@@ -1,0 +1,523 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_text_styles.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_routes.dart';
+import '../../../core/widgets/custom_button.dart';
+import '../../../core/widgets/custom_text_field.dart';
+import '../../../providers/auth_provider.dart';
+
+class MerchantRegisterScreen extends StatefulWidget {
+  const MerchantRegisterScreen({super.key});
+
+  @override
+  State<MerchantRegisterScreen> createState() => _MerchantRegisterScreenState();
+}
+
+class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _businessNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _openingHoursController = TextEditingController();
+  final _servicesController = TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _acceptTerms = false;
+  bool _isBusinessOwner = false;
+
+  @override
+  void dispose() {
+    _businessNameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _openingHoursController.dispose();
+    _servicesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Inscription Marchand'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Logo et titre
+                Column(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Icon(
+                        Icons.store,
+                        color: AppColors.onPrimary,
+                        size: 40,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Devenez Partenaire',
+                      style: AppTextStyles.h1.copyWith(fontSize: 28),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Rejoignez notre réseau de points de service',
+                      style: AppTextStyles.body2.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Informations du business
+                Text(
+                  'Informations du Business',
+                  style: AppTextStyles.h2.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _businessNameController,
+                  labelText: 'Nom du business',
+                  hintText: 'Ex: Boutique Express',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer le nom de votre business';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _emailController,
+                  labelText: 'Email professionnel',
+                  hintText: 'business@example.com',
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer votre email';
+                    }
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
+                      return 'Veuillez entrer un email valide';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _phoneController,
+                  labelText: 'Téléphone',
+                  hintText: '+225 0123456789',
+                  keyboardType: TextInputType.phone,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer votre numéro de téléphone';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _addressController,
+                  labelText: 'Adresse complète',
+                  hintText: '123 Rue du Commerce, Ville',
+                  maxLines: 2,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer votre adresse';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _openingHoursController,
+                  labelText: 'Horaires d\'ouverture',
+                  hintText: 'Ex: 8h00 - 20h00, Lundi-Samedi',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer vos horaires';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _servicesController,
+                  labelText: 'Services proposés',
+                  hintText: 'Ex: Recharge crédit, Cartes SIM, Forfaits data',
+                  maxLines: 2,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez décrire vos services';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Informations de connexion
+                Text(
+                  'Informations de Connexion',
+                  style: AppTextStyles.h2.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _passwordController,
+                  labelText: 'Mot de passe',
+                  hintText: '••••••••',
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez entrer un mot de passe';
+                    }
+                    if (value.length < 6) {
+                      return 'Le mot de passe doit contenir au moins 6 caractères';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _confirmPasswordController,
+                  labelText: 'Confirmer le mot de passe',
+                  hintText: '••••••••',
+                  obscureText: _obscureConfirmPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureConfirmPassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.textSecondary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                      });
+                    },
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Veuillez confirmer votre mot de passe';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Les mots de passe ne correspondent pas';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Vérifications
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _isBusinessOwner,
+                      onChanged: (value) {
+                        setState(() {
+                          _isBusinessOwner = value ?? false;
+                        });
+                      },
+                      activeColor: AppColors.primary,
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Je confirme être le propriétaire ou un représentant autorisé de ce business',
+                        style: AppTextStyles.body2,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _acceptTerms,
+                      onChanged: (value) {
+                        setState(() {
+                          _acceptTerms = value ?? false;
+                        });
+                      },
+                      activeColor: AppColors.primary,
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _acceptTerms = !_acceptTerms;
+                          });
+                        },
+                        child: RichText(
+                          text: TextSpan(
+                            style: AppTextStyles.body2.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                            children: [
+                              const TextSpan(text: 'J\'accepte les '),
+                              TextSpan(
+                                text: 'conditions d\'utilisation',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const TextSpan(text: ' et la '),
+                              TextSpan(
+                                text: 'politique de confidentialité',
+                                style: TextStyle(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Bouton d'inscription
+                Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    return CustomButton(
+                      text: authProvider.isLoading
+                          ? 'Création...'
+                          : 'Créer mon compte marchand',
+                      onPressed:
+                          (authProvider.isLoading ||
+                              !_acceptTerms ||
+                              !_isBusinessOwner)
+                          ? null
+                          : _handleRegister,
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Lien de connexion
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Déjà un compte ? ',
+                      style: AppTextStyles.body2.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.login,
+                        );
+                      },
+                      child: Text(
+                        'Se connecter',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Informations sur le processus
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Processus de validation :',
+                        style: AppTextStyles.h3.copyWith(fontSize: 14),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildProcessStep('1', 'Soumission de votre demande'),
+                      _buildProcessStep(
+                        '2',
+                        'Vérification par notre équipe (24-48h)',
+                      ),
+                      _buildProcessStep(
+                        '3',
+                        'Validation et activation de votre compte',
+                      ),
+                      _buildProcessStep(
+                        '4',
+                        'Accès à votre dashboard marchand',
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // Footer
+                Text(
+                  '© 2024 LocaCharge - Tous droits réservés',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProcessStep(String number, String description) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.onPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              description,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_acceptTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez accepter les conditions d\'utilisation'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    if (!_isBusinessOwner) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez confirmer être le propriétaire du business'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    // Créer un profil marchand avec les informations complètes
+    final success = await authProvider.registerMerchant(
+      businessName: _businessNameController.text,
+      email: _emailController.text,
+      phone: _phoneController.text,
+      address: _addressController.text,
+      openingHours: _openingHoursController.text,
+      services: _servicesController.text,
+      password: _passwordController.text,
+    );
+
+    if (success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Demande d\'inscription envoyée ! Vous recevrez un email de confirmation.',
+          ),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.error ?? 'Erreur lors de l\'inscription'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+}
