@@ -111,18 +111,20 @@ class MerchantDetailScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: _buildTimeCard(
-                          Icons.directions_walk,
-                          'À pied',
-                          merchant.walkingTime,
-                        ),
+  Icons.directions_walk,
+  'À pied',
+  merchant.walkingTime ?? 'Indisponible',
+),
+
                       ),
                       const SizedBox(width: AppDimensions.paddingM),
                       Expanded(
-                        child: _buildTimeCard(
-                          Icons.directions_car,
-                          'En voiture',
-                          merchant.drivingTime,
-                        ),
+                        child:_buildTimeCard(
+  Icons.directions_car,
+  'En voiture',
+  merchant.drivingTime ?? 'Indisponible',
+),
+
                       ),
                     ],
                   ),

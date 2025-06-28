@@ -5,24 +5,20 @@ import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/merchant_provider.dart';
+import '../../../providers/location_provider.dart';
 
 class MapViewScreen extends StatefulWidget {
   const MapViewScreen({Key? key}) : super(key: key);
 
   @override
-import 'package:provider/provider.dart';
-import '../../../providers/merchant_provider.dart';
-import '../../../providers/location_provider.dart';
-
-
   State<MapViewScreen> createState() => _MapViewScreenState();
 }
 
 class _MapViewScreenState extends State<MapViewScreen> {
-  // List<Merchant> _merchants = []; // Géré par MerchantProvider
   Merchant? _selectedMerchant;
-  // bool _isLoading = true; // Géré par MerchantProvider
-  final LocationService _locationService = LocationService(); // Peut rester pour les actions directes
+  final LocationService _locationService = LocationService();
 
   @override
   void initState() {
@@ -35,14 +31,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
     });
   }
 
-  // Future<void> _loadMerchants() async { ... } // Supprimé
-
   void _onMerchantSelected(Merchant merchant) {
     setState(() {
       _selectedMerchant = merchant;
     });
-
-    // Afficher les détails du marchand
     _showMerchantDetails(merchant);
   }
 
@@ -59,7 +51,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
         ),
         child: Column(
           children: [
-            // Handle
             Container(
               margin: const EdgeInsets.only(top: 8),
               width: 40,
@@ -69,7 +60,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            // Content
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -104,54 +94,32 @@ class _MapViewScreenState extends State<MapViewScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // Informations
-                    _buildInfoRow(
-                      Icons.access_time,
-                      'Horaires',
-                      merchant.hours,
-                    ),
+                    _buildInfoRow(Icons.access_time, 'Horaires', merchant.hours),
                     _buildInfoRow(Icons.phone, 'Téléphone', merchant.phone),
+                    _buildInfoRow(Icons.directions_walk, 'Distance', '${merchant.distance} km'),
                     _buildInfoRow(
-                      Icons.directions_walk,
-                      'Distance',
-                      '${merchant.distance} km',
-                    ),
-                    _buildInfoRow(
-                      Icons.directions_car,
-                      'Temps de trajet',
-                      merchant.drivingTime,
-                    ),
+  Icons.directions_car,
+  'Temps de trajet',
+  merchant.drivingTime ?? 'Non disponible',
+),
 
                     const SizedBox(height: 16),
-
-                    // Services
                     const Text(
                       'Services disponibles',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
-                      children: merchant.services
-                          .map(
-                            (service) => Chip(
-                              label: Text(service),
-                              backgroundColor: AppColors.primary.withOpacity(
-                                0.1,
-                              ),
-                              labelStyle: TextStyle(color: AppColors.primary),
-                            ),
-                          )
-                          .toList(),
+                      children: merchant.services.map(
+                        (service) => Chip(
+                          label: Text(service),
+                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          labelStyle: TextStyle(color: AppColors.primary),
+                        ),
+                      ).toList(),
                     ),
-
                     const Spacer(),
-
-                    // Boutons d'action
                     Row(
                       children: [
                         Expanded(
@@ -248,15 +216,13 @@ class _MapViewScreenState extends State<MapViewScreen> {
 
   Future<void> _callMerchant(String phone) async {
     final success = await _locationService.makePhoneCall(phone);
-    if (!success) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible d\'effectuer l\'appel'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d\'effectuer l\'appel'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -266,7 +232,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
       merchant.longitude,
       merchant.name,
     );
-
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -295,11 +260,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
       ),
       body: Consumer<MerchantProvider>(
         builder: (context, merchantProvider, child) {
-          // Potentiellement écouter aussi LocationProvider ici si des calculs de distance
-          // doivent être faits avant de passer les marchands à MapWidget.
-          // Pour l'instant, on passe la liste brute.
-          // final locationProvider = Provider.of<LocationProvider>(context);
-
           return Column(
             children: [
               const FilterBarWidget(),
@@ -314,7 +274,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                       const Center(child: Text("Aucun point de service trouvé."))
                     else
                       MapWidget(
-                        merchants: merchantProvider.merchants, // Utiliser la liste du provider
+                        merchants: merchantProvider.merchants,
                         onMerchantSelected: _onMerchantSelected,
                         showUserLocation: true,
                         initialZoom: 13.0,
@@ -345,9 +305,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                 children: [
                                   Text(
                                     '${merchantProvider.merchants.length} points de service trouvés',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
                                   ),
                                   if (_selectedMerchant != null)
                                     Text(
@@ -380,65 +338,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-}
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_merchants.length} points de service trouvés',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (_selectedMerchant != null)
-                                Text(
-                                  'Sélectionné: ${_selectedMerchant!.name}',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                            ],
-                          ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/list');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              foregroundColor: const Color(0xFF92400E),
-                              minimumSize: const Size(80, 32),
-                            ),
-                            child: const Text('Vue Liste'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

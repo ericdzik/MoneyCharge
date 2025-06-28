@@ -12,7 +12,7 @@ import 'providers/transaction_provider.dart';
 // Import des écrans utilisateur
 import 'features/user/screens/home_screen.dart';
 import 'features/user/screens/list_view_screen.dart';
-import 'features/user/screens/map_view_screen.dart';
+import 'features/user/screens/map_view_screen.dart' hide Container;
 import 'features/user/screens/merchant_detail_screen.dart';
 import 'features/user/screens/user_login_screen.dart';
 import 'features/user/screens/user_register_screen.dart';

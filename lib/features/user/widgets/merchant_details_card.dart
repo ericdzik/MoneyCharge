@@ -116,10 +116,11 @@ class MerchantDetailsCard extends StatelessWidget {
                     '${merchant.distance} km',
                   ),
                   _buildInfoRow(
-                    Icons.directions_car,
-                    'Temps de trajet',
-                    merchant.drivingTime,
-                  ),
+  Icons.directions_car,
+  'Temps de trajet',
+  merchant.drivingTime ?? 'Indisponible',
+),
+
                 ]),
 
                 const SizedBox(height: 16),
