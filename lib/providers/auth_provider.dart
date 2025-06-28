@@ -1,7 +1,8 @@
 import 'dart:async'; // Pour StreamSubscription
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Pour l'objet User de Firebase
-import 'package:cloud_firestore/cloud_firestore.dart'; // Pour interagir avec Firestore
+// cloud_firestore est déjà importé ici, mais vérifions qu'il n'y a pas de redondance ou de mauvaise place
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
 import '../services/auth_service.dart';
