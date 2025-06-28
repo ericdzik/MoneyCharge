@@ -162,28 +162,36 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _navigateToNextScreen();
   }
 
-  Future<void> _checkAuthStatus() async {
+  Future<void> _navigateToNextScreen() async {
+    // Simule un délai de chargement pour le splash screen
     await Future.delayed(const Duration(seconds: 2));
 
     if (!mounted) return;
 
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    // Vérifier le statut d'authentification
-    await authProvider.checkAuthStatus();
+    // Utiliser addPostFrameCallback pour s'assurer que le widget est monté
+    // et que le contexte est valide pour Provider.of
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return; // Vérifier à nouveau après le callback
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    if (!mounted) return;
-
-    if (authProvider.isAuthenticated) {
-      final defaultRoute = RouteGuards.getDefaultRouteForUserType(
-        authProvider.userType,
-      );
-      Navigator.pushReplacementNamed(context, defaultRoute);
-    } else {
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    }
+      // AuthProvider s'initialise maintenant dans son constructeur et écoute les authStateChanges.
+      // Nous pouvons directement vérifier l'état ici après le délai du splash.
+      if (authProvider.isAuthenticated) {
+        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
+          authProvider.userType,
+        );
+        Navigator.pushReplacementNamed(context, defaultRoute);
+      } else {
+        // Si non authentifié, ou si le profil n'a pas encore été chargé (isLoading est true),
+        // on pourrait attendre un peu plus ou aller directement au login.
+        // Pour l'instant, on va au login si pas encore authentifié après le délai.
+        // Une logique plus fine pourrait observer authProvider.isLoading.
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      }
+    });
   }
 
   @override

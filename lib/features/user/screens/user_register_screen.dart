@@ -377,18 +377,39 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    final success = await authProvider.registerUser(
-      _nameController.text,
-      _emailController.text,
-      _passwordController.text,
-    );
+    try {
+      await authProvider.registerUser(
+        _nameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
 
-    if (success && mounted) {
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
-    } else if (mounted) {
+      if (!mounted) return;
+
+      // Après l'inscription, Firebase connecte automatiquement l'utilisateur.
+      // AuthProvider devrait refléter cet état via authStateChanges.
+      if (authProvider.isAuthenticated) {
+        // Rediriger vers la page d'accueil ou une page de vérification d'email si nécessaire
+        Navigator.pushReplacementNamed(context, AppRoutes.home);
+         ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Inscription réussie ! Vous êtes connecté.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur d\'inscription.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur d\'inscription'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );

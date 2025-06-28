@@ -415,32 +415,46 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Utiliser la connexion unifiée qui détecte automatiquement le rôle
-    final success = await authProvider.loginUnified(
-      _emailController.text,
-      _passwordController.text,
-    );
-
-    if (success && mounted) {
-      // Rediriger vers la page appropriée selon le rôle détecté
-      final defaultRoute = RouteGuards.getDefaultRouteForUserType(
-        authProvider.userType,
+    try {
+      await authProvider.loginUnified(
+        _emailController.text,
+        _passwordController.text,
       );
-      Navigator.pushReplacementNamed(context, defaultRoute);
 
-      // Afficher un message informatif
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
+      // Après l'appel, vérifier l'état d'authentification et l'erreur potentielle
+      // gérés par le AuthProvider suite à la notification de authStateChanges
+      if (!mounted) return;
+
+      if (authProvider.isAuthenticated) {
+        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
+          authProvider.userType,
+        );
+        Navigator.pushReplacementNamed(context, defaultRoute);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
+            ),
+            backgroundColor: AppColors.success,
           ),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    } else if (mounted) {
+        );
+      } else {
+        // Si non authentifié, afficher l'erreur du provider ou un message par défaut
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Email ou mot de passe incorrect.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      // Au cas où loginUnified lui-même lèverait une exception non capturée par le provider
+      // (bien que le provider devrait gérer ses propres erreurs et les stocker dans authProvider.error)
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur de connexion'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );

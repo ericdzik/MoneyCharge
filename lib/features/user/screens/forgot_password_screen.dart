@@ -222,24 +222,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.error = null; // Clear previous errors
 
-    final success = await authProvider.resetPassword(_emailController.text);
+    try {
+      await authProvider.resetPassword(_emailController.text);
+      if (!mounted) return;
 
-    if (success && mounted) {
-      setState(() {
-        _isEmailSent = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email de réinitialisation envoyé avec succès'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (mounted) {
+      if (authProvider.error == null) {
+        setState(() {
+          _isEmailSent = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email de réinitialisation envoyé avec succès.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur lors de l\'envoi de l\'email.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur lors de l\'envoi'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );
@@ -248,20 +259,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _handleResendEmail() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.error = null; // Clear previous errors
 
-    final success = await authProvider.resetPassword(_emailController.text);
+    try {
+      await authProvider.resetPassword(_emailController.text);
+      if (!mounted) return;
 
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email renvoyé avec succès'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (mounted) {
+      if (authProvider.error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email de réinitialisation renvoyé avec succès.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur lors du renvoi de l\'email.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur lors de l\'envoi'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );

@@ -490,31 +490,48 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Créer un profil marchand avec les informations complètes
-    final success = await authProvider.registerMerchant(
-      businessName: _businessNameController.text,
-      email: _emailController.text,
-      phone: _phoneController.text,
-      address: _addressController.text,
-      openingHours: _openingHoursController.text,
-      services: _servicesController.text,
-      password: _passwordController.text,
-    );
-
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Demande d\'inscription envoyée ! Vous recevrez un email de confirmation.',
-          ),
-          backgroundColor: AppColors.success,
-        ),
+    try {
+      await authProvider.registerMerchant(
+        businessName: _businessNameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        address: _addressController.text,
+        openingHours: _openingHoursController.text,
+        services: _servicesController.text,
+        password: _passwordController.text,
       );
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    } else if (mounted) {
+
+      if (!mounted) return;
+
+      // Après l'appel, vérifier l'état.
+      // Pour l'inscription marchand, même si le compte Auth est créé,
+      // on pourrait vouloir attendre une validation admin.
+      // Pour l'instant, on considère que si pas d'erreur, c'est "envoyé".
+      // L'état isAuthenticated sera mis à jour par authStateChanges si l'utilisateur est connecté.
+      if (authProvider.error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        // Rediriger vers la page de connexion ou une page d'attente de validation.
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur lors de l\'inscription.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur lors de l\'inscription'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );
