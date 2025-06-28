@@ -180,27 +180,4 @@ class _MapViewContentState extends State<MapViewContent> {
     );
   }
 }
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ListViewScreen(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                          foregroundColor: const Color(0xFF92400E),
-                          minimumSize: const Size(80, 32),
-                        ),
-                        child: const Text('Vue Liste'),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
+// Le code dupliqué et erroné qui se trouvait ici a été supprimé.
