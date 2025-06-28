@@ -57,105 +57,129 @@ class MapViewContent extends StatefulWidget {
 
   @override
   State<MapViewContent> createState() => _MapViewContentState();
+import 'package:provider/provider.dart'; // Importer Provider
+import '../../../providers/merchant_provider.dart'; // Importer MerchantProvider
+import '../../../providers/location_provider.dart'; // Importer LocationProvider pour les calculs
+
 }
 
 class _MapViewContentState extends State<MapViewContent> {
-  List<Merchant> _merchants = [];
+  // List<Merchant> _merchants = []; // Supprimé, géré par MerchantProvider
 
   @override
   void initState() {
     super.initState();
-    _loadMerchants();
-  }
-
-  Future<void> _loadMerchants() async {
-    // Données de test pour l'écran d'accueil
-    final merchants = [
-      Merchant(
-        id: '1',
-        name: 'Station Total Lomé',
-        address: 'Avenue de la Paix, Lomé',
-        phone: '+228 22 21 21 21',
-        hours: '24h/24',
-        isOpen: true,
-        status: MerchantStatus.available,
-        latitude: 6.1319,
-        longitude: 1.2228,
-        distance: 0.5,
-        walkingTime: '6 min',
-        drivingTime: '2 min',
-        services: ['Recharge', 'Paiement', 'Transfert'],
-      ),
-      Merchant(
-        id: '2',
-        name: 'Boutique Mobile Money',
-        address: 'Rue du Commerce, Lomé',
-        phone: '+228 22 22 22 22',
-        hours: '7h-22h',
-        isOpen: true,
-        status: MerchantStatus.lowStock,
-        latitude: 6.1350,
-        longitude: 1.2250,
-        distance: 1.2,
-        walkingTime: '15 min',
-        drivingTime: '4 min',
-        services: ['Recharge', 'Paiement'],
-      ),
-    ];
-
-    setState(() {
-      _merchants = merchants;
+    // Charger les marchands via le provider au démarrage de ce widget
+    // Utiliser addPostFrameCallback pour s'assurer que le contexte est disponible
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) { // Vérifier si le widget est toujours monté
+        Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
+        // Initialiser aussi LocationProvider si ce n'est pas déjà fait globalement
+        Provider.of<LocationProvider>(context, listen: false).initialize();
+      }
     });
   }
 
+  // Future<void> _loadMerchants() async { ... } // Supprimé
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const FilterBarWidget(),
-        Expanded(
-          child: Stack(
-            children: [
-              MapWidget(
-                merchants: _merchants,
-                onMerchantSelected: (merchant) {
-                  // Navigation vers les détails du marchand
-                  Navigator.pushNamed(
-                    context,
-                    '/merchant-details',
-                    arguments: merchant,
-                  );
-                },
-                showUserLocation: true,
-                initialZoom: 13.0,
+    return Consumer<MerchantProvider>(
+      builder: (context, merchantProvider, child) {
+        // Écouter aussi LocationProvider pour les mises à jour de position de l'utilisateur
+        // qui pourraient affecter les distances.
+        final locationProvider = Provider.of<LocationProvider>(context);
+
+        List<Merchant> processedMerchants = merchantProvider.merchants.map((m) {
+          double distanceInMeters = locationProvider.calculateDistanceFromCurrent(m.latitude, m.longitude);
+          // Ici, on pourrait créer une nouvelle instance de Merchant ou un DTO avec les infos calculées
+          // Pour l'instant, on ne modifie pas l'objet Merchant directement car ses champs ne sont pas finaux
+          // Idéalement, Merchant aurait des champs non-finaux ou une méthode copyWith pour ces données dynamiques.
+          // Pour cette étape, on passe les marchands tels quels et MapWidget devra gérer ces calculs
+          // ou on suppose que le modèle Merchant est adapté pour stocker temporairement ces valeurs.
+          // Pour simplifier, nous allons juste passer la liste et supposer que MapWidget peut utiliser LocationProvider.
+          return m;
+        }).toList();
+
+        return Column(
+          children: [
+            const FilterBarWidget(),
+            Expanded(
+              child: Stack(
+                children: [
+                  if (merchantProvider.isLoading && merchantProvider.merchants.isEmpty)
+                    const Center(child: CircularProgressIndicator())
+                  else if (merchantProvider.error != null)
+                    Center(child: Text("Erreur: ${merchantProvider.error}"))
+                  else if (merchantProvider.merchants.isEmpty)
+                    const Center(child: Text("Aucun point de service trouvé."))
+                  else
+                    MapWidget(
+                      merchants: processedMerchants, // Utiliser la liste du provider
+                      onMerchantSelected: (merchant) {
+                        Navigator.pushNamed(
+                          context,
+                          '/merchant-details',
+                          arguments: {'merchant': merchant}, // S'assurer que les arguments sont passés correctement
+                        );
+                      },
+                      showUserLocation: true,
+                      initialZoom: 13.0,
+                    ),
+                  if (!merchantProvider.isLoading && merchantProvider.error == null)
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ColorUtils.blackWithAlpha(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${merchantProvider.merchants.length} points de service trouvés',
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ListViewScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary,
+                                foregroundColor: const Color(0xFF92400E),
+                                minimumSize: const Size(80, 32),
+                              ),
+                              child: const Text('Vue Liste'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-              Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.blackWithAlpha(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${_merchants.length} points de service trouvés',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
                             context,
                             MaterialPageRoute(
                               builder: (context) => const ListViewScreen(),

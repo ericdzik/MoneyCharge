@@ -10,79 +10,32 @@ class MapViewScreen extends StatefulWidget {
   const MapViewScreen({Key? key}) : super(key: key);
 
   @override
+import 'package:provider/provider.dart';
+import '../../../providers/merchant_provider.dart';
+import '../../../providers/location_provider.dart';
+
+
   State<MapViewScreen> createState() => _MapViewScreenState();
 }
 
 class _MapViewScreenState extends State<MapViewScreen> {
-  List<Merchant> _merchants = [];
+  // List<Merchant> _merchants = []; // Géré par MerchantProvider
   Merchant? _selectedMerchant;
-  bool _isLoading = true;
-  final LocationService _locationService = LocationService();
+  // bool _isLoading = true; // Géré par MerchantProvider
+  final LocationService _locationService = LocationService(); // Peut rester pour les actions directes
 
   @override
   void initState() {
     super.initState();
-    _loadMerchants();
-  }
-
-  Future<void> _loadMerchants() async {
-    // Simuler le chargement des données
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Données de test
-    final merchants = [
-      Merchant(
-        id: '1',
-        name: 'Station Total Lomé',
-        address: 'Avenue de la Paix, Lomé',
-        phone: '+228 22 21 21 21',
-        hours: '24h/24',
-        isOpen: true,
-        status: MerchantStatus.available,
-        latitude: 6.1319,
-        longitude: 1.2228,
-        distance: 0.5,
-        walkingTime: '6 min',
-        drivingTime: '2 min',
-        services: ['Recharge', 'Paiement', 'Transfert'],
-      ),
-      Merchant(
-        id: '2',
-        name: 'Boutique Mobile Money',
-        address: 'Rue du Commerce, Lomé',
-        phone: '+228 22 22 22 22',
-        hours: '7h-22h',
-        isOpen: true,
-        status: MerchantStatus.lowStock,
-        latitude: 6.1350,
-        longitude: 1.2250,
-        distance: 1.2,
-        walkingTime: '15 min',
-        drivingTime: '4 min',
-        services: ['Recharge', 'Paiement'],
-      ),
-      Merchant(
-        id: '3',
-        name: 'Kiosque Central',
-        address: 'Place de l\'Indépendance, Lomé',
-        phone: '+228 22 23 23 23',
-        hours: '6h-23h',
-        isOpen: false,
-        status: MerchantStatus.outOfStock,
-        latitude: 6.1280,
-        longitude: 1.2200,
-        distance: 2.1,
-        walkingTime: '25 min',
-        drivingTime: '6 min',
-        services: ['Recharge'],
-      ),
-    ];
-
-    setState(() {
-      _merchants = merchants;
-      _isLoading = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
+        Provider.of<LocationProvider>(context, listen: false).initialize();
+      }
     });
   }
+
+  // Future<void> _loadMerchants() async { ... } // Supprimé
 
   void _onMerchantSelected(Merchant merchant) {
     setState(() {
@@ -340,25 +293,97 @@ class _MapViewScreenState extends State<MapViewScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const FilterBarWidget(),
-          Expanded(
-            child: Stack(
-              children: [
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : MapWidget(
-                        merchants: _merchants,
+      body: Consumer<MerchantProvider>(
+        builder: (context, merchantProvider, child) {
+          // Potentiellement écouter aussi LocationProvider ici si des calculs de distance
+          // doivent être faits avant de passer les marchands à MapWidget.
+          // Pour l'instant, on passe la liste brute.
+          // final locationProvider = Provider.of<LocationProvider>(context);
+
+          return Column(
+            children: [
+              const FilterBarWidget(),
+              Expanded(
+                child: Stack(
+                  children: [
+                    if (merchantProvider.isLoading && merchantProvider.merchants.isEmpty)
+                      const Center(child: CircularProgressIndicator())
+                    else if (merchantProvider.error != null)
+                      Center(child: Text("Erreur: ${merchantProvider.error}"))
+                    else if (merchantProvider.merchants.isEmpty)
+                      const Center(child: Text("Aucun point de service trouvé."))
+                    else
+                      MapWidget(
+                        merchants: merchantProvider.merchants, // Utiliser la liste du provider
                         onMerchantSelected: _onMerchantSelected,
                         showUserLocation: true,
                         initialZoom: 13.0,
                       ),
-                // Panneau d'informations en bas
-                if (!_isLoading)
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
+                    if (!merchantProvider.isLoading && merchantProvider.error == null)
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${merchantProvider.merchants.length} points de service trouvés',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  if (_selectedMerchant != null)
+                                    Text(
+                                      'Sélectionné: ${_selectedMerchant!.name}',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/list');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: const Color(0xFF92400E),
+                                  minimumSize: const Size(80, 32),
+                                ),
+                                child: const Text('Vue Liste'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
                     right: 16,
                     child: Container(
                       padding: const EdgeInsets.all(16),

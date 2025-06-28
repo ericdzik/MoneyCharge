@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/user/models/merchant_model.dart';
-import '../services/api_service.dart';
+// import '../services/api_service.dart'; // ApiService n'est plus utilisé ici pour charger les marchands
 
 class MerchantProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  
+  // final ApiService _apiService = ApiService(); // Supprimé
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   List<Merchant> _merchants = [];
   bool _isLoading = false;
   String? _error;
@@ -13,71 +15,59 @@ class MerchantProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> loadMerchants() async {
+  Future<void> loadMerchants({bool forceRefresh = false}) async {
+    // Option pour forcer le rafraîchissement, sinon on peut ajouter une logique de cache simple ici si besoin
+    if (_merchants.isNotEmpty && !forceRefresh && !_isLoading) {
+       // Ne rien faire si les marchands sont déjà chargés et qu'on ne force pas le refresh
+       // Ou implémenter une logique de cache avec expiration si nécessaire.
+      // Pour l'instant, on recharge à chaque appel à loadMerchants si pas déjà en chargement.
+    }
+
     _setLoading(true);
+    _error = null;
+
     try {
-      _merchants = await _apiService.getMerchants();
-      _error = null;
+      // Interroger la collection 'users' pour les documents où role == 'merchant' et isVerified == true
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'merchant')
+          .where('isVerified', isEqualTo: true)
+          // Pourrait aussi ajouter .where('isActive', isEqualTo: true) si ce champ est pertinent
+          .get();
+
+      _merchants = querySnapshot.docs
+          .map((doc) => Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .toList();
+
     } catch (e) {
-      _error = e.toString();
-      _merchants = _getDemoMerchants(); // Fallback avec données de demo
+      _error = "Erreur lors du chargement des marchands: ${e.toString()}";
+      _merchants = []; // Vider la liste en cas d'erreur
+      print(_error); // Pour le débogage
     } finally {
       _setLoading(false);
     }
   }
 
   void _setLoading(bool loading) {
+    if (_isLoading == loading) return; // Éviter les notifications inutiles
     _isLoading = loading;
     notifyListeners();
   }
 
-  List<Merchant> _getDemoMerchants() {
-    return [
-      Merchant(
-        id: '1',
-        name: 'Boutique Télécoms Lomé',
-        address: '123 Rue du Commerce, Lomé',
-        phone: '+228 22 61 23 45',
-        hours: '8h00 - 20h00',
-        isOpen: true,
-        status: MerchantStatus.available,
-        latitude: 6.1319,
-        longitude: 1.2228,
-        distance: 0.5,
-        walkingTime: '6 min',
-        drivingTime: '2 min',
-        services: ['Recharge crédit', 'Cartes SIM', 'Forfaits data'],
-      ),
-      Merchant(
-        id: '2',
-        name: 'Cyber Café Digital',
-        address: '45 Avenue de la Paix, Lomé',
-        phone: '+228 22 45 67 89',
-        hours: '7h00 - 22h00',
-        isOpen: true,
-        status: MerchantStatus.lowStock,
-        latitude: 6.1375,
-        longitude: 1.2123,
-        distance: 1.2,
-        walkingTime: '15 min',
-        drivingTime: '4 min',
-        services: ['Recharge crédit', 'Internet', 'Impression'],
-      ),
-      Merchant(
-        id: '3',
-        name: 'Shop Mobile Plus',
-        address: '78 Boulevard du 13 Janvier, Lomé',
-        phone: '+228 22 78 90 12',
-        hours: '9h00 - 19h00',
-        isOpen: false,
-        status: MerchantStatus.outOfStock,
-        latitude: 6.1284,
-        longitude: 1.2350,
-        distance: 2.1,
-        walkingTime: '25 min',
-        drivingTime: '7 min',
-        services: ['Recharge crédit', 'Réparation mobile', 'Accessoires'],
-      ),
-    ];
+  // _getDemoMerchants() n'est plus nécessaire car nous chargeons depuis Firestore.
+  // List<Merchant> _getDemoMerchants() { ... }
+
+  // Optionnel: Méthode pour rafraîchir la liste explicitement
+  Future<void> refreshMerchants() async {
+    await loadMerchants(forceRefresh: true);
+  }
+
+  // Optionnel: Méthode pour trouver un marchand par ID si nécessaire
+  Merchant? getMerchantById(String id) {
+    try {
+      return _merchants.firstWhere((merchant) => merchant.id == id);
+    } catch (e) {
+      return null; // Non trouvé
+    }
   }
 }
