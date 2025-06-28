@@ -6,6 +6,9 @@ import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
 import '../models/merchant_model.dart';
 import 'list_view_screen.dart';
+import 'package:provider/provider.dart'; // Importer Provider
+import '../../../providers/merchant_provider.dart'; // Importer MerchantProvider
+import '../../../providers/location_provider.dart'; // Importer LocationProvider pour les calculs
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -57,10 +60,7 @@ class MapViewContent extends StatefulWidget {
 
   @override
   State<MapViewContent> createState() => _MapViewContentState();
-import 'package:provider/provider.dart'; // Importer Provider
-import '../../../providers/merchant_provider.dart'; // Importer MerchantProvider
-import '../../../providers/location_provider.dart'; // Importer LocationProvider pour les calculs
-
+// Les imports ont été déplacés en haut du fichier.
 }
 
 class _MapViewContentState extends State<MapViewContent> {
