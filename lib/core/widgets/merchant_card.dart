@@ -11,7 +11,7 @@ class MerchantCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDirectionsPressed;
 
-  const MerchantCard({
+  MerchantCard({ // Retrait du const ici
     super.key,
     required this.merchant,
     this.onTap,
