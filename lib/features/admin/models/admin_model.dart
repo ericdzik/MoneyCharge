@@ -21,23 +21,41 @@ class AdminModel {
     this.permissions = const [],
   });
 
-  factory AdminModel.fromJson(Map<String, dynamic> json) {
+  // factory AdminModel.fromJson(Map<String, dynamic> json) {
+  //   return AdminModel(
+  //     id: json['id'] ?? '',
+  //     email: json['email'] ?? '',
+  //     name: json['name'] ?? '',
+  //     role: AdminRole.values.firstWhere(
+  //       (e) => e.toString() == 'AdminRole.${json['role']}',
+  //       orElse: () => AdminRole.moderator,
+  //     ),
+  //     isActive: json['isActive'] ?? true,
+  //     createdAt: DateTime.parse(
+  //       json['createdAt'] ?? DateTime.now().toIso8601String(),
+  //     ),
+  //     lastLoginAt: json['lastLoginAt'] != null
+  //         ? DateTime.parse(json['lastLoginAt'])
+  //         : null,
+  //     permissions: List<String>.from(json['permissions'] ?? []),
+  //   );
+  // }
+
+  factory AdminModel.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data()!;
     return AdminModel(
-      id: json['id'] ?? '',
-      email: json['email'] ?? '',
-      name: json['name'] ?? '',
+      id: snapshot.id, // Utiliser l'ID du document (qui est l'UID)
+      email: data['email'] as String? ?? '',
+      name: data['name'] as String? ?? '',
       role: AdminRole.values.firstWhere(
-        (e) => e.toString() == 'AdminRole.${json['role']}',
-        orElse: () => AdminRole.moderator,
+        (e) => e.toString().split('.').last.toLowerCase() == (data['role'] as String?)?.toLowerCase(),
+        orElse: () => AdminRole.moderator, // default role if parsing fails or role is null
       ),
-      isActive: json['isActive'] ?? true,
-      createdAt: DateTime.parse(
-        json['createdAt'] ?? DateTime.now().toIso8601String(),
-      ),
-      lastLoginAt: json['lastLoginAt'] != null
-          ? DateTime.parse(json['lastLoginAt'])
-          : null,
-      permissions: List<String>.from(json['permissions'] ?? []),
+      isActive: data['isActive'] as bool? ?? true,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
+      permissions: List<String>.from(data['permissions'] as List? ?? []),
     );
   }
 

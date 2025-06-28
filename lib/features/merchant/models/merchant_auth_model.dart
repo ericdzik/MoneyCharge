@@ -23,22 +23,39 @@ class MerchantAuthModel {
     this.lastLoginAt,
   });
 
-  factory MerchantAuthModel.fromJson(Map<String, dynamic> json) {
+  // factory MerchantAuthModel.fromJson(Map<String, dynamic> json) {
+  //   return MerchantAuthModel(
+  //     id: json['id'] ?? '',
+  //     email: json['email'] ?? '',
+  //     businessName: json['businessName'] ?? '',
+  //     phone: json['phone'] ?? '',
+  //     address: json['address'] ?? '',
+  //     openingHours: json['openingHours'],
+  //     services: json['services'],
+  //     isVerified: json['isVerified'] ?? false,
+  //     createdAt: DateTime.parse(
+  //       json['createdAt'] ?? DateTime.now().toIso8601String(),
+  //     ),
+  //     lastLoginAt: json['lastLoginAt'] != null
+  //         ? DateTime.parse(json['lastLoginAt'])
+  //         : null,
+  //   );
+  // }
+
+  factory MerchantAuthModel.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data()!;
     return MerchantAuthModel(
-      id: json['id'] ?? '',
-      email: json['email'] ?? '',
-      businessName: json['businessName'] ?? '',
-      phone: json['phone'] ?? '',
-      address: json['address'] ?? '',
-      openingHours: json['openingHours'],
-      services: json['services'],
-      isVerified: json['isVerified'] ?? false,
-      createdAt: DateTime.parse(
-        json['createdAt'] ?? DateTime.now().toIso8601String(),
-      ),
-      lastLoginAt: json['lastLoginAt'] != null
-          ? DateTime.parse(json['lastLoginAt'])
-          : null,
+      id: snapshot.id, // Utiliser l'ID du document (qui est l'UID)
+      email: data['email'] as String? ?? '',
+      businessName: data['name'] as String? ?? '', // Firestore 'name' field for businessName
+      phone: data['phone'] as String? ?? '',
+      address: data['address'] as String? ?? '',
+      openingHours: data['openingHours'] as String?,
+      services: data['services'] as String?,
+      isVerified: data['isVerified'] as bool? ?? false,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
     );
   }
 
