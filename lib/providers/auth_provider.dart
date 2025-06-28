@@ -232,7 +232,7 @@ class AuthProvider with ChangeNotifier {
   // Réinitialiser le mot de passe
   Future<void> resetPassword(String email) async {
     _setLoading(true);
-    _error = null;
+    clearError(); // Utiliser la nouvelle méthode pour clearer l'erreur
     try {
       await _authService.resetPassword(email);
       // Peut-être afficher un message de succès à l'utilisateur via un autre mécanisme
@@ -240,6 +240,13 @@ class AuthProvider with ChangeNotifier {
       _error = e.toString();
     } finally {
       _setLoading(false);
+    }
+  }
+
+  void clearError() {
+    if (_error != null) {
+      _error = null;
+      notifyListeners(); // Notifier si l'erreur est effectivement clearée
     }
   }
 

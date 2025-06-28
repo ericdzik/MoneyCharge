@@ -33,10 +33,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
-          final user = authProvider.currentUser;
+          // Accéder au profil utilisateur spécifique pour les utilisateurs standards
+          final user = authProvider.appUserProfile;
+
+          if (authProvider.isLoading && user == null) { // Afficher le chargement si user est null et qu'on charge encore
+            return const Center(child: CircularProgressIndicator());
+          }
 
           if (user == null) {
-            return const Center(child: CircularProgressIndicator());
+            // Gérer le cas où l'utilisateur n'est pas un 'user' ou profil non trouvé
+            // Peut-être rediriger ou afficher un message d'erreur plus spécifique
+            return const Center(
+              child: Text("Profil utilisateur non disponible ou type d'utilisateur incorrect."),
+            );
           }
 
           return SingleChildScrollView(

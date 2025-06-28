@@ -222,7 +222,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.error = null; // Clear previous errors
+    authProvider.clearError(); // Utiliser la méthode pour clearer l'erreur
 
     try {
       await authProvider.resetPassword(_emailController.text);
@@ -259,7 +259,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _handleResendEmail() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    authProvider.error = null; // Clear previous errors
+    authProvider.clearError(); // Utiliser la méthode pour clearer l'erreur
 
     try {
       await authProvider.resetPassword(_emailController.text);
