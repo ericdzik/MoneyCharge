@@ -19,6 +19,13 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_local_notifications: ^16.3.2
   timezone: ^0.9.2
+  firebase_core: ^2.24.2  # Vérifiez la dernière version
+  firebase_auth: ^4.16.0  # Vérifiez la dernière version
+  cloud_firestore: ^4.14.0 # Vérifiez la dernière version
+  # Optionnel, mais souvent utile :
+  # firebase_storage: ^11.6.0 # Pour le stockage de fichiers (ex: photos de profil)
+  # firebase_messaging: ^14.7.10 # Pour les notifications push
+  # firebase_analytics: ^10.8.0 # Pour l'analyse du comportement utilisateur
 
 dev_dependencies:
   flutter_test:
