@@ -38,7 +38,52 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   GoogleMapController? _mapController;
   LatLng? _selectedLocation;
   final Set<Marker> _markers = {};
-  static const LatLng _initialCameraPosition = LatLng(5.359952, -4.008256); // Abidjan, Côte d'Ivoire - Default
+  // Default initial position, will be updated if location is fetched.
+  CameraPosition _cameraPosition = const CameraPosition(
+    target: LatLng(5.359952, -4.008256), // Abidjan, Côte d'Ivoire
+    zoom: 12,
+  );
+  bool _isLocationPermissionGranted = false;
+  bool _isFetchingInitialLocation = true; // To show loading indicator for map
+
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermissionAndFetch();
+  }
+
+  Future<void> _requestLocationPermissionAndFetch() async {
+    setState(() {
+      _isFetchingInitialLocation = true;
+    });
+
+    PermissionStatus status = await Permission.locationWhenInUse.request();
+
+    if (status.isGranted) {
+      _isLocationPermissionGranted = true;
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high);
+        setState(() {
+          _cameraPosition = CameraPosition(
+            target: LatLng(position.latitude, position.longitude),
+            zoom: 15, // Zoom in a bit more for current location
+          );
+        });
+      } catch (e) {
+        print("Erreur lors de la récupération de la position: $e");
+        // Keep default _cameraPosition
+      }
+    } else if (status.isDenied || status.isRestricted || status.isPermanentlyDenied) {
+      _isLocationPermissionGranted = false;
+      // Optionally, show a message or guide user to settings
+      print("Permission de localisation refusée.");
+    }
+
+    setState(() {
+      _isFetchingInitialLocation = false;
+    });
+  }
 
   @override
   void dispose() {
@@ -207,22 +252,42 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                    child: GoogleMap(
-                      initialCameraPosition: const CameraPosition(
-                        target: _initialCameraPosition,
-                        zoom: 12,
-                      ),
-                      onMapCreated: (GoogleMapController controller) {
-                        _mapController = controller;
-                      },
-                      onTap: _onMapTapped,
-                      markers: _markers,
-                      myLocationButtonEnabled: true,
-                      myLocationEnabled: false, // We'll handle permission separately if needed
-                      zoomControlsEnabled: true,
-                    ),
+                    child: _isFetchingInitialLocation
+                        ? const Center(
+                            child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: AppDimensions.paddingS),
+                              Text('Chargement de la carte...'),
+                            ],
+                          ))
+                        : GoogleMap(
+                            initialCameraPosition: _cameraPosition,
+                            onMapCreated: (GoogleMapController controller) {
+                              _mapController = controller;
+                              // Animate camera to the fetched position if it changed from default
+                              if (_cameraPosition.target != const LatLng(5.359952, -4.008256)) {
+                                controller.animateCamera(CameraUpdate.newCameraPosition(_cameraPosition));
+                              }
+                            },
+                            onTap: _onMapTapped,
+                            markers: _markers,
+                            myLocationButtonEnabled: true,
+                            myLocationEnabled: _isLocationPermissionGranted, // Enable blue dot if permission granted
+                            zoomControlsEnabled: true,
+                          ),
                   ),
                 ),
+                if (!_isLocationPermissionGranted && !_isFetchingInitialLocation)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.paddingS),
+                    child: Text(
+                      'Permission de localisation refusée. La carte est centrée sur une position par défaut.',
+                      style: AppTextStyles.caption.copyWith(color: AppColors.outOfStock),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 if (_selectedLocation != null)
                   Padding(
                     padding: const EdgeInsets.only(top: AppDimensions.paddingS),
