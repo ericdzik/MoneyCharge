@@ -5,6 +5,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../providers/transaction_provider.dart';
+import '../../../providers/auth_provider.dart'; // Import AuthProvider
 import '../models/balance_model.dart';
 import '../widgets/transaction_card_widget.dart';
 import '../widgets/balance_summary_widget.dart';
@@ -20,14 +21,17 @@ class BalanceManagementScreen extends StatefulWidget {
 class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String _selectedPeriod = 'today';
+  // String _selectedPeriod = 'today'; // This variable was not used
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TransactionProvider>().loadData();
+      // Fetch AuthProvider instance first
+      final authProvider = context.read<AuthProvider>();
+      // Then call fetchTransactionsAndBalance
+      context.read<TransactionProvider>().fetchTransactionsAndBalance(authProvider);
     });
   }
 
@@ -37,8 +41,16 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     super.dispose();
   }
 
+  void _reloadData() {
+    final authProvider = context.read<AuthProvider>();
+    context.read<TransactionProvider>().fetchTransactionsAndBalance(authProvider);
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Obtain AuthProvider here to pass to AddTransactionDialog
+    final authProvider = context.watch<AuthProvider>();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -49,7 +61,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: _showAddTransactionDialog,
+            onPressed: () => _showAddTransactionDialog(authProvider), // Pass authProvider
             tooltip: 'Ajouter une transaction',
           ),
         ],
@@ -84,6 +96,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
                   const SizedBox(height: AppDimensions.paddingM),
                   Text(
                     'Erreur: ${provider.error}',
+                    textAlign: TextAlign.center,
                     style: AppTextStyles.body1.copyWith(
                       color: AppColors.outOfStock,
                     ),
@@ -91,7 +104,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
                   const SizedBox(height: AppDimensions.paddingL),
                   CustomButton(
                     text: 'Réessayer',
-                    onPressed: () => provider.loadData(),
+                    onPressed: _reloadData, // Use the new reload method
                   ),
                 ],
               ),
@@ -230,7 +243,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
             ),
             const SizedBox(height: AppDimensions.paddingM),
             Text(
-              'Aucune transaction',
+              'Aucune transaction pour cette période.',
               style: AppTextStyles.body1.copyWith(
                 color: AppColors.onSurface.withOpacity(0.7),
               ),
@@ -294,10 +307,11 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     }
   }
 
-  void _showAddTransactionDialog() {
+  void _showAddTransactionDialog(AuthProvider authProvider) { // Accept AuthProvider
     showDialog(
       context: context,
-      builder: (context) => const AddTransactionDialog(),
+      // Pass authProvider to AddTransactionDialog
+      builder: (context) => AddTransactionDialog(authProvider: authProvider),
     );
   }
 
@@ -310,7 +324,10 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
 }
 
 class AddTransactionDialog extends StatefulWidget {
-  const AddTransactionDialog({super.key});
+  final AuthProvider authProvider; // Add AuthProvider field
+
+  // Modify constructor to accept AuthProvider
+  const AddTransactionDialog({super.key, required this.authProvider});
 
   @override
   State<AddTransactionDialog> createState() => _AddTransactionDialogState();
@@ -524,8 +541,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   void _submitTransaction() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final provider = context.read<TransactionProvider>();
-    final success = await provider.addTransaction(
+    // TransactionProvider is read here, but AuthProvider is accessed via widget.authProvider
+    final transactionProvider = context.read<TransactionProvider>();
+    final success = await transactionProvider.addTransaction(
       customerPhone: _customerPhoneController.text,
       type: _selectedType,
       balanceType: _selectedBalanceType,
@@ -536,6 +554,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       reference: _referenceController.text.isNotEmpty
           ? _referenceController.text
           : null,
+      authProvider: widget.authProvider, // Use the passed AuthProvider
     );
 
     if (success && mounted) {
@@ -549,7 +568,8 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur: ${provider.error}'),
+          // Use transactionProvider.error to show the error from the provider
+          content: Text('Erreur: ${transactionProvider.error ?? "Une erreur inconnue est survenue."}'),
           backgroundColor: AppColors.outOfStock,
         ),
       );
@@ -565,7 +585,7 @@ class TransactionDetailsDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Détails de la transaction'),
+      title: const Text('Détails de la transaction'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,

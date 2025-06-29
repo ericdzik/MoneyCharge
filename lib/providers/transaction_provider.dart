@@ -1,10 +1,14 @@
 import 'package:flutter/foundation.dart';
 import '../features/merchant/models/balance_model.dart';
+import '../services/api_service.dart'; // Import ApiService
+import './auth_provider.dart'; // Import AuthProvider
 
 class TransactionProvider with ChangeNotifier {
+  final ApiService _apiService = ApiService(); // Instantiate ApiService
+
   BalanceModel? _balance;
   List<TransactionModel> _transactions = [];
-  bool _isLoading = false;
+  bool _isLoading = false; // Combined loading state for simplicity for now
   String? _error;
 
   // Getters
@@ -13,7 +17,7 @@ class TransactionProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Statistiques
+  // Statistiques (remain unchanged, operate on local _transactions)
   double get totalRevenue => _transactions
       .where((t) => t.isSuccessful && t.balanceType == BalanceType.credit)
       .fold(0.0, (sum, t) => sum + t.netAmount);
@@ -24,11 +28,7 @@ class TransactionProvider with ChangeNotifier {
 
   double get totalProfit => totalRevenue - totalExpenses;
 
-  // Statistiques par période
-  List<TransactionModel> getTransactionsForPeriod(
-    DateTime start,
-    DateTime end,
-  ) {
+  List<TransactionModel> getTransactionsForPeriod(DateTime start, DateTime end) {
     return _transactions
         .where((t) => t.createdAt.isAfter(start) && t.createdAt.isBefore(end))
         .toList();
@@ -50,7 +50,6 @@ class TransactionProvider with ChangeNotifier {
     return getRevenueForPeriod(start, end) - getExpensesForPeriod(start, end);
   }
 
-  // Statistiques du jour
   List<TransactionModel> get todayTransactions {
     final now = DateTime.now();
     final startOfDay = DateTime(now.year, now.month, now.day);
@@ -70,7 +69,6 @@ class TransactionProvider with ChangeNotifier {
 
   double get todayProfit => todayRevenue - todayExpenses;
 
-  // Statistiques de la semaine
   List<TransactionModel> get weekTransactions {
     final now = DateTime.now();
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
@@ -90,7 +88,6 @@ class TransactionProvider with ChangeNotifier {
 
   double get weekProfit => weekRevenue - weekExpenses;
 
-  // Statistiques du mois
   List<TransactionModel> get monthTransactions {
     final now = DateTime.now();
     final startOfMonth = DateTime(now.year, now.month, 1);
@@ -110,21 +107,58 @@ class TransactionProvider with ChangeNotifier {
 
   double get monthProfit => monthRevenue - monthExpenses;
 
-  // Charger les données
-  Future<void> loadData() async {
-    _setLoading(true);
+  Future<void> _fetchBalanceData(String merchantId) async {
     try {
-      await Future.delayed(const Duration(seconds: 1)); // Simulation API
-      _loadDemoData();
-      _error = null;
+      final statsData = await _apiService.getStats(merchantId: merchantId);
+      if (statsData.containsKey('currentBalance')) {
+         _balance = BalanceModel.fromJson(statsData);
+      } else if (statsData.containsKey('balance') && statsData['balance'] is Map) {
+         _balance = BalanceModel.fromJson(statsData['balance'] as Map<String, dynamic>);
+      } else {
+        print("Balance data not found in stats or in expected format.");
+      }
+    } catch (e) {
+      print("Error fetching balance: $e");
+      _balance = null;
+      rethrow;
+    }
+  }
+
+  Future<void> fetchTransactionsAndBalance(AuthProvider authProvider) async {
+    if (authProvider.userType != UserType.merchant || authProvider.merchantProfile == null) {
+      _error = "Utilisateur non marchand ou profil marchand non chargé.";
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+    final String? merchantId = authProvider.merchantProfile!.id;
+    if (merchantId == null || merchantId.isEmpty) {
+      _error = "ID du marchand non disponible.";
+      _isLoading = false;
+      notifyListeners();
+      return;
+    }
+
+    _setLoading(true);
+    _error = null;
+    try {
+      final List<Map<String, dynamic>> transactionData =
+          await _apiService.getTransactions(merchantId: merchantId);
+      _transactions = transactionData
+          .map((data) => TransactionModel.fromJson(data))
+          .toList();
+
+      await _fetchBalanceData(merchantId);
+
     } catch (e) {
       _error = e.toString();
+      _transactions = [];
+      _balance = null;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Ajouter une transaction
   Future<bool> addTransaction({
     required String customerPhone,
     required TransactionType type,
@@ -134,47 +168,78 @@ class TransactionProvider with ChangeNotifier {
     required String description,
     String? operator,
     String? reference,
+    required AuthProvider authProvider,
   }) async {
     _setLoading(true);
+    _error = null; // Clear previous errors
+
+    String? currentMerchantId;
+    if (authProvider.userType == UserType.merchant && authProvider.merchantProfile != null) {
+      currentMerchantId = authProvider.merchantProfile!.id;
+    }
+
+    if (currentMerchantId == null || currentMerchantId.isEmpty) {
+       _error = "Impossible d'ajouter la transaction: ID du marchand non disponible.";
+      _setLoading(false);
+      return false;
+    }
+
+    // Prepare data for API
+    // Assuming netAmount is calculated server-side or needs to be calculated before sending
+    // For now, let's calculate it client-side as before, but API might override or expect specific fields.
+    double netAmountValue = (balanceType == BalanceType.credit)
+        ? amount - commission
+        : amount + commission; // This logic might need adjustment based on API spec
+
+    final Map<String, dynamic> transactionData = {
+      'merchantId': currentMerchantId,
+      'customerPhone': customerPhone,
+      'type': type.toString().split('.').last, // Send enum value as string
+      'balanceType': balanceType.toString().split('.').last, // Send enum value as string
+      'amount': amount,
+      'commission': commission,
+      'netAmount': netAmountValue, // Or let server calculate
+      'description': description,
+      if (operator != null) 'operator': operator,
+      if (reference != null) 'reference': reference,
+      // 'isSuccessful' and 'createdAt' are typically set by the server upon creation
+    };
+
     try {
-      final transaction = TransactionModel(
-        id: 'txn_${DateTime.now().millisecondsSinceEpoch}',
-        merchantId:
-            'merchant_1', // En production, récupérer depuis AuthProvider
-        customerPhone: customerPhone,
-        type: type,
-        balanceType: balanceType,
-        amount: amount,
-        commission: commission,
-        netAmount: balanceType == BalanceType.credit
-            ? amount - commission
-            : amount + commission,
-        description: description,
-        operator: operator,
-        reference: reference,
-        isSuccessful: true, // En production, vérifier avec l'API
-        createdAt: DateTime.now(),
-      );
+      final Map<String, dynamic> createdTransactionData =
+          await _apiService.createTransaction(transactionData);
 
-      _transactions.insert(0, transaction);
-      _updateBalance(transaction);
+      // Assuming the API returns the full created transaction object including its new ID and timestamps
+      final newTransaction = TransactionModel.fromJson(createdTransactionData);
 
-      notifyListeners();
+      _transactions.insert(0, newTransaction);
+      // After successful transaction creation, it's best to re-fetch balance
+      // or update it based on reliable data from API if possible.
+      // For now, we'll call _updateBalanceLocally, then trigger a full refresh.
+      _updateBalanceLocally(newTransaction);
+
+      // Optionally, trigger a full refresh of transactions and balance to ensure consistency
+      // This could be a separate call or a flag to the UI to refresh.
+      // For now, just local update and notify. A full refresh might be better.
+      // Consider calling: await fetchTransactionsAndBalance(authProvider);
+      // For simplicity in this step, we'll rely on local update and subsequent manual refresh by user if needed.
+
+      _setLoading(false);
+      notifyListeners(); // Notify after all local state updates
       return true;
     } catch (e) {
       _error = e.toString();
-      return false;
-    } finally {
       _setLoading(false);
+      return false;
     }
   }
 
-  // Mettre à jour le solde
-  void _updateBalance(TransactionModel transaction) {
+  void _updateBalanceLocally(TransactionModel transaction) {
     if (_balance == null) {
+      print("Warning: Updating balance locally, but initial balance was null. Initializing to zero for merchant ${transaction.merchantId}.");
       _balance = BalanceModel(
-        id: 'balance_1',
-        merchantId: 'merchant_1',
+        id: 'balance_local_${transaction.merchantId}',
+        merchantId: transaction.merchantId,
         currentBalance: 0.0,
         totalCredits: 0.0,
         totalDebits: 0.0,
@@ -182,144 +247,26 @@ class TransactionProvider with ChangeNotifier {
       );
     }
 
-    if (transaction.balanceType == BalanceType.credit) {
-      _balance = _balance!.copyWith(
-        currentBalance: _balance!.currentBalance + transaction.netAmount,
-        totalCredits: _balance!.totalCredits + transaction.netAmount,
-        lastUpdated: DateTime.now(),
-      );
-    } else {
-      _balance = _balance!.copyWith(
-        currentBalance: _balance!.currentBalance - transaction.amount,
-        totalDebits: _balance!.totalDebits + transaction.amount,
-        lastUpdated: DateTime.now(),
-      );
+    double newCurrentBalance = _balance!.currentBalance;
+    double newTotalCredits = _balance!.totalCredits;
+    double newTotalDebits = _balance!.totalDebits;
+
+    if (transaction.isSuccessful) { // Only update balance for successful transactions
+      if (transaction.balanceType == BalanceType.credit) {
+        newCurrentBalance += transaction.netAmount;
+        newTotalCredits += transaction.netAmount;
+      } else {
+        newCurrentBalance -= transaction.amount;
+        newTotalDebits += transaction.amount;
+      }
     }
-  }
 
-  // Charger des données de démonstration
-  void _loadDemoData() {
-    // Solde initial
-    _balance = BalanceModel(
-      id: 'balance_1',
-      merchantId: 'merchant_1',
-      currentBalance: 125000.0,
-      totalCredits: 250000.0,
-      totalDebits: 125000.0,
-      lastUpdated: DateTime.now(),
+    _balance = _balance!.copyWith(
+      currentBalance: newCurrentBalance,
+      totalCredits: newTotalCredits,
+      totalDebits: newTotalDebits,
+      lastUpdated: DateTime.now(), // Should ideally be server timestamp if balance is server-authoritative
     );
-
-    // Transactions de démonstration
-    _transactions = [
-      // Transactions d'aujourd'hui
-      TransactionModel(
-        id: 'txn_1',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456789',
-        type: TransactionType.rechargeCredit,
-        balanceType: BalanceType.credit,
-        amount: 1000.0,
-        commission: 50.0,
-        netAmount: 950.0,
-        description: 'Recharge crédit MTN',
-        operator: 'MTN',
-        reference: 'REF001',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      TransactionModel(
-        id: 'txn_2',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456790',
-        type: TransactionType.dataPackage,
-        balanceType: BalanceType.credit,
-        amount: 2000.0,
-        commission: 100.0,
-        netAmount: 1900.0,
-        description: 'Forfait data Orange 1GB',
-        operator: 'Orange',
-        reference: 'REF002',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-      TransactionModel(
-        id: 'txn_3',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456791',
-        type: TransactionType.moneyTransfer,
-        balanceType: BalanceType.credit,
-        amount: 5000.0,
-        commission: 250.0,
-        netAmount: 4750.0,
-        description: 'Transfert d\'argent',
-        operator: 'Moov Money',
-        reference: 'REF003',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      ),
-      // Transactions de la semaine
-      TransactionModel(
-        id: 'txn_4',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456792',
-        type: TransactionType.simCard,
-        balanceType: BalanceType.credit,
-        amount: 1500.0,
-        commission: 75.0,
-        netAmount: 1425.0,
-        description: 'Vente carte SIM MTN',
-        operator: 'MTN',
-        reference: 'REF004',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      TransactionModel(
-        id: 'txn_5',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456793',
-        type: TransactionType.billPayment,
-        balanceType: BalanceType.credit,
-        amount: 3000.0,
-        commission: 150.0,
-        netAmount: 2850.0,
-        description: 'Paiement facture électricité',
-        operator: 'CIE',
-        reference: 'REF005',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-      // Dépenses
-      TransactionModel(
-        id: 'txn_6',
-        merchantId: 'merchant_1',
-        customerPhone: 'N/A',
-        type: TransactionType.other,
-        balanceType: BalanceType.debit,
-        amount: 50000.0,
-        commission: 0.0,
-        netAmount: 50000.0,
-        description: 'Achat de crédit MTN',
-        operator: 'MTN',
-        reference: 'REF006',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      TransactionModel(
-        id: 'txn_7',
-        merchantId: 'merchant_1',
-        customerPhone: 'N/A',
-        type: TransactionType.other,
-        balanceType: BalanceType.debit,
-        amount: 30000.0,
-        commission: 0.0,
-        netAmount: 30000.0,
-        description: 'Achat de crédit Orange',
-        operator: 'Orange',
-        reference: 'REF007',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
   }
 
   void _setLoading(bool loading) {
