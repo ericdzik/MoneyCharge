@@ -46,14 +46,23 @@ class AdminModel {
   factory AdminModel.fromFirestore(
       DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data()!;
+    // Assuming the specific admin level (superAdmin, admin, moderator) is stored
+    // in a field named 'adminLevel' in Firestore, not in the main 'role' field
+    // which would just be 'admin'.
+    String? adminLevelString = data['adminLevel'] as String?;
+    AdminRole determinedAdminRole = AdminRole.moderator; // Default
+    if (adminLevelString != null) {
+      determinedAdminRole = AdminRole.values.firstWhere(
+        (e) => e.toString().split('.').last.toLowerCase() == adminLevelString.toLowerCase(),
+        orElse: () => AdminRole.moderator, // Default if string doesn't match any enum
+      );
+    }
+
     return AdminModel(
       id: snapshot.id, // Utiliser l'ID du document (qui est l'UID)
       email: data['email'] as String? ?? '',
       name: data['name'] as String? ?? '',
-      role: AdminRole.values.firstWhere(
-        (e) => e.toString().split('.').last.toLowerCase() == (data['role'] as String?)?.toLowerCase(),
-        orElse: () => AdminRole.moderator, // default role if parsing fails or role is null
-      ),
+      role: determinedAdminRole, // Use the determined specific admin role
       isActive: data['isActive'] as bool? ?? true,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),

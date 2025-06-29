@@ -7,6 +7,9 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../providers/auth_provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
 
 class MerchantRegisterScreen extends StatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -31,6 +34,12 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   bool _acceptTerms = false;
   bool _isBusinessOwner = false;
 
+  // Map related state variables
+  GoogleMapController? _mapController;
+  LatLng? _selectedLocation;
+  final Set<Marker> _markers = {};
+  static const LatLng _initialCameraPosition = LatLng(5.359952, -4.008256); // Abidjan, Côte d'Ivoire - Default
+
   @override
   void dispose() {
     _businessNameController.dispose();
@@ -42,6 +51,25 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     _openingHoursController.dispose();
     _servicesController.dispose();
     super.dispose();
+  }
+
+  void _onMapTapped(LatLng location) {
+    setState(() {
+      _selectedLocation = location;
+      _markers.clear();
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('selectedLocation'),
+          position: location,
+          infoWindow: InfoWindow(
+            title: 'Emplacement sélectionné',
+            snippet:
+                'Lat: ${location.latitude.toStringAsFixed(4)}, Lng: ${location.longitude.toStringAsFixed(4)}',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      );
+    });
   }
 
   @override
@@ -163,7 +191,48 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
+
+                // Map Section
+                Text(
+                  'Localisation sur la carte',
+                  style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppDimensions.paddingS),
+                Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    child: GoogleMap(
+                      initialCameraPosition: const CameraPosition(
+                        target: _initialCameraPosition,
+                        zoom: 12,
+                      ),
+                      onMapCreated: (GoogleMapController controller) {
+                        _mapController = controller;
+                      },
+                      onTap: _onMapTapped,
+                      markers: _markers,
+                      myLocationButtonEnabled: true,
+                      myLocationEnabled: false, // We'll handle permission separately if needed
+                      zoomControlsEnabled: true,
+                    ),
+                  ),
+                ),
+                if (_selectedLocation != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.paddingS),
+                    child: Text(
+                      'Lieu sélectionné: Lat: ${_selectedLocation!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLocation!.longitude.toStringAsFixed(4)}',
+                      style: AppTextStyles.caption.copyWith(color: AppColors.success),
+                    ),
+                  ),
+                const SizedBox(height: AppDimensions.paddingL),
+                // End of Map Section
 
                 CustomTextField(
                   controller: _openingHoursController,
@@ -490,6 +559,16 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
+    if (_selectedLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez sélectionner un emplacement sur la carte.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     try {
       await authProvider.registerMerchant(
         businessName: _businessNameController.text,
@@ -499,6 +578,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         openingHours: _openingHoursController.text,
         services: _servicesController.text,
         password: _passwordController.text,
+        latitude: _selectedLocation!.latitude,
+        longitude: _selectedLocation!.longitude,
       );
 
       if (!mounted) return;

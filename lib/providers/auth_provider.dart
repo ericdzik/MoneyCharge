@@ -267,6 +267,9 @@ class AuthProvider with ChangeNotifier {
     required String openingHours,
     required String services,
     required String password,
+    // Add new parameters for location
+    required double? latitude,
+    required double? longitude,
   }) async {
     _setLoading(true);
     _error = null;
@@ -291,6 +294,8 @@ class AuthProvider with ChangeNotifier {
           'isVerified': false, // Les marchands commencent comme non vérifiés
           'isActive': true,
           'lastLoginAt': FieldValue.serverTimestamp(),
+          'latitude': latitude, // Add latitude to Firestore data
+          'longitude': longitude, // Add longitude to Firestore data
           // Ajouter ici d'autres champs spécifiques aux marchands si nécessaire
         }, SetOptions(merge: true)); // merge: true pour ne pas écraser d'autres champs si le doc existe déjà (peu probable ici)
 
