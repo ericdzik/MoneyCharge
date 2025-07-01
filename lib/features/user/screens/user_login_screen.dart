@@ -34,13 +34,14 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL), // Horizontal padding
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            // Replace SingleChildScrollView -> Column with ListView
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL), // Vertical padding for ListView
               children: [
-                const Spacer(),
+                // const SizedBox(height: AppDimensions.paddingXL), // Top padding, can be adjusted
                 // Logo et titre
                 Column(
                   children: [
@@ -215,6 +216,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: AppDimensions.paddingM),
 
                 // Lien d'inscription
                 Row(
@@ -271,6 +273,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     ),
                   ],
                 ),
+                const SizedBox(height: AppDimensions.paddingL),
 
                 // Informations sur les rôles
                 Container(
@@ -312,7 +315,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: AppDimensions.paddingL),
 
                 // Boutons de connexion alternative
                 Row(
@@ -320,7 +323,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          // Connexion avec Google
+                          // TODO: Connexion avec Google
                         },
                         icon: const Icon(Icons.g_mobiledata, size: 24),
                         label: const Text('Google'),
@@ -333,7 +336,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {
-                          // Connexion avec Facebook
+                          // TODO: Connexion avec Facebook
                         },
                         icon: const Icon(Icons.facebook, size: 24),
                         label: const Text('Facebook'),
@@ -344,7 +347,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     ),
                   ],
                 ),
-                const Spacer(),
+                const SizedBox(height: AppDimensions.paddingXL),
 
                 // Footer
                 Text(
@@ -354,6 +357,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                const SizedBox(height: AppDimensions.paddingM), // Ensure some bottom padding
               ],
             ),
           ),
@@ -421,8 +425,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         _passwordController.text,
       );
 
-      // Après l'appel, vérifier l'état d'authentification et l'erreur potentielle
-      // gérés par le AuthProvider suite à la notification de authStateChanges
       if (!mounted) return;
 
       if (authProvider.isAuthenticated) {
@@ -440,7 +442,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
           ),
         );
       } else {
-        // Si non authentifié, afficher l'erreur du provider ou un message par défaut
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(authProvider.error ?? 'Email ou mot de passe incorrect.'),
@@ -449,8 +450,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         );
       }
     } catch (e) {
-      // Au cas où loginUnified lui-même lèverait une exception non capturée par le provider
-      // (bien que le provider devrait gérer ses propres erreurs et les stocker dans authProvider.error)
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

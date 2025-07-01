@@ -61,25 +61,26 @@ class BalanceModel {
 
   factory BalanceModel.fromJson(Map<String, dynamic> json) {
     return BalanceModel(
-      id: json['id'] ?? '',
-      merchantId: json['merchantId'] ?? '',
-      currentBalance: (json['currentBalance'] ?? 0.0).toDouble(),
-      totalCredits: (json['totalCredits'] ?? 0.0).toDouble(),
-      totalDebits: (json['totalDebits'] ?? 0.0).toDouble(),
-      lastUpdated: DateTime.parse(
-        json['lastUpdated'] ?? DateTime.now().toIso8601String(),
-      ),
+      id: json['id'] ?? json['uid'] ?? '', // Allow 'uid' as potential id from user doc
+      merchantId: json['merchantId'] ?? json['uid'] ?? '', // Allow 'uid' if balance is part of user doc
+      currentBalance: (json['currentBalance'] as num?)?.toDouble() ?? 0.0,
+      totalCredits: (json['totalCredits'] as num?)?.toDouble() ?? 0.0,
+      totalDebits: (json['totalDebits'] as num?)?.toDouble() ?? 0.0,
+      lastUpdated: (json['lastUpdated'] as Timestamp?)?.toDate() ??
+                   (json['lastUpdated'] is String
+                       ? DateTime.tryParse(json['lastUpdated']) ?? DateTime.now()
+                       : DateTime.now()),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson() { // Renaming to toFirestoreMap for clarity
     return {
-      'id': id,
+      // 'id' is usually the document ID, not stored in fields for Firestore typically
       'merchantId': merchantId,
       'currentBalance': currentBalance,
       'totalCredits': totalCredits,
       'totalDebits': totalDebits,
-      'lastUpdated': lastUpdated.toIso8601String(),
+      'lastUpdated': Timestamp.fromDate(lastUpdated), // Store as Firestore Timestamp
     };
   }
 
@@ -153,15 +154,16 @@ class TransactionModel {
       operator: json['operator'],
       reference: json['reference'],
       isSuccessful: json['isSuccessful'] ?? false,
-      createdAt: DateTime.parse(
-        json['createdAt'] ?? DateTime.now().toIso8601String(),
-      ),
+      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
+                   (json['createdAt'] is String
+                       ? DateTime.tryParse(json['createdAt']) ?? DateTime.now()
+                       : DateTime.now()),
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toFirestoreMap() { // Renamed for clarity
     return {
-      'id': id,
+      // 'id' is usually the document ID, not stored in fields for Firestore
       'merchantId': merchantId,
       'customerPhone': customerPhone,
       'type': type.toString().split('.').last,

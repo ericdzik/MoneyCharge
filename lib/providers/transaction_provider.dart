@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
 import '../features/merchant/models/balance_model.dart';
-import '../services/api_service.dart'; // Import ApiService
+// import '../services/api_service.dart'; // No longer using ApiService here
 import './auth_provider.dart'; // Import AuthProvider
 
 class TransactionProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService(); // Instantiate ApiService
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Add Firestore instance
+  // final ApiService _apiService = ApiService(); // Remove ApiService instance
 
   BalanceModel? _balance;
   List<TransactionModel> _transactions = [];
@@ -107,23 +109,6 @@ class TransactionProvider with ChangeNotifier {
 
   double get monthProfit => monthRevenue - monthExpenses;
 
-  Future<void> _fetchBalanceData(String merchantId) async {
-    try {
-      final statsData = await _apiService.getStats(merchantId: merchantId);
-      if (statsData.containsKey('currentBalance')) {
-         _balance = BalanceModel.fromJson(statsData);
-      } else if (statsData.containsKey('balance') && statsData['balance'] is Map) {
-         _balance = BalanceModel.fromJson(statsData['balance'] as Map<String, dynamic>);
-      } else {
-        print("Balance data not found in stats or in expected format.");
-      }
-    } catch (e) {
-      print("Error fetching balance: $e");
-      _balance = null;
-      rethrow;
-    }
-  }
-
   Future<void> fetchTransactionsAndBalance(AuthProvider authProvider) async {
     if (authProvider.userType != UserType.merchant || authProvider.merchantProfile == null) {
       _error = "Utilisateur non marchand ou profil marchand non chargé.";
@@ -142,22 +127,44 @@ class TransactionProvider with ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      final List<Map<String, dynamic>> transactionData =
-          await _apiService.getTransactions(merchantId: merchantId);
-      _transactions = transactionData
-          .map((data) => TransactionModel.fromJson(data))
+      // Fetch Transactions from Firestore
+      final transactionsSnapshot = await _firestore
+          .collection('transactions')
+          .where('merchantId', isEqualTo: merchantId)
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      _transactions = transactionsSnapshot.docs
+          .map((doc) => TransactionModel.fromJson(doc.data() as Map<String, dynamic>..['id'] = doc.id))
           .toList();
 
-      await _fetchBalanceData(merchantId);
+      // Fetch Balance from Merchant's profile in 'users' collection
+      final merchantDocSnapshot = await _firestore.collection('users').doc(merchantId).get();
+      if (merchantDocSnapshot.exists) {
+        final merchantData = merchantDocSnapshot.data() as Map<String, dynamic>;
+        // Assuming balance fields are directly on the merchant document
+        // and BalanceModel.fromJson can handle this structure (e.g. using merchantId as 'id' for BalanceModel)
+         _balance = BalanceModel.fromJson(merchantData..['id'] = merchantDocSnapshot.id);
+      } else {
+        // If merchant profile doesn't exist, or balance info isn't there
+        _balance = null;
+        print("Profil marchand non trouvé pour récupérer le solde, ou solde non inclus.");
+        // Optionally set an error or use a default balance
+      }
 
     } catch (e) {
-      _error = e.toString();
+      print("Error in fetchTransactionsAndBalance: $e");
+      _error = "Erreur lors de la récupération des données: ${e.toString()}";
       _transactions = [];
       _balance = null;
     } finally {
       _setLoading(false);
     }
   }
+
+  // _fetchBalanceData method is now integrated into fetchTransactionsAndBalance
+  // Future<void> _fetchBalanceData(String merchantId) async { ... }
+
 
   Future<bool> addTransaction({
     required String customerPhone,
@@ -202,33 +209,100 @@ class TransactionProvider with ChangeNotifier {
       'description': description,
       if (operator != null) 'operator': operator,
       if (reference != null) 'reference': reference,
-      // 'isSuccessful' and 'createdAt' are typically set by the server upon creation
+      // 'isSuccessful' will be set to true upon successful write to Firestore for now.
+      // 'createdAt' will be set using FieldValue.serverTimestamp().
     };
 
     try {
-      final Map<String, dynamic> createdTransactionData =
-          await _apiService.createTransaction(transactionData);
+      // Add transaction to Firestore
+      // We use toFirestoreMap() from TransactionModel which should prepare data correctly
+      final newTransactionRef = await _firestore.collection('transactions').add(
+        TransactionModel( // Create a temporary model to get the map, then add server timestamp
+          id: '', // Firestore will generate ID
+          merchantId: currentMerchantId,
+          customerPhone: customerPhone,
+          type: type,
+          balanceType: balanceType,
+          amount: amount,
+          commission: commission,
+          netAmount: netAmountValue,
+          description: description,
+          operator: operator,
+          reference: reference,
+          isSuccessful: true, // Assume success for now, can be updated by backend if needed
+          createdAt: DateTime.now(), // Placeholder, will be replaced by server timestamp
+        ).toFirestoreMap()
+          ..['createdAt'] = FieldValue.serverTimestamp(), // Add server timestamp
+      );
 
-      // Assuming the API returns the full created transaction object including its new ID and timestamps
-      final newTransaction = TransactionModel.fromJson(createdTransactionData);
+      // Create a TransactionModel instance from the data we have + new ID and fetched timestamp (or estimate)
+      // For immediate UI update, we can construct it. A more robust way is to re-fetch or get from server.
+      final newTransactionForUI = TransactionModel(
+        id: newTransactionRef.id, // Use the ID from Firestore
+        merchantId: currentMerchantId,
+        customerPhone: customerPhone,
+        type: type,
+        balanceType: balanceType,
+        amount: amount,
+        commission: commission,
+        netAmount: netAmountValue,
+        description: description,
+        operator: operator,
+        reference: reference,
+        isSuccessful: true, // Assuming direct write success
+        createdAt: DateTime.now(), // Approximate with current time for UI, actual is server time
+      );
 
-      _transactions.insert(0, newTransaction);
-      // After successful transaction creation, it's best to re-fetch balance
-      // or update it based on reliable data from API if possible.
-      // For now, we'll call _updateBalanceLocally, then trigger a full refresh.
-      _updateBalanceLocally(newTransaction);
+      _transactions.insert(0, newTransactionForUI);
 
-      // Optionally, trigger a full refresh of transactions and balance to ensure consistency
-      // This could be a separate call or a flag to the UI to refresh.
-      // For now, just local update and notify. A full refresh might be better.
-      // Consider calling: await fetchTransactionsAndBalance(authProvider);
-      // For simplicity in this step, we'll rely on local update and subsequent manual refresh by user if needed.
+      // --- Balance Update Logic (Client-Side with Firestore write) ---
+      // This is where a Cloud Function is highly recommended for atomicity and reliability.
+      // For now, performing a client-side read-modify-write on the merchant's balance.
+      final merchantDocRef = _firestore.collection('users').doc(currentMerchantId);
+      await _firestore.runTransaction((firestoreTransaction) async {
+        final merchantSnapshot = await firestoreTransaction.get(merchantDocRef);
+        if (!merchantSnapshot.exists) {
+          throw Exception("Document marchand non trouvé pour la mise à jour du solde!");
+        }
+
+        double currentBalance = (merchantSnapshot.data()?['currentBalance'] as num?)?.toDouble() ?? 0.0;
+        double currentTotalCredits = (merchantSnapshot.data()?['totalCredits'] as num?)?.toDouble() ?? 0.0;
+        double currentTotalDebits = (merchantSnapshot.data()?['totalDebits'] as num?)?.toDouble() ?? 0.0;
+
+        if (newTransactionForUI.balanceType == BalanceType.credit) {
+          currentBalance += newTransactionForUI.netAmount;
+          currentTotalCredits += newTransactionForUI.netAmount;
+        } else { // Debit
+          currentBalance -= newTransactionForUI.amount; // Assuming amount is positive for debit
+          currentTotalDebits += newTransactionForUI.amount;
+        }
+
+        firestoreTransaction.update(merchantDocRef, {
+          'currentBalance': currentBalance,
+          'totalCredits': currentTotalCredits,
+          'totalDebits': currentTotalDebits,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        });
+
+        // Update local balance model for immediate UI reflection
+        _balance = BalanceModel(
+          id: currentMerchantId, // or merchantSnapshot.id
+          merchantId: currentMerchantId,
+          currentBalance: currentBalance,
+          totalCredits: currentTotalCredits,
+          totalDebits: currentTotalDebits,
+          lastUpdated: DateTime.now(), // Approximate for UI
+        );
+      });
+      // --- End of Balance Update Logic ---
 
       _setLoading(false);
-      notifyListeners(); // Notify after all local state updates
+      notifyListeners();
       return true;
+
     } catch (e) {
-      _error = e.toString();
+      print("Error in addTransaction: $e");
+      _error = "Erreur lors de l'ajout de la transaction: ${e.toString()}";
       _setLoading(false);
       return false;
     }
@@ -268,6 +342,9 @@ class TransactionProvider with ChangeNotifier {
       lastUpdated: DateTime.now(), // Should ideally be server timestamp if balance is server-authoritative
     );
   }
+
+  // _updateBalanceLocally is no longer needed as its logic is integrated into addTransaction
+  // void _updateBalanceLocally(TransactionModel transaction) { ... }
 
   void _setLoading(bool loading) {
     _isLoading = loading;

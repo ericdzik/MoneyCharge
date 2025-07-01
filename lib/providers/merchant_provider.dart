@@ -35,9 +35,29 @@ class MerchantProvider with ChangeNotifier {
           // Pourrait aussi ajouter .where('isActive', isEqualTo: true) si ce champ est pertinent
           .get();
 
-      _merchants = querySnapshot.docs
-          .map((doc) => Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>))
-          .toList();
+      final rawDocs = querySnapshot.docs;
+      print('[MerchantProvider] Fetched ${rawDocs.length} raw merchant documents.');
+
+      _merchants = rawDocs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        // print('[MerchantProvider] Parsing merchant: ${doc.id}, data: $data');
+        try {
+          Merchant merchant = Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>);
+          // print('[MerchantProvider] Parsed ${merchant.name} at ${merchant.latitude}, ${merchant.longitude}');
+          return merchant;
+        } catch (e) {
+          print('[MerchantProvider] Error parsing merchant ${doc.id}: $e');
+          return null; // Return null for merchants that fail to parse
+        }
+      }).whereType<Merchant>().toList(); // Filter out any nulls from parsing errors
+
+      print('[MerchantProvider] Successfully parsed ${_merchants.length} merchants.');
+      if (_merchants.isNotEmpty) {
+        print('[MerchantProvider] First merchant: ${_merchants.first.name} at Lat: ${_merchants.first.latitude}, Lng: ${_merchants.first.longitude}');
+        if (_merchants.length > 1 && _merchants.length >=2) {
+           print('[MerchantProvider] Second merchant: ${_merchants[1].name} at Lat: ${_merchants[1].latitude}, Lng: ${_merchants[1].longitude}');
+        }
+      }
 
     } catch (e) {
       _error = "Erreur lors du chargement des marchands: ${e.toString()}";
