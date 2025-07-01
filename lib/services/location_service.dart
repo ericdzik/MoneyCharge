@@ -133,31 +133,50 @@ class LocationService {
     }
   }
 
+import 'dart:io' show Platform; // Add this import
+
+// ... (keep other imports and class beginning) ...
+
   // Ouvrir la navigation vers un point
   Future<bool> openNavigation(
     double latitude,
     double longitude,
     String destinationName,
   ) async {
+    Uri uri;
+
+    if (Platform.isIOS) {
+      // For iOS, prioritize Apple Maps.
+      uri = Uri.parse('https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=d');
+      // Optionally, could try Google Maps URL as a fallback if Apple Maps fails and Google Maps is installed.
+      // For simplicity, we'll just try Apple Maps first on iOS.
+      // If it fails, the generic catch will handle it, or we could add Google Maps here too.
+    } else { // Android and other platforms
+      // Use Google Maps URL for Android and others.
+      uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving');
+    }
+
     try {
-      // Essayer d'abord Google Maps
-      final googleMapsUrl =
-          'https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving';
-
-      if (await canLaunchUrl(Uri.parse(googleMapsUrl))) {
-        return await launchUrl(
-          Uri.parse(googleMapsUrl),
-          mode: LaunchMode.externalApplication,
-        );
+      if (await canLaunchUrl(uri)) {
+        return await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // If the primary URL fails, try a more generic approach or a web fallback.
+        // For Android, if the specific Google Maps app URL fails, try a generic geo intent.
+        if (Platform.isAndroid) {
+          String query = Uri.encodeComponent(destinationName.isNotEmpty ? destinationName : '$latitude,$longitude');
+          final geoUri = Uri.parse('geo:$latitude,$longitude?q=$query');
+          if (await canLaunchUrl(geoUri)) {
+            return await launchUrl(geoUri, mode: LaunchMode.externalApplication);
+          }
+        }
+        // As a final fallback, try opening Google Maps in a browser (less ideal but better than nothing)
+        Uri webUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
+         if (await canLaunchUrl(webUri)) {
+            return await launchUrl(webUri, mode: LaunchMode.platformDefault); // Let platform decide
+        }
+        print('Could not launch any map application for navigation.');
+        return false;
       }
-
-      // Fallback vers Apple Maps (iOS) ou autres applications
-      final fallbackUrl =
-          'https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=d';
-      return await launchUrl(
-        Uri.parse(fallbackUrl),
-        mode: LaunchMode.externalApplication,
-      );
     } catch (e) {
       print('Erreur lors de l\'ouverture de la navigation: $e');
       return false;
