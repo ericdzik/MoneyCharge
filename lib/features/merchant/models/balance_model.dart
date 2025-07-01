@@ -1,15 +1,16 @@
+import 'package:cloud_firestore/cloud_firestore.dart'; // Ensure this is the first or among the top imports
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 
 enum BalanceType { credit, debit }
 
 enum TransactionType {
-  rechargeCredit, // Recharge de crédit téléphonique
-  dataPackage, // Forfait data
-  simCard, // Vente de carte SIM
-  moneyTransfer, // Transfert d'argent
-  billPayment, // Paiement de factures
-  other, // Autres services
+  rechargeCredit,
+  dataPackage,
+  simCard,
+  moneyTransfer,
+  billPayment,
+  other,
 }
 
 extension BalanceTypeExtension on BalanceType {
@@ -60,27 +61,33 @@ class BalanceModel {
   });
 
   factory BalanceModel.fromJson(Map<String, dynamic> json) {
+    dynamic lastUpdatedData = json['lastUpdated'];
+    DateTime parsedLastUpdated;
+    if (lastUpdatedData is Timestamp) {
+      parsedLastUpdated = lastUpdatedData.toDate();
+    } else if (lastUpdatedData is String) {
+      parsedLastUpdated = DateTime.tryParse(lastUpdatedData) ?? DateTime.now();
+    } else {
+      parsedLastUpdated = DateTime.now();
+    }
+
     return BalanceModel(
-      id: json['id'] ?? json['uid'] ?? '', // Allow 'uid' as potential id from user doc
-      merchantId: json['merchantId'] ?? json['uid'] ?? '', // Allow 'uid' if balance is part of user doc
+      id: json['id'] ?? json['uid'] ?? '',
+      merchantId: json['merchantId'] ?? json['uid'] ?? '',
       currentBalance: (json['currentBalance'] as num?)?.toDouble() ?? 0.0,
       totalCredits: (json['totalCredits'] as num?)?.toDouble() ?? 0.0,
       totalDebits: (json['totalDebits'] as num?)?.toDouble() ?? 0.0,
-      lastUpdated: (json['lastUpdated'] as Timestamp?)?.toDate() ??
-                   (json['lastUpdated'] is String
-                       ? DateTime.tryParse(json['lastUpdated']) ?? DateTime.now()
-                       : DateTime.now()),
+      lastUpdated: parsedLastUpdated,
     );
   }
 
-  Map<String, dynamic> toJson() { // Renaming to toFirestoreMap for clarity
+  Map<String, dynamic> toFirestoreMap() {
     return {
-      // 'id' is usually the document ID, not stored in fields for Firestore typically
       'merchantId': merchantId,
       'currentBalance': currentBalance,
       'totalCredits': totalCredits,
       'totalDebits': totalDebits,
-      'lastUpdated': Timestamp.fromDate(lastUpdated), // Store as Firestore Timestamp
+      'lastUpdated': Timestamp.fromDate(lastUpdated),
     };
   }
 
@@ -113,7 +120,7 @@ class TransactionModel {
   final double commission;
   final double netAmount;
   final String description;
-  final String? operator; // MTN, Orange, Moov, etc.
+  final String? operator;
   final String? reference;
   final bool isSuccessful;
   final DateTime createdAt;
@@ -135,35 +142,41 @@ class TransactionModel {
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    dynamic createdAtData = json['createdAt'];
+    DateTime parsedCreatedAt;
+    if (createdAtData is Timestamp) {
+      parsedCreatedAt = createdAtData.toDate();
+    } else if (createdAtData is String) {
+      parsedCreatedAt = DateTime.tryParse(createdAtData) ?? DateTime.now();
+    } else {
+      parsedCreatedAt = DateTime.now();
+    }
+
     return TransactionModel(
       id: json['id'] ?? '',
       merchantId: json['merchantId'] ?? '',
       customerPhone: json['customerPhone'] ?? '',
       type: TransactionType.values.firstWhere(
-        (e) => e.toString() == 'TransactionType.${json['type']}',
+        (e) => e.toString().split('.').last.toLowerCase() == (json['type'] as String?)?.toLowerCase(),
         orElse: () => TransactionType.other,
       ),
       balanceType: BalanceType.values.firstWhere(
-        (e) => e.toString() == 'BalanceType.${json['balanceType']}',
+        (e) => e.toString().split('.').last.toLowerCase() == (json['balanceType'] as String?)?.toLowerCase(),
         orElse: () => BalanceType.debit,
       ),
-      amount: (json['amount'] ?? 0.0).toDouble(),
-      commission: (json['commission'] ?? 0.0).toDouble(),
-      netAmount: (json['netAmount'] ?? 0.0).toDouble(),
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      commission: (json['commission'] as num?)?.toDouble() ?? 0.0,
+      netAmount: (json['netAmount'] as num?)?.toDouble() ?? 0.0,
       description: json['description'] ?? '',
-      operator: json['operator'],
-      reference: json['reference'],
-      isSuccessful: json['isSuccessful'] ?? false,
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ??
-                   (json['createdAt'] is String
-                       ? DateTime.tryParse(json['createdAt']) ?? DateTime.now()
-                       : DateTime.now()),
+      operator: json['operator'] as String?,
+      reference: json['reference'] as String?,
+      isSuccessful: json['isSuccessful'] as bool? ?? false,
+      createdAt: parsedCreatedAt,
     );
   }
 
-  Map<String, dynamic> toFirestoreMap() { // Renamed for clarity
+  Map<String, dynamic> toFirestoreMap() {
     return {
-      // 'id' is usually the document ID, not stored in fields for Firestore
       'merchantId': merchantId,
       'customerPhone': customerPhone,
       'type': type.toString().split('.').last,
@@ -175,7 +188,7 @@ class TransactionModel {
       'operator': operator,
       'reference': reference,
       'isSuccessful': isSuccessful,
-      'createdAt': createdAt.toIso8601String(),
+      'createdAt': Timestamp.fromDate(createdAt), // Store as Firestore Timestamp
     };
   }
 

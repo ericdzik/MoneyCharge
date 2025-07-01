@@ -286,8 +286,8 @@ class TransactionProvider with ChangeNotifier {
 
         // Update local balance model for immediate UI reflection
         _balance = BalanceModel(
-          id: currentMerchantId, // or merchantSnapshot.id
-          merchantId: currentMerchantId,
+          id: currentMerchantId!, // Use null assertion operator
+          merchantId: currentMerchantId!, // Use null assertion operator
           currentBalance: currentBalance,
           totalCredits: currentTotalCredits,
           totalDebits: currentTotalDebits,
