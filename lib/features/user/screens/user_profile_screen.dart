@@ -19,6 +19,26 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
+    // Debug prints to check AuthProvider state when UserProfileScreen builds
+    final authProviderForDebug = Provider.of<AuthProvider>(context, listen: false);
+    print('-----------------------------------------------------');
+    print('[UserProfileScreen] Building UserProfileScreen...');
+    print('[UserProfileScreen]   isAuthenticated: ${authProviderForDebug.isAuthenticated}');
+    print('[UserProfileScreen]   userType: ${authProviderForDebug.userType}');
+    print('[UserProfileScreen]   userId: ${authProviderForDebug.userId}');
+    print('[UserProfileScreen]   appUserProfile is null: ${authProviderForDebug.appUserProfile == null}');
+    if (authProviderForDebug.appUserProfile != null) {
+      print('[UserProfileScreen]   appUserProfile Name: ${authProviderForDebug.appUserProfile!.name}');
+      print('[UserProfileScreen]   appUserProfile Email: ${authProviderForDebug.appUserProfile!.email}');
+    } else {
+      print('[UserProfileScreen]   appUserProfile is indeed NULL.');
+    }
+    print('[UserProfileScreen]   merchantProfile is null: ${authProviderForDebug.merchantProfile == null}');
+    print('[UserProfileScreen]   adminProfile is null: ${authProviderForDebug.adminProfile == null}');
+    print('[UserProfileScreen]   isLoading: ${authProviderForDebug.isLoading}');
+    print('[UserProfileScreen]   error: ${authProviderForDebug.error}');
+    print('-----------------------------------------------------');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mon Profil'),
