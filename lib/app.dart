@@ -158,24 +158,73 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+import 'dart:async'; // Ajout pour StreamSubscription (bien que non utilisé directement avec addListener)
+
+// ... autres imports ...
+
+// Écran de démarrage
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
 class _SplashScreenState extends State<SplashScreen> {
+  VoidCallback? _authListener;
+
   @override
   void initState() {
     super.initState();
-    _navigateToNextScreen();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      _authListener = () {
+        if (!authProvider.isLoading) {
+          if (mounted) {
+            _navigateToNextScreen(authProvider);
+          }
+          // Le listener est retiré dans dispose ou après la première exécution réussie
+        }
+      };
+
+      if (!authProvider.isLoading) {
+        _navigateToNextScreen(authProvider);
+      } else {
+        authProvider.addListener(_authListener!);
+      }
+    });
   }
 
-  Future<void> _navigateToNextScreen() async {
-    // Simule un délai de chargement pour le splash screen
-    await Future.delayed(const Duration(seconds: 2));
+  @override
+  void dispose() {
+    if (_authListener != null) {
+      // Tentative de retrait du listener s'il a été ajouté.
+      // Cela nécessite que authProvider soit accessible ou que le listener soit stocké
+      // d'une manière qui permette son retrait sans référence directe à l'instance de AuthProvider
+      // si elle n'est plus accessible de manière fiable ici (bien que Provider.of devrait fonctionner).
+      try {
+        final authProvider = Provider.of<AuthProvider>(context, listen: false);
+        authProvider.removeListener(_authListener!);
+      } catch (e) {
+        // Ignorer les erreurs si le provider n'est plus accessible (par exemple, widget déjà démonté)
+        print("[SplashScreen dispose] Error removing listener: $e");
+      }
+    }
+    super.dispose();
+  }
+
+  void _navigateToNextScreen(AuthProvider authProvider) {
+    // Retirer le listener ici pour s'assurer qu'il ne s'exécute qu'une fois pour la navigation
+    if (_authListener != null) {
+        authProvider.removeListener(_authListener!);
+        _authListener = null; // Éviter les retraits multiples dans dispose
+    }
 
     if (!mounted) return;
 
-    // Utiliser addPostFrameCallback pour s'assurer que le widget est monté
-    // et que le contexte est valide pour Provider.of
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       print('-----------------------------------------------------');
       print('[SplashScreen._navigateToNextScreen] Checking auth state...');
       print('[SplashScreen] isAuthenticated: ${authProvider.isAuthenticated}');
@@ -191,7 +240,6 @@ class _SplashScreenState extends State<SplashScreen> {
         Navigator.pushReplacementNamed(context, defaultRoute);
       } else {
         print('[SplashScreen] User NOT authenticated or userType is unknown (or error). Navigating to login.');
-        print('[SplashScreen] Reason for else: isAuthenticated=${authProvider.isAuthenticated}');
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
       print('-----------------------------------------------------');

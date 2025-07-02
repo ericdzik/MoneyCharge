@@ -171,8 +171,8 @@ class AuthProvider with ChangeNotifier {
     print('[AuthProvider.loginUnified] Attempting login for: $email');
     _setLoading(true);
     _error = null;
-    // _userType = UserType.unknown; // Reset userType before login attempt? Consider implications.
-    // _clearProfiles(); // Clear profiles before login attempt?
+    // _userType = UserType.unknown; // Réinitialiser avant la tentative pourrait être envisagé
+    // _clearProfiles(); // Effacer les profils avant la tentative
 
     try {
       print('[AuthProvider.loginUnified] Calling _authService.loginUnified...');
@@ -180,14 +180,39 @@ class AuthProvider with ChangeNotifier {
       print('[AuthProvider.loginUnified] _authService.loginUnified returned UID: $uid');
 
       if (uid != null) {
-        // At this point, Firebase Auth was successful.
-        // _listenToAuthChanges stream will handle fetching profile and setting userType.
-        // We don't need to explicitly set _userType or _error here if auth was successful.
-        // The crucial part is that _listenToAuthChanges should run and populate the profile.
-        print('[AuthProvider.loginUnified] Firebase Auth successful via service. UID: $uid. Waiting for _listenToAuthChanges to update profile.');
+        // Authentification Firebase réussie. Maintenant, récupérer explicitement le profil.
+        // Il est possible que _listenToAuthChanges soit également déclenché.
+        // Pour s'assurer que loginUnified attend la récupération du profil :
+
+        // Mettre à jour _firebaseUser ici pour refléter l'utilisateur connecté
+        // Cela suppose que _authService.loginUnified a mis à jour currentUser de FirebaseAuth.
+        // Si _authService.authStateChanges est rapide, _firebaseUser pourrait déjà être mis à jour.
+        // Pour être sûr, on peut re-vérifier :
+        if (_firebaseAuth.currentUser != null && _firebaseAuth.currentUser!.uid == uid) {
+          _firebaseUser = _firebaseAuth.currentUser;
+          print('[AuthProvider.loginUnified] Firebase user confirmed: $uid. Fetching profile...');
+          await _fetchUserProfile(uid); // Attendre la récupération du profil
+          if (_userType != UserType.unknown) { // Si le profil a été trouvé et le rôle défini
+            await _updateLastLogin(uid); // Mettre à jour la date de dernière connexion
+          }
+          print('[AuthProvider.loginUnified] Profile fetched. UserType: $_userType');
+        } else {
+          // Cas improbable où currentUser n'est pas (encore) à jour ou ne correspond pas.
+          // Cela pourrait indiquer un problème de timing avec le stream authStateChanges.
+          // On pourrait forcer une nouvelle récupération de l'utilisateur Firebase si nécessaire,
+          // mais _fetchUserProfile(uid) devrait suffire si l'UID est correct.
+          print('[AuthProvider.loginUnified] Firebase currentUser not immediately reflecting the new user or UID mismatch. Relying on uid: $uid for profile fetch.');
+          await _fetchUserProfile(uid); // Essayer quand même avec l'UID obtenu
+           if (_userType != UserType.unknown) {
+            await _updateLastLogin(uid);
+          }
+          print('[AuthProvider.loginUnified] Profile fetched (after UID mismatch check). UserType: $_userType');
+           // Si _firebaseUser n'est toujours pas défini, cela pourrait être un souci, mais _fetchUserProfile
+           // ne dépend que de l'UID pour récupérer les données Firestore.
+           // L'état _firebaseUser sera de toute façon mis à jour par _listenToAuthChanges.
+        }
       } else {
-        // This case (uid is null but no exception from _authService.loginUnified) should ideally not happen.
-        // _authService.loginUnified should throw if Firebase Auth fails.
+        // Ce cas (uid est null mais pas d'exception) ne devrait pas se produire.
         _error = "Erreur de connexion: UID non retourné par AuthService.";
         _userType = UserType.unknown;
         _clearProfiles();
@@ -195,13 +220,13 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       print('[AuthProvider.loginUnified] Caught exception: ${e.toString()}');
-      _error = e.toString(); // This will capture "Erreur de connexion: Firebase: Error (auth/invalid-credential)..."
+      _error = e.toString();
       _userType = UserType.unknown;
       _clearProfiles();
       print('[AuthProvider.loginUnified] Exception caught. _error set to: $_error, _userType set to: $_userType');
     } finally {
-      print('[AuthProvider.loginUnified] Finally block. Current _error: $_error, _userType: $_userType, _firebaseUser: ${_firebaseUser?.uid}');
-      _setLoading(false); // This will call notifyListeners()
+      print('[AuthProvider.loginUnified] Finally block. Current _error: $_error, _userType: $_userType, isAuthenticated: $isAuthenticated, firebaseUser UID: ${_firebaseUser?.uid}');
+      _setLoading(false); // Cela appellera notifyListeners()
       print('[AuthProvider.loginUnified] Login attempt finished. isLoading is now false.');
     }
   }
