@@ -53,36 +53,59 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   }
 
   Future<void> _requestLocationPermissionAndFetch() async {
+    print("[MerchantRegisterScreen] Attempting to fetch initial location...");
     setState(() {
       _isFetchingInitialLocation = true;
     });
 
-    PermissionStatus status = await Permission.locationWhenInUse.request();
+    try {
+      print("[MerchantRegisterScreen] Requesting location permission...");
+      PermissionStatus status = await Permission.locationWhenInUse.request();
+      print("[MerchantRegisterScreen] Permission status: $status");
 
-    if (status.isGranted) {
-      _isLocationPermissionGranted = true;
-      try {
-        Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
-        setState(() {
-          _cameraPosition = CameraPosition(
-            target: LatLng(position.latitude, position.longitude),
-            zoom: 15, // Zoom in a bit more for current location
-          );
-        });
-      } catch (e) {
-        print("Erreur lors de la récupération de la position: $e");
-        // Keep default _cameraPosition
+      if (status.isGranted) {
+        _isLocationPermissionGranted = true;
+        print("[MerchantRegisterScreen] Location permission granted. Fetching current position...");
+        try {
+          Position position = await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+            timeLimit: const Duration(seconds: 15), // Added timeout
+          ).timeout(const Duration(seconds: 20)); // Overall timeout for the operation including system dialogs
+
+          print("[MerchantRegisterScreen] Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}");
+          if (mounted) {
+            setState(() {
+              _cameraPosition = CameraPosition(
+                target: LatLng(position.latitude, position.longitude),
+                zoom: 15,
+              );
+            });
+          }
+        } catch (e) {
+          print("[MerchantRegisterScreen] Error fetching position: $e");
+          // Keep default _cameraPosition, _isLocationPermissionGranted remains true if permission was granted before timeout/error
+        }
+      } else {
+        _isLocationPermissionGranted = false;
+        print("[MerchantRegisterScreen] Location permission denied or restricted.");
+        // Optionally, show a message or guide user to settings
+        if (mounted && (status.isPermanentlyDenied || status.isRestricted)) {
+            // Consider showing a dialog to open app settings
+            print("[MerchantRegisterScreen] Consider guiding user to app settings for location permission.");
+        }
       }
-    } else if (status.isDenied || status.isRestricted || status.isPermanentlyDenied) {
-      _isLocationPermissionGranted = false;
-      // Optionally, show a message or guide user to settings
-      print("Permission de localisation refusée.");
+    } catch (e) {
+        // Catch any other unexpected errors during permission request or general flow
+        print("[MerchantRegisterScreen] General error in _requestLocationPermissionAndFetch: $e");
+        _isLocationPermissionGranted = false; // Assume permission failed if error here
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isFetchingInitialLocation = false;
+          print("[MerchantRegisterScreen] Finished fetching initial location. _isFetchingInitialLocation: false");
+        });
+      }
     }
-
-    setState(() {
-      _isFetchingInitialLocation = false;
-    });
   }
 
   @override
