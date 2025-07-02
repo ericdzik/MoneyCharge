@@ -27,9 +27,6 @@ import 'features/merchant/screens/balance_management_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
-import 'dart:async'; // Ajout pour StreamSubscription (bien que non utilisé directement avec addListener)
-
-// ... autres imports ...
 
 class LocaChargeApp extends StatelessWidget {
   const LocaChargeApp({super.key});
@@ -161,11 +158,17 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+import 'dart:async'; // Ajout pour StreamSubscription (bien que non utilisé directement avec addListener)
 
+// ... autres imports ...
 
+// Écran de démarrage
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({super.key});
 
-
-
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
 
 class _SplashScreenState extends State<SplashScreen> {
   VoidCallback? _authListener;
