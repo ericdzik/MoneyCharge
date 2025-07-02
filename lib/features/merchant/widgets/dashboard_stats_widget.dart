@@ -27,7 +27,7 @@ class DashboardStatsWidget extends StatelessWidget {
       crossAxisCount: 2,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.5, // Ajusté pour une meilleure lisibilité potentielle
+      childAspectRatio: 1.2, // Modifié de 1.5 à 1.2 pour augmenter la hauteur des cartes
       children: [
         _buildStatCard(
           title: 'Solde Actuel',
@@ -69,53 +69,62 @@ class DashboardStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10), // Padding ajusté
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08), // Ombre plus légère
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 28), // Icône un peu plus grande
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: AppTextStyles.h2.copyWith(
-                  fontSize: 18, // Taille ajustée pour la valeur
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                title, // Titre sous la valeur
-                style: AppTextStyles.body2.copyWith(
-                  color: AppColors.textOnSurface,
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                subtitle, // Sous-titre en dessous
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+          Icon(icon, color: color, size: 26), // Taille icône ajustée
+          const SizedBox(height: 6), // Espacement ajusté
+          Text(
+            value,
+            style: AppTextStyles.h2.copyWith( // Utiliser h3 ou un style plus petit si h2 est trop grand
+              fontSize: 16, // Taille de police pour la valeur
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-        ),
+          const SizedBox(height: 3), // Espacement ajusté
+          Text(
+            title,
+            style: AppTextStyles.body2.copyWith(
+              color: AppColors.textOnSurface.withOpacity(0.9), // Légèrement plus visible
+              fontWeight: FontWeight.w500,
+              fontSize: 12, // Taille de police pour le titre
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          // Le sous-titre peut prendre un peu plus de place si nécessaire,
+          // mais il faut être prudent avec la hauteur totale.
+          // Si le sous-titre est court, le SizedBox suivant peut être minime.
+          // const SizedBox(height: 1),
+          Text(
+            subtitle,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 10, // Taille de police pour le sous-titre
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1, // Forcer sur une ligne, ou 2 si absolument nécessaire et que ça rentre
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
