@@ -709,36 +709,36 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     }
 
     try {
-      await authProvider.registerMerchant(
-        // Collecter les services sélectionnés
-        final List<String> selectedServices = _servicesOffered.entries
-            .where((entry) => entry.value)
-            .map((entry) => entry.key)
-            .toList();
+      // Collecter les services sélectionnés
+      final List<String> selectedServices = _servicesOffered.entries
+          .where((entry) => entry.value)
+          .map((entry) => entry.key)
+          .toList();
 
-        if (selectedServices.isEmpty) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Veuillez sélectionner au moins un service proposé.'),
-              backgroundColor: Colors.orange,
-            ),
-          );
-          return;
-        }
-
-        await authProvider.registerMerchant(
-          businessName: _businessNameController.text,
-          email: _emailController.text,
-          phone: _phoneController.text,
-          address: _addressController.text,
-          openingHours: _openingHoursController.text,
-          services: selectedServices, // Passer la liste des services
-          password: _passwordController.text,
-          latitude: _selectedLocation!.latitude,
-          longitude: _selectedLocation!.longitude,
-          merchantType: _selectedMerchantType, // Passer le type de marchand
+      if (selectedServices.isEmpty) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Veuillez sélectionner au moins un service proposé.'),
+            backgroundColor: Colors.orange,
+          ),
         );
+        return;
+      }
+
+      // Appel unique et correct à registerMerchant
+      await authProvider.registerMerchant(
+        businessName: _businessNameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        address: _addressController.text,
+        openingHours: _openingHoursController.text,
+        services: selectedServices, // Passer la liste des services
+        password: _passwordController.text,
+        latitude: _selectedLocation!.latitude,
+        longitude: _selectedLocation!.longitude,
+        merchantType: _selectedMerchantType, // Passer le type de marchand
+      );
 
       if (!mounted) return;
 
