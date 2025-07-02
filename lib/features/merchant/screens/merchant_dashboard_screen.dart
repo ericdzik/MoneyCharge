@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import Provider
+import '../../../providers/auth_provider.dart'; // Import AuthProvider
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -16,42 +18,58 @@ class MerchantDashboardScreen extends StatefulWidget {
 }
 
 class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
-  // Données simulées pour le dashboard
-  late MerchantAuthModel _merchant;
-  int _totalServices = 8;
-  int _activeServices = 6;
-  double _totalRevenue = 125000;
-  int _totalTransactions = 45;
+  // Remove simulated data
+  // late MerchantAuthModel _merchant;
+  int _totalServices = 8; // Keep for now, will be dynamic later
+  int _activeServices = 6; // Keep for now, will be dynamic later
+  double _totalRevenue = 125000; // Keep for now, will be dynamic later
+  int _totalTransactions = 45; // Keep for now, will be dynamic later
 
-  @override
-  void initState() {
-    super.initState();
-    _loadMerchantData();
-  }
+  // initState can be removed if _loadMerchantData is removed and no other init logic needed
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // _loadMerchantData(); // Removed
+  // }
 
-  void _loadMerchantData() {
-    // Simulation de données marchand
-    _merchant = MerchantAuthModel(
-      id: '1',
-      email: 'marchand@example.com',
-      businessName: 'Boutique Express',
-      phone: '+225 0123456789',
-      address: '123 Rue du Commerce, Abidjan',
-      isVerified: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 30)),
-      lastLoginAt: DateTime.now().subtract(const Duration(hours: 2)),
-    );
-  }
+  // _loadMerchantData is removed as we'll use AuthProvider
+  // void _loadMerchantData() { ... }
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final MerchantAuthModel? currentMerchant = authProvider.merchantProfile;
+
+    if (authProvider.isLoading && currentMerchant == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (currentMerchant == null) {
+      // This case should ideally be handled by RouteGuards if a non-merchant tries to access
+      // or if the profile somehow failed to load after auth.
+      return Scaffold(
+        appBar: AppBar(title: const Text("Erreur Profil Marchand")),
+        body: const Center(
+          child: Padding(
+            padding: EdgeInsets.all(AppDimensions.paddingL),
+            child: Text(
+              "Profil marchand non disponible. Veuillez vous reconnecter ou contacter le support.",
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
             // Header du marchand
-            MerchantHeaderWidget(merchant: _merchant, onLogout: _handleLogout),
+            MerchantHeaderWidget(merchant: currentMerchant, onLogout: () => _handleLogout(context)),
 
             // Contenu principal
             Expanded(
@@ -294,22 +312,29 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
   }
 
-  void _handleLogout() {
+  void _handleLogout(BuildContext dialogContext) { // Renamed context to avoid conflict
+    final authProvider = Provider.of<AuthProvider>(dialogContext, listen: false);
     showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+      context: dialogContext, // Use the passed context for the dialog
+      builder: (BuildContext alertContext) => AlertDialog( // Use a different context for AlertDialog builder
         title: const Text('Déconnexion'),
         content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(alertContext), // Use alertContext to pop dialog
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/merchant/login');
+            onPressed: () async {
+              Navigator.pop(alertContext); // Dismiss dialog first
+              await authProvider.logout();
+              // Ensure context is still valid if there are other async operations before navigation
+              if (mounted) { // Check if the main screen's state is still mounted
+                 // Navigate to the main login screen, not merchant-specific one
+                Navigator.pushNamedAndRemoveUntil(dialogContext, AppRoutes.login, (route) => false);
+              }
             },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
             child: const Text('Déconnexion'),
           ),
         ],

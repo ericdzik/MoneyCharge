@@ -97,12 +97,16 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _fetchUserProfile(String uid) async {
+    print('-----------------------------------------------------');
+    print('[AuthProvider._fetchUserProfile] Fetching profile for UID: $uid');
     try {
       final docSnapshot = await _firestore.collection('users').doc(uid).get();
       if (docSnapshot.exists) {
         final data = docSnapshot.data()!;
         final role = data['role'] as String?;
+        print('[AuthProvider._fetchUserProfile] Firestore role string: "$role"');
         _userType = _parseUserType(role);
+        print('[AuthProvider._fetchUserProfile] Parsed UserType: $_userType');
 
         // Créer l'objet profil approprié
         switch (_userType) {

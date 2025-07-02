@@ -174,23 +174,27 @@ class _SplashScreenState extends State<SplashScreen> {
     // Utiliser addPostFrameCallback pour s'assurer que le widget est monté
     // et que le contexte est valide pour Provider.of
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return; // Vérifier à nouveau après le callback
+      if (!mounted) return;
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      print('-----------------------------------------------------');
+      print('[SplashScreen._navigateToNextScreen] Checking auth state...');
+      print('[SplashScreen] isAuthenticated: ${authProvider.isAuthenticated}');
+      print('[SplashScreen] userType from AuthProvider: ${authProvider.userType}');
+      print('[SplashScreen] isLoading: ${authProvider.isLoading}');
+      print('[SplashScreen] error: ${authProvider.error}');
 
-      // AuthProvider s'initialise maintenant dans son constructeur et écoute les authStateChanges.
-      // Nous pouvons directement vérifier l'état ici après le délai du splash.
       if (authProvider.isAuthenticated) {
         final defaultRoute = RouteGuards.getDefaultRouteForUserType(
           authProvider.userType,
         );
+        print('[SplashScreen] User authenticated. Determined defaultRoute: $defaultRoute for userType: ${authProvider.userType}');
         Navigator.pushReplacementNamed(context, defaultRoute);
       } else {
-        // Si non authentifié, ou si le profil n'a pas encore été chargé (isLoading est true),
-        // on pourrait attendre un peu plus ou aller directement au login.
-        // Pour l'instant, on va au login si pas encore authentifié après le délai.
-        // Une logique plus fine pourrait observer authProvider.isLoading.
+        print('[SplashScreen] User NOT authenticated or userType is unknown (or error). Navigating to login.');
+        print('[SplashScreen] Reason for else: isAuthenticated=${authProvider.isAuthenticated}');
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
+      print('-----------------------------------------------------');
     });
   }
 
