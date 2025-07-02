@@ -259,7 +259,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 CustomButton(
                   text: 'Se déconnecter',
                   onPressed: () => _showLogoutDialog(context),
-                  buttonColor: AppColors.primary,
+                  // No explicit color parameter needed, type: ButtonType.primary is default
+                  // and will use ElevatedButtonThemeData from app_theme.dart
                 ),
                 const SizedBox(height: AppDimensions.paddingM),
 
@@ -416,7 +417,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
+                backgroundColor: AppColors.primary, // This will be applied by the theme
                 padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS),
                 textStyle: AppTextStyles.button),
             child: const Text('Déconnexion'),
@@ -457,7 +458,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               );
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.outOfStock,
+                backgroundColor: AppColors.outOfStock, // Destructive action color
                 padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS),
                 textStyle: AppTextStyles.button),
             child: const Text('Supprimer'),

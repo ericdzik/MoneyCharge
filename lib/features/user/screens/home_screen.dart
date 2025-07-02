@@ -6,6 +6,7 @@ import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
 import '../models/merchant_model.dart';
 import 'list_view_screen.dart';
+import 'user_profile_screen.dart'; // Import UserProfileScreen
 import 'package:provider/provider.dart'; // Importer Provider
 import '../../../providers/merchant_provider.dart'; // Importer MerchantProvider
 import '../../../providers/location_provider.dart'; // Importer LocationProvider pour les calculs
@@ -20,10 +21,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final List<Widget> _screens = [
-    const MapViewContent(),
-    const ListViewScreen(),
-    const Center(child: Text('Favoris')),
-    const Center(child: Text('Profil')),
+    const MapViewContent(),    // Index 0
+    const ListViewScreen(),    // Index 1
+    const Center(child: Text('Favoris - TODO')), // Index 2 - Placeholder for Favorites
+    const UserProfileScreen(), // Index 3 - Actual UserProfileScreen
   ];
 
   @override
