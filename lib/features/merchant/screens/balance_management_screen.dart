@@ -180,23 +180,17 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
                 ),
 
                 // Liste des transactions
-                // Retirer Expanded, TabBarView prendra la hauteur de son contenu (ListViews avec shrinkWrap)
-                TabBarView(
-                  controller: _tabController,
-                  // Important: TabBarView dans un SingleChildScrollView a besoin d'une hauteur.
-                  // Soit on lui donne une hauteur fixe, soit ses enfants (ListViews) doivent avoir shrinkWrap=true
-                  // et physics=NeverScrollableScrollPhysics, et le TabBarView s'adaptera.
-                  // Comme les ListView.builder dans _buildTransactionsList auront shrinkWrap et NeverScrollable,
-                  // le TabBarView devrait s'adapter à la hauteur de l'onglet actuel.
-                  // Pour éviter des sauts de hauteur lors du changement d'onglet, on peut envisager de
-                  // calculer la hauteur maximale de tous les onglets ou utiliser PageView avec KeepAlive.
-                  // Pour une solution simple, on laisse le TabBarView s'adapter.
-                  physics: const NeverScrollableScrollPhysics(), // Empêcher le TabBarView de scroller lui-même
-                  children: [
-                    _buildTransactionsList(provider.todayTransactions),
-                    _buildTransactionsList(provider.weekTransactions),
-                    _buildTransactionsList(provider.monthTransactions),
-                  ],
+                SizedBox( // Envelopper TabBarView dans un SizedBox avec une hauteur fixe pour test
+                  height: 400.0, // Hauteur de test, à ajuster ou rendre dynamique
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildTransactionsList(provider.todayTransactions),
+                      _buildTransactionsList(provider.weekTransactions),
+                      _buildTransactionsList(provider.monthTransactions),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -265,8 +259,8 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     }
 
     return ListView.builder(
-      shrinkWrap: true, // Important pour ListView dans SingleChildScrollView/Column
-      physics: const NeverScrollableScrollPhysics(), // Déléguer le scroll au parent
+      // Retirer shrinkWrap et NeverScrollableScrollPhysics pour permettre le défilement
+      // à l'intérieur du SizedBox parent du TabBarView.
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingL,
         vertical: AppDimensions.paddingM,
