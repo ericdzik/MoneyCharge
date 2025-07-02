@@ -7,7 +7,7 @@ class MerchantAuthModel {
   final String phone;
   final String address;
   final String? openingHours;
-  final String? services;
+  final List<String>? services; // Modifié de String? à List<String>?
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
@@ -21,7 +21,7 @@ class MerchantAuthModel {
     required this.phone,
     required this.address,
     this.openingHours,
-    this.services,
+    this.services, // Le type sera List<String>?
     this.isVerified = false,
     required this.createdAt,
     this.lastLoginAt,
@@ -60,7 +60,7 @@ class MerchantAuthModel {
       phone: data['phone'] as String? ?? '',
       address: data['address'] as String? ?? '',
       openingHours: data['openingHours'] as String?,
-      services: data['services'] as String?,
+      services: data['services'] != null ? List<String>.from(data['services'] as List) : null, // Corrigé
       isVerified: data['isVerified'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
@@ -93,7 +93,7 @@ class MerchantAuthModel {
     String? phone,
     String? address,
     String? openingHours,
-    String? services,
+    List<String>? services, // Modifié
     bool? isVerified,
     DateTime? createdAt,
     DateTime? lastLoginAt,
