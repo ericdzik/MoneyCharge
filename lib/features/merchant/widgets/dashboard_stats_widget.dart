@@ -1,58 +1,61 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; // Pour le formatage des nombres
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 
 class DashboardStatsWidget extends StatelessWidget {
-  final int totalServices;
-  final int activeServices;
-  final double totalRevenue;
-  final int totalTransactions;
+  final double? currentBalance;
+  final double? todayRevenue;
+  final double? todayProfit;
+  final int? todayTransactionCount;
 
   const DashboardStatsWidget({
     super.key,
-    required this.totalServices,
-    required this.activeServices,
-    required this.totalRevenue,
-    required this.totalTransactions,
+    this.currentBalance,
+    this.todayRevenue,
+    this.todayProfit,
+    this.todayTransactionCount,
   });
 
   @override
   Widget build(BuildContext context) {
+    final currencyFormatter = NumberFormat.currency(locale: 'fr_FR', symbol: 'FCFA', decimalDigits: 0);
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.5, // Ajusté pour une meilleure lisibilité potentielle
       children: [
         _buildStatCard(
-          title: 'Services',
-          value: '$totalServices',
-          subtitle: '$activeServices actifs',
-          icon: Icons.inventory,
+          title: 'Solde Actuel',
+          value: currentBalance != null ? currencyFormatter.format(currentBalance) : 'N/A',
+          subtitle: 'Disponible',
+          icon: Icons.account_balance_wallet,
           color: AppColors.primary,
         ),
         _buildStatCard(
-          title: 'Revenus',
-          value: '${totalRevenue.toStringAsFixed(0)} FCFA',
-          subtitle: 'Total',
-          icon: Icons.monetization_on,
-          color: Colors.green,
+          title: 'Revenu (Jour)',
+          value: todayRevenue != null ? currencyFormatter.format(todayRevenue) : 'N/A',
+          subtitle: 'Dernières 24h',
+          icon: Icons.trending_up,
+          color: AppColors.success, // Vert
         ),
         _buildStatCard(
-          title: 'Transactions',
-          value: '$totalTransactions',
+          title: 'Transactions (Jour)',
+          value: todayTransactionCount != null ? todayTransactionCount.toString() : 'N/A',
           subtitle: 'Aujourd\'hui',
           icon: Icons.receipt_long,
-          color: Colors.orange,
+          color: Colors.orange, // Gardons orange pour transactions
         ),
         _buildStatCard(
-          title: 'Performance',
-          value: '${_calculatePerformance()}%',
-          subtitle: 'Taux de satisfaction',
-          icon: Icons.trending_up,
-          color: Colors.blue,
+          title: 'Bénéfice (Jour)',
+          value: todayProfit != null ? currencyFormatter.format(todayProfit) : 'N/A',
+          subtitle: 'Dernières 24h',
+          icon: Icons.attach_money, // ou Icons.savings
+          color: todayProfit == null ? Colors.grey : (todayProfit! >= 0 ? AppColors.primary : AppColors.outOfStock),
         ),
       ],
     );
@@ -60,13 +63,13 @@ class DashboardStatsWidget extends StatelessWidget {
 
   Widget _buildStatCard({
     required String title,
-    required String value,
+    required String value, // La valeur est maintenant une String formatée
     required String subtitle,
     required IconData icon,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
@@ -83,45 +86,38 @@ class DashboardStatsWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const Spacer(),
+              Icon(icon, color: color, size: 28), // Icône un peu plus grande
+              const SizedBox(height: 8),
               Text(
-                title,
+                value,
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: 18, // Taille ajustée pour la valeur
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title, // Titre sous la valeur
+                style: AppTextStyles.body2.copyWith(
+                  color: AppColors.textOnSurface,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                subtitle, // Sous-titre en dessous
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textSecondary,
                 ),
+                textAlign: TextAlign.center,
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
-
-  int _calculatePerformance() {
-    if (totalTransactions == 0) return 0;
-    return ((activeServices / totalServices) * 100).round();
-  }
 }
+// _calculatePerformance n'est plus nécessaire car les données sont externes.
