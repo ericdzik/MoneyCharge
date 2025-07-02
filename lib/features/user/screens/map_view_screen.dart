@@ -135,7 +135,19 @@ class _MapViewScreenState extends State<MapViewScreen> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => _navigateToMerchant(merchant),
+                            onPressed: () async { // Make async for potential delay
+                              print("===================================================");
+                              print("[MapViewScreen] DEBUG: 'Itinéraire' button pressed for ${merchant.name}. Timestamp: ${DateTime.now()}");
+                              print("===================================================");
+
+                              // Keep Navigator.pop if it's intended to close sheet before action
+                              Navigator.pop(context);
+
+                              // Add a small delay to ensure print statements flush if it's a timing issue
+                              await Future.delayed(const Duration(milliseconds: 100));
+
+                              _navigateToMerchant(merchant);
+                            },
                             icon: const Icon(Icons.directions),
                             label: const Text('Itinéraire'),
                             style: ElevatedButton.styleFrom(
@@ -227,6 +239,13 @@ class _MapViewScreenState extends State<MapViewScreen> {
   }
 
   Future<void> _navigateToMerchant(Merchant merchant) async {
+    print("===================================================");
+    print("[MapViewScreen] DEBUG: _navigateToMerchant CALLED for ${merchant.name}. Lat: ${merchant.latitude}, Lng: ${merchant.longitude}. Timestamp: ${DateTime.now()}");
+    print("===================================================");
+
+    // Add a small delay
+    await Future.delayed(const Duration(milliseconds: 100));
+
     final success = await _locationService.openNavigation(
       merchant.latitude,
       merchant.longitude,
