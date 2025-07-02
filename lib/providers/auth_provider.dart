@@ -308,11 +308,11 @@ class AuthProvider with ChangeNotifier {
     required String phone,
     required String address,
     required String openingHours,
-    required String services,
+    required List<String> services, // Modifié de String à List<String>
     required String password,
-    // Add new parameters for location
     required double? latitude,
     required double? longitude,
+    required String merchantType, // Ajouté
   }) async {
     _setLoading(true);
     _error = null;
@@ -333,14 +333,15 @@ class AuthProvider with ChangeNotifier {
           'phone': phone,
           'address': address,
           'openingHours': openingHours,
-          'services': services,
-          'isVerified': false, // Les marchands commencent comme non vérifiés
+          'services': services, // Sauvegarder la liste des services
+          'isVerified': false,
           'isActive': true,
           'lastLoginAt': FieldValue.serverTimestamp(),
-          'latitude': latitude, // Add latitude to Firestore data
-          'longitude': longitude, // Add longitude to Firestore data
+          'latitude': latitude,
+          'longitude': longitude,
+          'merchantType': merchantType, // Sauvegarder le type de marchand
           // Ajouter ici d'autres champs spécifiques aux marchands si nécessaire
-        }, SetOptions(merge: true)); // merge: true pour ne pas écraser d'autres champs si le doc existe déjà (peu probable ici)
+        }, SetOptions(merge: true));
 
         // L'état sera mis à jour par _listenToAuthChanges
       } else {

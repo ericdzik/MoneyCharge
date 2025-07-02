@@ -27,7 +27,15 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _openingHoursController = TextEditingController();
-  final _servicesController = TextEditingController();
+  // final _servicesController = TextEditingController(); // Supprimé, remplacé par _servicesOffered
+
+  // Variables d'état pour les nouveaux champs
+  String _selectedMerchantType = 'boutique'; // Valeur par défaut
+  final Map<String, bool> _servicesOffered = {
+    'Recharge crédit': false,
+    'Transfert d\'argent': false,
+    'Achat de carte SIM': false,
+  };
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -117,7 +125,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _openingHoursController.dispose();
-    _servicesController.dispose();
+    // _servicesController.dispose(); // Supprimé
     super.dispose();
   }
 
@@ -322,6 +330,43 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                 const SizedBox(height: AppDimensions.paddingL),
                 // End of Map Section
 
+                // --- Type de Marchand ---
+                Text(
+                  'Type de Marchand',
+                  style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text('Boutique Fixe'),
+                        value: 'boutique',
+                        groupValue: _selectedMerchantType,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMerchantType = value!;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    ),
+                    Expanded(
+                      child: RadioListTile<String>(
+                        title: const Text('Ambulant'),
+                        value: 'ambulant',
+                        groupValue: _selectedMerchantType,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedMerchantType = value!;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+
                 CustomTextField(
                   controller: _openingHoursController,
                   labelText: 'Horaires d\'ouverture',
@@ -335,18 +380,24 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                CustomTextField(
-                  controller: _servicesController,
-                  labelText: 'Services proposés',
-                  hintText: 'Ex: Recharge crédit, Cartes SIM, Forfaits data',
-                  maxLines: 2,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez décrire vos services';
-                    }
-                    return null;
-                  },
+                // --- Services Proposés ---
+                Text(
+                  'Services Proposés',
+                  style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
                 ),
+                ..._servicesOffered.keys.map((String serviceName) {
+                  return CheckboxListTile(
+                    title: Text(serviceName),
+                    value: _servicesOffered[serviceName],
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _servicesOffered[serviceName] = value!;
+                      });
+                    },
+                    activeColor: AppColors.primary,
+                    controlAffinity: ListTileControlAffinity.leading,
+                  );
+                }).toList(),
                 const SizedBox(height: 24),
 
                 // Informations de connexion
@@ -659,16 +710,35 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     try {
       await authProvider.registerMerchant(
-        businessName: _businessNameController.text,
-        email: _emailController.text,
-        phone: _phoneController.text,
-        address: _addressController.text,
-        openingHours: _openingHoursController.text,
-        services: _servicesController.text,
-        password: _passwordController.text,
-        latitude: _selectedLocation!.latitude,
-        longitude: _selectedLocation!.longitude,
-      );
+        // Collecter les services sélectionnés
+        final List<String> selectedServices = _servicesOffered.entries
+            .where((entry) => entry.value)
+            .map((entry) => entry.key)
+            .toList();
+
+        if (selectedServices.isEmpty) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Veuillez sélectionner au moins un service proposé.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          return;
+        }
+
+        await authProvider.registerMerchant(
+          businessName: _businessNameController.text,
+          email: _emailController.text,
+          phone: _phoneController.text,
+          address: _addressController.text,
+          openingHours: _openingHoursController.text,
+          services: selectedServices, // Passer la liste des services
+          password: _passwordController.text,
+          latitude: _selectedLocation!.latitude,
+          longitude: _selectedLocation!.longitude,
+          merchantType: _selectedMerchantType, // Passer le type de marchand
+        );
 
       if (!mounted) return;
 

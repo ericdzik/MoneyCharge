@@ -7,12 +7,13 @@ class MerchantAuthModel {
   final String phone;
   final String address;
   final String? openingHours;
-  final List<String>? services; // Modifié de String? à List<String>?
+  final List<String>? services;
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
-  final double? latitude; // Added latitude
-  final double? longitude; // Added longitude
+  final double? latitude;
+  final double? longitude;
+  final String merchantType; // Nouveau champ
 
   MerchantAuthModel({
     required this.id,
@@ -21,12 +22,13 @@ class MerchantAuthModel {
     required this.phone,
     required this.address,
     this.openingHours,
-    this.services, // Le type sera List<String>?
+    this.services,
     this.isVerified = false,
     required this.createdAt,
     this.lastLoginAt,
-    this.latitude, // Added to constructor
-    this.longitude, // Added to constructor
+    this.latitude,
+    this.longitude,
+    required this.merchantType, // Ajouté au constructeur
   });
 
   // factory MerchantAuthModel.fromJson(Map<String, dynamic> json) {
@@ -60,12 +62,13 @@ class MerchantAuthModel {
       phone: data['phone'] as String? ?? '',
       address: data['address'] as String? ?? '',
       openingHours: data['openingHours'] as String?,
-      services: data['services'] != null ? List<String>.from(data['services'] as List) : null, // Corrigé
+      services: data['services'] != null ? List<String>.from(data['services'] as List) : null,
       isVerified: data['isVerified'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
-      latitude: (data['latitude'] as num?)?.toDouble(), // Read latitude
-      longitude: (data['longitude'] as num?)?.toDouble(), // Read longitude
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
+      merchantType: data['merchantType'] as String? ?? 'boutique', // Lire merchantType, valeur par défaut 'boutique'
     );
   }
 
@@ -81,8 +84,9 @@ class MerchantAuthModel {
       'isVerified': isVerified,
       'createdAt': Timestamp.fromDate(createdAt), // Use Timestamp for Firestore
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
-      'latitude': latitude, // Add latitude
-      'longitude': longitude, // Add longitude
+      'latitude': latitude,
+      'longitude': longitude,
+      'merchantType': merchantType, // Ajouter merchantType
     };
   }
 
@@ -93,12 +97,13 @@ class MerchantAuthModel {
     String? phone,
     String? address,
     String? openingHours,
-    List<String>? services, // Modifié
+    List<String>? services,
     bool? isVerified,
     DateTime? createdAt,
     DateTime? lastLoginAt,
-    double? latitude, // Added to copyWith
-    double? longitude, // Added to copyWith
+    double? latitude,
+    double? longitude,
+    String? merchantType, // Ajouté
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -113,6 +118,7 @@ class MerchantAuthModel {
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      merchantType: merchantType ?? this.merchantType, // Ajouté
     );
   }
 }
