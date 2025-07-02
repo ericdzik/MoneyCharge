@@ -29,20 +29,94 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     super.dispose();
   }
 
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    print('-----------------------------------------------------');
+    print('[UnifiedLoginScreen._handleLogin] Attempting login for ${_emailController.text}');
+
+    try {
+      print('[UnifiedLoginScreen._handleLogin] Calling await authProvider.loginUnified...');
+      await authProvider.loginUnified(
+        _emailController.text,
+        _passwordController.text,
+      );
+      print('[UnifiedLoginScreen._handleLogin] After await authProvider.loginUnified completed.');
+      print('[UnifiedLoginScreen._handleLogin] Current authProvider state:');
+      print('[UnifiedLoginScreen._handleLogin]   isAuthenticated: ${authProvider.isAuthenticated}');
+      print('[UnifiedLoginScreen._handleLogin]   userType: ${authProvider.userType}');
+      print('[UnifiedLoginScreen._handleLogin]   error: ${authProvider.error}');
+      print('[UnifiedLoginScreen._handleLogin]   isLoading: ${authProvider.isLoading}');
+
+
+      if (!mounted) return;
+
+      if (authProvider.isAuthenticated) {
+        print('[UnifiedLoginScreen._handleLogin] User IS Authenticated. UserType: ${authProvider.userType}');
+        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
+          authProvider.userType,
+        );
+        print('[UnifiedLoginScreen._handleLogin] Navigating to defaultRoute: $defaultRoute');
+        Navigator.pushReplacementNamed(context, defaultRoute);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+      } else {
+        print('[UnifiedLoginScreen._handleLogin] User IS NOT Authenticated. Error: ${authProvider.error}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Email ou mot de passe incorrect.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('[UnifiedLoginScreen._handleLogin] Caught exception during _handleLogin: ${e.toString()}');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(authProvider.error ?? "Erreur inattendue: ${e.toString()}"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+    print('-----------------------------------------------------');
+  }
+
+  String _getRoleDisplayName(UserType? userType) {
+    switch (userType) {
+      case UserType.admin:
+        return 'Administrateur';
+      case UserType.merchant:
+        return 'Marchand';
+      case UserType.user:
+        return 'Utilisateur';
+      default:
+        return 'Utilisateur';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL), // Horizontal padding
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
           child: Form(
             key: _formKey,
-            // Replace SingleChildScrollView -> Column with ListView
             child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL), // Vertical padding for ListView
+              padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
               children: [
-                // const SizedBox(height: AppDimensions.paddingXL), // Top padding, can be adjusted
-                // Logo et titre
+                const SizedBox(height: AppDimensions.paddingXL),
                 Column(
                   children: [
                     Container(
@@ -76,7 +150,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: 48),
 
-                // Formulaire
                 CustomTextField(
                   controller: _emailController,
                   labelText: 'Email',
@@ -126,7 +199,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Lien mot de passe oublié
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -143,7 +215,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // Bouton de connexion
                 Consumer<AuthProvider>(
                   builder: (context, authProvider, child) {
                     return CustomButton(
@@ -156,7 +227,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // Boutons de test (à retirer en production)
                 Text(
                   'Test rapide :',
                   style: AppTextStyles.body2.copyWith(
@@ -218,7 +288,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: AppDimensions.paddingM),
 
-                // Lien d'inscription
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -244,7 +313,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Lien d'inscription marchand
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -275,7 +343,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: AppDimensions.paddingL),
 
-                // Informations sur les rôles
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -317,7 +384,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: AppDimensions.paddingL),
 
-                // Boutons de connexion alternative
                 Row(
                   children: [
                     Expanded(
@@ -349,7 +415,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: AppDimensions.paddingXL),
 
-                // Footer
                 Text(
                   '© 2024 LocaCharge - Tous droits réservés',
                   style: AppTextStyles.caption.copyWith(
@@ -357,7 +422,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: AppDimensions.paddingM), // Ensure some bottom padding
+                const SizedBox(height: AppDimensions.paddingM),
               ],
             ),
           ),
@@ -410,66 +475,5 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _handleLogin() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    try {
-      await authProvider.loginUnified(
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      if (authProvider.isAuthenticated) {
-        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
-          authProvider.userType,
-        );
-        Navigator.pushReplacementNamed(context, defaultRoute);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
-            ),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(authProvider.error ?? 'Email ou mot de passe incorrect.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? e.toString()),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  String _getRoleDisplayName(UserType? userType) {
-    switch (userType) {
-      case UserType.admin:
-        return 'Administrateur';
-      case UserType.merchant:
-        return 'Marchand';
-      case UserType.user:
-        return 'Utilisateur';
-      default:
-        return 'Utilisateur';
-    }
   }
 }
