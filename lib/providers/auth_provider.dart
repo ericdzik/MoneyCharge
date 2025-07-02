@@ -43,6 +43,7 @@ class User {
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance; // Assurer l'initialisation
   StreamSubscription? _authStateSubscription;
 
   // État d'authentification
@@ -202,9 +203,11 @@ class AuthProvider with ChangeNotifier {
           // On pourrait forcer une nouvelle récupération de l'utilisateur Firebase si nécessaire,
           // mais _fetchUserProfile(uid) devrait suffire si l'UID est correct.
           print('[AuthProvider.loginUnified] Firebase currentUser not immediately reflecting the new user or UID mismatch. Relying on uid: $uid for profile fetch.');
-          await _fetchUserProfile(uid); // Essayer quand même avec l'UID obtenu
+          // uid est garanti non-nul ici à cause du `if (uid != null)` externe.
+          // L'utilisation de uid! rend cela explicite pour l'analyseur si nécessaire.
+          await _fetchUserProfile(uid!);
            if (_userType != UserType.unknown) {
-            await _updateLastLogin(uid);
+            await _updateLastLogin(uid!);
           }
           print('[AuthProvider.loginUnified] Profile fetched (after UID mismatch check). UserType: $_userType');
            // Si _firebaseUser n'est toujours pas défini, cela pourrait être un souci, mais _fetchUserProfile
