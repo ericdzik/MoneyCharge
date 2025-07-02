@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_routes.dart'; // Import AppRoutes
 import '../../../core/utils/color_utils.dart';
 import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
@@ -120,8 +121,8 @@ class _MapViewContentState extends State<MapViewContent> {
                       onMerchantSelected: (merchant) {
                         Navigator.pushNamed(
                           context,
-                          '/merchant-details',
-                          arguments: {'merchant': merchant}, // S'assurer que les arguments sont passés correctement
+                          AppRoutes.merchantDetail, // Use the correct route constant
+                          arguments: {'merchant': merchant},
                         );
                       },
                       showUserLocation: true,
