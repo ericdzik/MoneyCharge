@@ -8,7 +8,7 @@ import '../../../providers/transaction_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../models/balance_model.dart'; // Contient BalanceModel
 import '../../../models/transaction_model.dart'; // Notre TransactionModel centralisé
-import '../widgets/transaction_card_widget.dart';
+import '../widgets/transaction_card_widget.dart'; // S'assurer qu'il utilise le TransactionModel centralisé
 import '../widgets/balance_summary_widget.dart';
 
 class BalanceManagementScreen extends StatefulWidget {
@@ -26,10 +26,11 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 1, vsync: this); // Réduit à 1 onglet "Toutes" pour l'instant
+    // Simplifié à un seul onglet pour l'instant car les getters de période ont été commentés
+    _tabController = TabController(length: 1, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
-      // Utiliser le nouveau nom de méthode
+      // Utiliser le nouveau nom de méthode et le getter d'état de chargement
       context.read<TransactionProvider>().fetchMerchantTransactions(authProvider);
     });
   }
@@ -42,18 +43,19 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
 
   void _reloadData() {
     final authProvider = context.read<AuthProvider>();
-    // Utiliser le nouveau nom de méthode
+     // Utiliser le nouveau nom de méthode
     context.read<TransactionProvider>().fetchMerchantTransactions(authProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
+    final transactionProvider = context.watch<TransactionProvider>(); // watch pour reconstruire
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Gestion du solde'),
+        title: const Text('Gestion du solde & Transactions'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.onPrimary,
         elevation: 0,
@@ -63,6 +65,11 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
             onPressed: () => _showAddTransactionDialog(authProvider),
             tooltip: 'Ajouter une transaction',
           ),
+           IconButton( // Bouton de rafraîchissement
+            icon: const Icon(Icons.refresh),
+            onPressed: _reloadData,
+            tooltip: 'Rafraîchir les données',
+          ),
         ],
         bottom: TabBar(
           controller: _tabController,
@@ -70,108 +77,57 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
           labelColor: AppColors.onPrimary,
           unselectedLabelColor: AppColors.onPrimary.withOpacity(0.7),
           tabs: const [
-            Tab(text: 'Toutes les Transactions'), // Un seul onglet pour l'instant
+            Tab(text: 'Toutes les Transactions'),
             // Tab(text: 'Cette semaine'), // Commenté
             // Tab(text: 'Ce mois'), // Commenté
           ],
         ),
       ),
-      body: Consumer<TransactionProvider>(
-        builder: (context, provider, child) {
-          // Utiliser les nouveaux noms de getters pour l'état de chargement et d'erreur
-          if (provider.isLoadingTransactions && provider.merchantTransactions.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          // Afficher le solde si disponible (vient de TransactionProvider pour l'instant)
+          if (transactionProvider.balance != null)
+            BalanceSummaryWidget(balance: transactionProvider.balance!),
+          else
+            const Padding(
+              padding: EdgeInsets.all(AppDimensions.paddingM),
+              child: Text("Solde non disponible.", style: AppTextStyles.body1),
+            ),
 
-          if (provider.transactionsError != null && provider.merchantTransactions.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.outOfStock, // Peut-être une couleur d'erreur plus générique
-                  ),
-                  const SizedBox(height: AppDimensions.paddingM),
-                  Text(
-                    'Erreur: ${provider.transactionsError}', // Utiliser transactionsError
-                    textAlign: TextAlign.center,
-                    style: AppTextStyles.body1.copyWith(
-                      color: AppColors.outOfStock, // Peut-être une couleur d'erreur plus générique
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.paddingL),
-                  CustomButton(
-                    text: 'Réessayer',
-                    onPressed: _reloadData,
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return Column(
-            children: [
-              BalanceSummaryWidget(balance: provider.balance), // Affichage du solde (si disponible)
-
-              // Les statistiques par période sont commentées car les getters correspondants
-              // dans TransactionProvider sont commentés.
-              /*
-              Container(
-                // ... (ancien code pour les statistiques par période) ...
-              ),
-              */
-
-              Expanded(
-                child: TabBarView(
-                  controller: _tabController,
+          // Gérer l'état de chargement et d'erreur pour les transactions
+          if (transactionProvider.isLoadingTransactions && transactionProvider.merchantTransactions.isEmpty)
+            const Expanded(child: Center(child: CircularProgressIndicator()))
+          else if (transactionProvider.transactionsError != null && transactionProvider.merchantTransactions.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Afficher toutes les transactions du marchand
-                    _buildTransactionsList(provider.merchantTransactions),
-                    // _buildTransactionsList(provider.weekTransactions), // Commenté
-                    // _buildTransactionsList(provider.monthTransactions), // Commenté
+                    const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                    const SizedBox(height: AppDimensions.paddingM),
+                    Text(
+                      'Erreur: ${transactionProvider.transactionsError}',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.body1.copyWith(color: Colors.red),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingL),
+                    CustomButton(text: 'Réessayer', onPressed: _reloadData),
                   ],
                 ),
               ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildStatCard(
-    String label,
-    double value,
-    IconData icon,
-    Color color,
-  ) {
-    // ... (contenu de _buildStatCard inchangé, mais il n'est plus appelé pour l'instant) ...
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: AppDimensions.paddingS),
-          Text(
-            '${value.toStringAsFixed(0)} FCFA',
-            style: AppTextStyles.body1.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
+            )
+          else
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildTransactionsList(transactionProvider.merchantTransactions),
+                  // Les autres vues de TabBarView sont commentées car les getters de période le sont aussi
+                  // Center(child: Text("Transactions de la semaine (TODO)")),
+                  // Center(child: Text("Transactions du mois (TODO)")),
+                ],
+              ),
             ),
-          ),
-          Text(
-            label,
-            style: AppTextStyles.body2.copyWith(
-              color: AppColors.onSurface.withOpacity(0.7),
-            ),
-          ),
         ],
       ),
     );
@@ -180,50 +136,35 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
   Widget _buildTransactionsList(List<TransactionModel> transactions) {
     if (transactions.isEmpty) {
       return Center(
-        // ... (contenu inchangé) ...
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.receipt_long,
-              size: 64,
-              color: AppColors.onSurface.withOpacity(0.5),
-            ),
-            const SizedBox(height: AppDimensions.paddingM),
-            Text(
-              'Aucune transaction pour cette période.',
-              style: AppTextStyles.body1.copyWith(
-                color: AppColors.onSurface.withOpacity(0.7),
+        child: Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.receipt_long, size: 64, color: AppColors.onSurface.withOpacity(0.5)),
+              const SizedBox(height: AppDimensions.paddingM),
+              Text(
+                'Aucune transaction pour cette période.',
+                style: AppTextStyles.body1.copyWith(color: AppColors.onSurface.withOpacity(0.7)),
+                textAlign: TextAlign.center,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     }
-
     return ListView.builder(
-      // ... (contenu inchangé) ...
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingL,
-        vertical: AppDimensions.paddingM,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL, vertical: AppDimensions.paddingM),
       itemCount: transactions.length,
       itemBuilder: (context, index) {
-        return TransactionCardWidget( // S'assurer que TransactionCardWidget est compatible avec le nouveau TransactionModel
-          transaction: transactions[index],
-          onTap: () => _showTransactionDetails(transactions[index]),
+        final transaction = transactions[index];
+        return TransactionCardWidget( // Doit utiliser le TransactionModel centralisé
+          transaction: transaction,
+          onTap: () => _showTransactionDetails(transaction),
         );
       },
     );
   }
-
-  // Les méthodes _getRevenueForCurrentTab, _getExpensesForCurrentTab, _getProfitForCurrentTab
-  // sont commentées car les getters de période dans TransactionProvider sont commentés.
-  /*
-  double _getRevenueForCurrentTab(TransactionProvider provider) { ... }
-  double _getExpensesForCurrentTab(TransactionProvider provider) { ... }
-  double _getProfitForCurrentTab(TransactionProvider provider) { ... }
-  */
 
   void _showAddTransactionDialog(AuthProvider authProvider) {
     showDialog(
@@ -253,13 +194,12 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
   final _customerPhoneController = TextEditingController();
   final _amountController = TextEditingController();
   final _commissionController = TextEditingController();
-  // Remplacer _descriptionController par _serviceNameController et _detailsController
   final _serviceNameController = TextEditingController();
-  final _detailsController = TextEditingController(); // Pour les détails/description optionnels
+  final _detailsController = TextEditingController();
   final _referenceController = TextEditingController();
 
-  TransactionType _selectedType = TransactionType.sale; // Type par défaut
-  BalanceType _selectedBalanceType = BalanceType.credit; // Type de solde par défaut
+  TransactionType _selectedType = TransactionType.sale;
+  BalanceType _selectedBalanceType = BalanceType.credit;
   String? _selectedOperator;
 
   final List<String> _operators = [
@@ -289,37 +229,38 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
             children: [
               DropdownButtonFormField<TransactionType>(
                 value: _selectedType,
-                decoration: const InputDecoration(labelText: 'Type de transaction'),
+                decoration: const InputDecoration(labelText: 'Type de transaction', border: OutlineInputBorder()),
                 items: TransactionType.values.map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type.name)); // Utiliser .name pour l'affichage de l'enum
+                  // Utiliser typeDisplay du modèle TransactionModel pour un affichage convivial
+                  return DropdownMenuItem(value: type, child: Text(TransactionModel(id:'', merchantId:'', serviceName:'', amount:0, commission:0, netAmount:0, type:type, status:TransactionStatus.pending, balanceType:_selectedBalanceType, timestamp:Timestamp.now()).typeDisplay));
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedType = value!),
               ),
               const SizedBox(height: AppDimensions.paddingM),
               DropdownButtonFormField<BalanceType>(
                 value: _selectedBalanceType,
-                decoration: const InputDecoration(labelText: 'Impact sur le solde'),
+                decoration: const InputDecoration(labelText: 'Impact sur le solde', border: OutlineInputBorder()),
                 items: BalanceType.values.map((type) {
-                  return DropdownMenuItem(value: type, child: Text(type.name)); // Utiliser .name
+                  return DropdownMenuItem(value: type, child: Text(type.name));
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedBalanceType = value!),
               ),
               const SizedBox(height: AppDimensions.paddingM),
               TextFormField(
                 controller: _serviceNameController,
-                decoration: const InputDecoration(labelText: 'Nom du Service/Produit'),
+                decoration: const InputDecoration(labelText: 'Nom du Service/Produit', border: OutlineInputBorder()),
                 validator: (value) => (value == null || value.isEmpty) ? 'Champ requis' : null,
               ),
               const SizedBox(height: AppDimensions.paddingM),
               TextFormField(
                 controller: _customerPhoneController,
-                decoration: const InputDecoration(labelText: 'Téléphone client (si applicable)'),
+                decoration: const InputDecoration(labelText: 'Téléphone client (si applicable)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.phone)),
                 keyboardType: TextInputType.phone,
               ),
               const SizedBox(height: AppDimensions.paddingM),
               TextFormField(
                 controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Montant (FCFA)'),
+                decoration: const InputDecoration(labelText: 'Montant (FCFA)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.attach_money)),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.isEmpty) return 'Champ requis';
@@ -330,10 +271,10 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
               const SizedBox(height: AppDimensions.paddingM),
               TextFormField(
                 controller: _commissionController,
-                decoration: const InputDecoration(labelText: 'Commission (FCFA)'),
+                decoration: const InputDecoration(labelText: 'Commission (FCFA)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.percent)),
                 keyboardType: TextInputType.number,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Champ requis (0 si pas de commission)';
+                validator: (value) { // La commission peut être 0
+                  if (value == null || value.isEmpty) return 'Saisir 0 si pas de commission';
                   if (double.tryParse(value) == null) return 'Commission invalide';
                   return null;
                 },
@@ -341,20 +282,20 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
               const SizedBox(height: AppDimensions.paddingM),
               DropdownButtonFormField<String>(
                 value: _selectedOperator,
-                decoration: const InputDecoration(labelText: 'Opérateur (si applicable)'),
+                decoration: const InputDecoration(labelText: 'Opérateur (si applicable)', border: OutlineInputBorder()),
                 items: _operators.map((op) => DropdownMenuItem(value: op, child: Text(op))).toList(),
                 onChanged: (value) => setState(() => _selectedOperator = value),
               ),
               const SizedBox(height: AppDimensions.paddingM),
               TextFormField(
-                controller: _detailsController, // Nouveau contrôleur pour les détails
-                decoration: const InputDecoration(labelText: 'Détails/Description (optionnel)'),
+                controller: _detailsController,
+                decoration: const InputDecoration(labelText: 'Détails/Description (optionnel)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.description)),
                 maxLines: 2,
               ),
               const SizedBox(height: AppDimensions.paddingM),
               TextFormField(
                 controller: _referenceController,
-                decoration: const InputDecoration(labelText: 'Référence (optionnel)'),
+                decoration: const InputDecoration(labelText: 'Référence (optionnel)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.receipt)),
               ),
             ],
           ),
@@ -377,14 +318,14 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
       balanceType: _selectedBalanceType,
       amount: double.parse(_amountController.text),
       commission: double.parse(_commissionController.text),
-      serviceName: _serviceNameController.text, // Utiliser serviceName
-      details: _detailsController.text.isNotEmpty ? _detailsController.text : null, // Utiliser details
+      serviceName: _serviceNameController.text,
+      details: _detailsController.text.isNotEmpty ? _detailsController.text : null,
       operator: _selectedOperator,
       reference: _referenceController.text.isNotEmpty ? _referenceController.text : null,
       authProvider: widget.authProvider,
     );
 
-    if (mounted) { // Vérifier avant d'utiliser context
+    if (mounted) {
         if (success) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -392,9 +333,9 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
         );
         } else {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            SnackBar( // Utiliser le nouveau nom pour l'erreur de transaction
             content: Text('Erreur: ${transactionProvider.transactionsError ?? "Une erreur inconnue est survenue."}'),
-            backgroundColor: Colors.red), // Utiliser transactionsError
+            backgroundColor: Colors.red),
         );
         }
     }
@@ -402,7 +343,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
 }
 
 class TransactionDetailsDialog extends StatelessWidget {
-  final TransactionModel transaction; // Doit être notre TransactionModel centralisé
+  final TransactionModel transaction;
 
   const TransactionDetailsDialog({super.key, required this.transaction});
 
@@ -410,16 +351,17 @@ class TransactionDetailsDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Détails de la transaction'),
-      content: SingleChildScrollView( // Ajout pour éviter overflow si trop de détails
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildDetailRow('ID Transaction', transaction.id),
-            _buildDetailRow('Type', transaction.typeDisplay), // Utiliser le getter
-            _buildDetailRow('Impact Solde', transaction.balanceType.name), // Utiliser .name ou un getter display
+            _buildDetailRow('Type', transaction.typeDisplay),
+            _buildDetailRow('Impact Solde', transaction.balanceType.name),
             if(transaction.customerPhone != null && transaction.customerPhone!.isNotEmpty)
               _buildDetailRow('Téléphone Client', transaction.customerPhone!),
+            _buildDetailRow('Service', transaction.serviceName), // Afficher serviceName
             _buildDetailRow('Montant', '${transaction.amount.toStringAsFixed(2)} FCFA'),
             _buildDetailRow('Commission', '${transaction.commission.toStringAsFixed(2)} FCFA'),
             _buildDetailRow('Montant Net', '${transaction.netAmount.toStringAsFixed(2)} FCFA'),
@@ -429,10 +371,9 @@ class TransactionDetailsDialog extends StatelessWidget {
               _buildDetailRow('Détails', transaction.details!),
             if (transaction.reference != null && transaction.reference!.isNotEmpty)
               _buildDetailRow('Référence', transaction.reference!),
-            _buildDetailRow('Statut', transaction.statusDisplay), // Utiliser le getter
+            _buildDetailRow('Statut', transaction.statusDisplay),
             _buildDetailRow(
               'Date',
-              // Formatter la date pour meilleure lisibilité
               '${transaction.timestamp.toDate().day.toString().padLeft(2, '0')}/${transaction.timestamp.toDate().month.toString().padLeft(2, '0')}/${transaction.timestamp.toDate().year} '
               'à ${transaction.timestamp.toDate().hour.toString().padLeft(2, '0')}:${transaction.timestamp.toDate().minute.toString().padLeft(2, '0')}',
             ),
@@ -449,14 +390,13 @@ class TransactionDetailsDialog extends StatelessWidget {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    // ... (contenu inchangé) ...
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100,
+            width: 100, // Largeur fixe pour les labels pour un meilleur alignement
             child: Text(
               '$label:',
               style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold),

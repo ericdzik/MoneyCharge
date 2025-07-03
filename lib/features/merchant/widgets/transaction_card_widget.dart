@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../models/balance_model.dart';
+// import '../models/balance_model.dart'; // Ne plus importer ceci pour TransactionModel
+import '../../../models/transaction_model.dart'; // Importer le modèle centralisé
 
 class TransactionCardWidget extends StatelessWidget {
-  final TransactionModel transaction;
+  final TransactionModel transaction; // Doit maintenant utiliser le TransactionModel centralisé
   final VoidCallback? onTap;
 
   const TransactionCardWidget({
@@ -50,14 +51,14 @@ class TransactionCardWidget extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          transaction.type.typeText,
+                          transaction.typeDisplay, // Utiliser le getter
                           style: AppTextStyles.body1.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          transaction.customerPhone,
+                          transaction.customerPhone ?? 'N/A', // Gérer la nullité
                           style: AppTextStyles.body2.copyWith(
                             color: AppColors.onSurface.withOpacity(0.7),
                           ),
@@ -74,6 +75,7 @@ class TransactionCardWidget extends StatelessWidget {
                         '${transaction.netAmount.toStringAsFixed(0)} FCFA',
                         style: AppTextStyles.body1.copyWith(
                           fontWeight: FontWeight.bold,
+                          // Assurez-vous que BalanceType.credit est correctement importé/accessible
                           color: transaction.balanceType == BalanceType.credit
                               ? AppColors.success
                               : AppColors.outOfStock,
@@ -85,13 +87,13 @@ class TransactionCardWidget extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: transaction.statusColor.withOpacity(0.1),
+                          color: _getStatusColor(transaction.status).withOpacity(0.1), // Utiliser une méthode helper
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          transaction.statusText,
+                          transaction.statusDisplay, // Utiliser le getter
                           style: AppTextStyles.caption.copyWith(
-                            color: transaction.statusColor,
+                            color: _getStatusColor(transaction.status), // Utiliser une méthode helper
                             fontSize: 10,
                           ),
                         ),
@@ -144,35 +146,45 @@ class TransactionCardWidget extends StatelessWidget {
 
   Color _getTypeColor(TransactionType type) {
     switch (type) {
-      case TransactionType.rechargeCredit:
-        return AppColors.primary;
-      case TransactionType.dataPackage:
-        return AppColors.success;
-      case TransactionType.simCard:
-        return AppColors.secondary;
-      case TransactionType.moneyTransfer:
-        return AppColors.primary;
-      case TransactionType.billPayment:
-        return AppColors.secondary;
-      case TransactionType.other:
-        return AppColors.onSurface;
+      case TransactionType.sale:
+        return AppColors.success; // Vert pour les ventes (crédits)
+      case TransactionType.stockPurchase:
+        return AppColors.primary; // Bleu pour achat de stock (débits)
+      case TransactionType.refund:
+        return Colors.orange; // Orange pour remboursements
+      case TransactionType.withdrawal:
+        return AppColors.secondary; // Autre couleur pour retraits
+      default:
+        return AppColors.onSurface; // Couleur par défaut
     }
   }
 
   IconData _getTypeIcon(TransactionType type) {
     switch (type) {
-      case TransactionType.rechargeCredit:
-        return Icons.phone_android;
-      case TransactionType.dataPackage:
-        return Icons.wifi;
-      case TransactionType.simCard:
-        return Icons.sim_card;
-      case TransactionType.moneyTransfer:
-        return Icons.account_balance_wallet;
-      case TransactionType.billPayment:
-        return Icons.receipt;
-      case TransactionType.other:
-        return Icons.more_horiz;
+      case TransactionType.sale:
+        return Icons.shopping_cart_checkout_rounded;
+      case TransactionType.stockPurchase:
+        return Icons.inventory_2_outlined;
+      case TransactionType.refund:
+        return Icons.undo_rounded;
+      case TransactionType.withdrawal:
+        return Icons.savings_outlined;
+      default:
+        return Icons.receipt_long_outlined; // Icône par défaut
+    }
+  }
+
+  Color _getStatusColor(TransactionStatus status) {
+    switch (status) {
+      case TransactionStatus.completed:
+        return AppColors.success;
+      case TransactionStatus.pending:
+        return Colors.orange; // Ou AppColors.warning si défini
+      case TransactionStatus.failed:
+      case TransactionStatus.cancelled:
+        return Colors.red; // Ou AppColors.error si défini
+      default:
+        return AppColors.textSecondary;
     }
   }
 
