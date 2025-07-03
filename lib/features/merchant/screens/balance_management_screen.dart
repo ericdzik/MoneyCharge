@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Assurez-vous que cet import est présent pour Timestamp
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/auth_provider.dart';
-import '../models/balance_model.dart'; // Contient BalanceModel
-import '../../../models/transaction_model.dart'; // Notre TransactionModel centralisé
-import '../widgets/transaction_card_widget.dart'; // S'assurer qu'il utilise le TransactionModel centralisé
+import '../models/balance_model.dart';
+import '../../../models/transaction_model.dart';
+import '../widgets/transaction_card_widget.dart';
 import '../widgets/balance_summary_widget.dart';
 
 class BalanceManagementScreen extends StatefulWidget {
@@ -26,11 +27,9 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
   @override
   void initState() {
     super.initState();
-    // Simplifié à un seul onglet pour l'instant car les getters de période ont été commentés
     _tabController = TabController(length: 1, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authProvider = context.read<AuthProvider>();
-      // Utiliser le nouveau nom de méthode et le getter d'état de chargement
       context.read<TransactionProvider>().fetchMerchantTransactions(authProvider);
     });
   }
@@ -43,14 +42,13 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
 
   void _reloadData() {
     final authProvider = context.read<AuthProvider>();
-     // Utiliser le nouveau nom de méthode
     context.read<TransactionProvider>().fetchMerchantTransactions(authProvider);
   }
 
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
-    final transactionProvider = context.watch<TransactionProvider>(); // watch pour reconstruire
+    final transactionProvider = context.watch<TransactionProvider>();
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -65,7 +63,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
             onPressed: () => _showAddTransactionDialog(authProvider),
             tooltip: 'Ajouter une transaction',
           ),
-           IconButton( // Bouton de rafraîchissement
+           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _reloadData,
             tooltip: 'Rafraîchir les données',
@@ -78,14 +76,11 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
           unselectedLabelColor: AppColors.onPrimary.withOpacity(0.7),
           tabs: const [
             Tab(text: 'Toutes les Transactions'),
-            // Tab(text: 'Cette semaine'), // Commenté
-            // Tab(text: 'Ce mois'), // Commenté
           ],
         ),
       ),
       body: Column(
         children: [
-          // Afficher le solde si disponible (vient de TransactionProvider pour l'instant)
           if (transactionProvider.balance != null)
             BalanceSummaryWidget(balance: transactionProvider.balance!),
           else
@@ -94,7 +89,6 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
               child: Text("Solde non disponible.", style: AppTextStyles.body1),
             ),
 
-          // Gérer l'état de chargement et d'erreur pour les transactions
           if (transactionProvider.isLoadingTransactions && transactionProvider.merchantTransactions.isEmpty)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (transactionProvider.transactionsError != null && transactionProvider.merchantTransactions.isEmpty)
@@ -122,9 +116,6 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
                 controller: _tabController,
                 children: [
                   _buildTransactionsList(transactionProvider.merchantTransactions),
-                  // Les autres vues de TabBarView sont commentées car les getters de période le sont aussi
-                  // Center(child: Text("Transactions de la semaine (TODO)")),
-                  // Center(child: Text("Transactions du mois (TODO)")),
                 ],
               ),
             ),
@@ -158,7 +149,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
       itemCount: transactions.length,
       itemBuilder: (context, index) {
         final transaction = transactions[index];
-        return TransactionCardWidget( // Doit utiliser le TransactionModel centralisé
+        return TransactionCardWidget(
           transaction: transaction,
           onTap: () => _showTransactionDetails(transaction),
         );
@@ -217,6 +208,22 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     super.dispose();
   }
 
+  // Helper pour afficher le texte des TransactionType dans le Dropdown
+  String _getTransactionTypeDisplayText(TransactionType type) {
+    switch (type) {
+      case TransactionType.sale:
+        return 'Vente';
+      case TransactionType.stockPurchase:
+        return 'Achat de Stock';
+      case TransactionType.refund:
+        return 'Remboursement';
+      case TransactionType.withdrawal:
+        return 'Retrait';
+      default:
+        return type.name;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -231,8 +238,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 value: _selectedType,
                 decoration: const InputDecoration(labelText: 'Type de transaction', border: OutlineInputBorder()),
                 items: TransactionType.values.map((type) {
-                  // Utiliser typeDisplay du modèle TransactionModel pour un affichage convivial
-                  return DropdownMenuItem(value: type, child: Text(TransactionModel(id:'', merchantId:'', serviceName:'', amount:0, commission:0, netAmount:0, type:type, status:TransactionStatus.pending, balanceType:_selectedBalanceType, timestamp:Timestamp.now()).typeDisplay));
+                  return DropdownMenuItem(value: type, child: Text(_getTransactionTypeDisplayText(type)));
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedType = value!),
               ),
@@ -273,7 +279,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 controller: _commissionController,
                 decoration: const InputDecoration(labelText: 'Commission (FCFA)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.percent)),
                 keyboardType: TextInputType.number,
-                validator: (value) { // La commission peut être 0
+                validator: (value) {
                   if (value == null || value.isEmpty) return 'Saisir 0 si pas de commission';
                   if (double.tryParse(value) == null) return 'Commission invalide';
                   return null;
@@ -333,7 +339,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
         );
         } else {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar( // Utiliser le nouveau nom pour l'erreur de transaction
+            SnackBar(
             content: Text('Erreur: ${transactionProvider.transactionsError ?? "Une erreur inconnue est survenue."}'),
             backgroundColor: Colors.red),
         );
@@ -361,7 +367,7 @@ class TransactionDetailsDialog extends StatelessWidget {
             _buildDetailRow('Impact Solde', transaction.balanceType.name),
             if(transaction.customerPhone != null && transaction.customerPhone!.isNotEmpty)
               _buildDetailRow('Téléphone Client', transaction.customerPhone!),
-            _buildDetailRow('Service', transaction.serviceName), // Afficher serviceName
+            _buildDetailRow('Service', transaction.serviceName),
             _buildDetailRow('Montant', '${transaction.amount.toStringAsFixed(2)} FCFA'),
             _buildDetailRow('Commission', '${transaction.commission.toStringAsFixed(2)} FCFA'),
             _buildDetailRow('Montant Net', '${transaction.netAmount.toStringAsFixed(2)} FCFA'),
@@ -396,7 +402,7 @@ class TransactionDetailsDialog extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 100, // Largeur fixe pour les labels pour un meilleur alignement
+            width: 100,
             child: Text(
               '$label:',
               style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold),

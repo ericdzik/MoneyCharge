@@ -130,7 +130,7 @@ class TransactionCardWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _formatTime(transaction.createdAt),
+                    _formatTime(transaction.timestamp.toDate()), // Utiliser timestamp.toDate()
                     style: AppTextStyles.body2.copyWith(
                       color: AppColors.onSurface.withOpacity(0.7),
                     ),
