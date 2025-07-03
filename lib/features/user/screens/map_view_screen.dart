@@ -11,7 +11,9 @@ import '../../../providers/location_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLngBounds
 
 class MapViewScreen extends StatefulWidget {
-  const MapViewScreen({Key? key}) : super(key: key);
+  final Merchant? targetMerchant; // Marchand optionnel à cibler
+
+  const MapViewScreen({Key? key, this.targetMerchant}) : super(key: key);
 
   @override
   State<MapViewScreen> createState() => _MapViewScreenState();
@@ -29,10 +31,34 @@ class _MapViewScreenState extends State<MapViewScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
+        final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
         final locationProvider = Provider.of<LocationProvider>(context, listen: false);
-        locationProvider.initialize();
-        // Effacer tout itinéraire précédent lors de l'initialisation de l'écran
+
+        merchantProvider.loadMerchants();
+        locationProvider.initialize().then((_) {
+          // Après l'initialisation de la localisation, vérifier si un marchand cible est fourni
+          if (widget.targetMerchant != null && locationProvider.currentPosition != null) {
+            final destination = LatLng(widget.targetMerchant!.latitude, widget.targetMerchant!.longitude);
+            locationProvider.fetchAndSetRoute(destination).then((_) {
+              if (locationProvider.routeBounds != null && _mapController != null) {
+                _mapController!.animateCamera(
+                  CameraUpdate.newLatLngBounds(locationProvider.routeBounds!, 60.0), // Increased padding
+                );
+              }
+              // Optionnel: sélectionner le marchand et afficher ses détails
+              // Cela peut être fait ici ou après que la carte soit construite
+              // Pour l'instant, on se concentre sur l'affichage de l'itinéraire
+              if (mounted) { // Vérifier si le widget est toujours monté avant setState
+                 setState(() {
+                    _selectedMerchant = widget.targetMerchant;
+                 });
+                 // On peut aussi appeler _showMerchantDetails si c'est souhaité
+                 // _showMerchantDetails(widget.targetMerchant!);
+              }
+            });
+          }
+        });
+        // Effacer tout itinéraire précédent lors de l'initialisation de l'écran (déjà fait ou à faire avant fetch)
         locationProvider.clearRoute();
       }
     });
@@ -341,10 +367,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
                       GoogleMap( // Remplacement de MapWidget par GoogleMap direct pour plus de contrôle
                         initialCameraPosition: CameraPosition(
                           target: LatLng(
-                            locationProvider.effectiveLatitude,
-                            locationProvider.effectiveLongitude,
+                            widget.targetMerchant?.latitude ?? locationProvider.effectiveLatitude,
+                            widget.targetMerchant?.longitude ?? locationProvider.effectiveLongitude,
                           ),
-                          zoom: 13.0,
+                          zoom: widget.targetMerchant != null ? 15.0 : 13.0, // Zoom plus proche si marchand cible
                         ),
                         onMapCreated: (GoogleMapController controller) {
                           _mapController = controller;

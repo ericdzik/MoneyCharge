@@ -6,7 +6,7 @@ import '../../../providers/merchant_provider.dart';
 import '../widgets/filter_bar_widget.dart';
 import 'merchant_detail_screen.dart';
 import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
-import '../../../services/location_service.dart'; // Ajout de l'import pour LocationService
+// import '../../../services/location_service.dart'; // Retiré car plus utilisé directement
 
 class ListViewScreen extends StatefulWidget {
   const ListViewScreen({Key? key}) : super(key: key);
@@ -91,20 +91,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
     );
   }
 
-  Future<void> _openDirections(Merchant merchant) async {
-    final locationService = LocationService();
-    final success = await locationService.openNavigation(
-      merchant.latitude,
-      merchant.longitude,
-      merchant.name,
+  void _openDirections(Merchant merchant) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapViewScreen(targetMerchant: merchant),
+      ),
     );
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'ouvrir la navigation'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 }

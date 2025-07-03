@@ -188,21 +188,13 @@ class MerchantDetailScreen extends StatelessWidget {
               child: CustomButton(
                 text: 'Itinéraire',
                 icon: const Icon(Icons.directions, size: 20),
-                onPressed: () async {
-                  final locationService = LocationService();
-                  final success = await locationService.openNavigation(
-                    merchant.latitude,
-                    merchant.longitude,
-                    merchant.name,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MapViewScreen(targetMerchant: merchant),
+                    ),
                   );
-                  if (!success && context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Impossible d\'ouvrir la navigation'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
                 },
               ),
             ),
