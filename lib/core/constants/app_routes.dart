@@ -23,7 +23,8 @@ class AppRoutes {
   // Routes marchand
   static const String merchantDashboard = '/merchant/dashboard';
   static const String stockManagement = '/merchant/stock';
-  static const String merchantProfile = '/merchant/profile';
+  static const String merchantProfile = '/merchant/profile'; // Potentially for viewing
+  static const String editMerchantProfile = '/merchant/edit-profile'; // For editing
   static const String merchantAnalytics = '/merchant/analytics';
   static const String balanceManagement = '/merchant/balance';
 

@@ -24,6 +24,7 @@ import 'features/user/screens/rental_history_screen.dart';
 import 'features/merchant/screens/merchant_register_screen.dart';
 import 'features/merchant/screens/merchant_dashboard_screen.dart';
 import 'features/merchant/screens/balance_management_screen.dart';
+import 'features/merchant/screens/edit_merchant_profile_screen.dart'; // AJOUTÉ
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
@@ -135,6 +136,14 @@ class LocaChargeApp extends StatelessWidget {
           ),
         );
 
+      case AppRoutes.editMerchantProfile: // AJOUTÉ
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const EditMerchantProfileScreen(),
+            UserType.merchant,
+          ),
+        );
+
       // Routes admin (protégées)
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
@@ -150,17 +159,9 @@ class LocaChargeApp extends StatelessWidget {
   }
 }
 
-// Écran de démarrage
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
 import 'dart:async'; // Ajout pour StreamSubscription (bien que non utilisé directement avec addListener)
 
-// ... autres imports ...
+// ... autres imports ... // Note: les autres imports sont déjà en haut du fichier.
 
 // Écran de démarrage
 class SplashScreen extends StatefulWidget {
@@ -203,13 +204,19 @@ class _SplashScreenState extends State<SplashScreen> {
       // Cela nécessite que authProvider soit accessible ou que le listener soit stocké
       // d'une manière qui permette son retrait sans référence directe à l'instance de AuthProvider
       // si elle n'est plus accessible de manière fiable ici (bien que Provider.of devrait fonctionner).
+      // Pour plus de sûreté, on peut vérifier si le provider est toujours accessible.
       try {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        authProvider.removeListener(_authListener!);
+         if (mounted) { // Vérifier si le widget est toujours monté pour accéder au contexte
+            final authProvider = Provider.of<AuthProvider>(context, listen: false);
+            authProvider.removeListener(_authListener!);
+         } else {
+            // Si le widget n'est plus monté, il est possible que le listener ait déjà été retiré
+            // ou que le contexte ne soit plus valide. Il est plus sûr de ne rien faire ou juste nullifier.
+         }
       } catch (e) {
-        // Ignorer les erreurs si le provider n'est plus accessible (par exemple, widget déjà démonté)
-        print("[SplashScreen dispose] Error removing listener: $e");
+        print("[SplashScreen dispose] Error removing listener: $e. Listener might have been already removed or context is invalid.");
       }
+       _authListener = null; // S'assurer qu'il est nullifié pour éviter des appels futurs.
     }
     super.dispose();
   }
@@ -217,8 +224,15 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToNextScreen(AuthProvider authProvider) {
     // Retirer le listener ici pour s'assurer qu'il ne s'exécute qu'une fois pour la navigation
     if (_authListener != null) {
+      // Il est plus sûr de retirer le listener via le provider si possible
+      // et si on a encore une référence valide au provider.
+      // Cependant, authProvider est passé en argument, donc on peut l'utiliser.
+      try {
         authProvider.removeListener(_authListener!);
-        _authListener = null; // Éviter les retraits multiples dans dispose
+      } catch (e) {
+        print("[SplashScreen _navigateToNextScreen] Error removing listener: $e");
+      }
+      _authListener = null;
     }
 
     if (!mounted) return;
@@ -248,6 +262,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+// La première définition (plus simple) de SplashScreen et _SplashScreenState est supprimée.
+// Seule cette version (avec _authListener) est conservée.
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: Center(

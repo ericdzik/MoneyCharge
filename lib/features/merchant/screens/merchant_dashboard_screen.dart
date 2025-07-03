@@ -175,7 +175,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           icon: Icons.person,
           color: Colors.blue,
           onTap: () {
-            // Navigation vers le profil
+            Navigator.pushNamed(context, AppRoutes.editMerchantProfile);
           },
         ),
         _buildActionCard(
