@@ -25,6 +25,9 @@ dependencies:
   firebase_auth: ^4.17.8 # Veuillez vérifier la dernière version sur pub.dev
   cloud_firestore: ^4.15.8 # Veuillez vérifier la dernière version sur pub.dev
 
+  # Pour décoder les polylignes de Google Directions API
+  flutter_polyline_points: ^2.0.0 # Vérifiez la dernière version sur pub.dev
+
 
 dev_dependencies:
   flutter_test:

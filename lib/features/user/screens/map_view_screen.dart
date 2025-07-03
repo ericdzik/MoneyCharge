@@ -8,6 +8,7 @@ import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/merchant_provider.dart';
 import '../../../providers/location_provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLngBounds
 
 class MapViewScreen extends StatefulWidget {
   const MapViewScreen({Key? key}) : super(key: key);
@@ -18,7 +19,10 @@ class MapViewScreen extends StatefulWidget {
 
 class _MapViewScreenState extends State<MapViewScreen> {
   Merchant? _selectedMerchant;
-  final LocationService _locationService = LocationService();
+  // _locationService n'est plus nécessaire ici si toute la logique de navigation passe par LocationProvider
+  // final LocationService _locationService = LocationService();
+  GoogleMapController? _mapController;
+
 
   @override
   void initState() {
@@ -26,7 +30,10 @@ class _MapViewScreenState extends State<MapViewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
-        Provider.of<LocationProvider>(context, listen: false).initialize();
+        final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+        locationProvider.initialize();
+        // Effacer tout itinéraire précédent lors de l'initialisation de l'écran
+        locationProvider.clearRoute();
       }
     });
   }
@@ -35,6 +42,8 @@ class _MapViewScreenState extends State<MapViewScreen> {
     setState(() {
       _selectedMerchant = merchant;
     });
+    // Effacer l'itinéraire précédent lorsqu'un nouveau marchand est sélectionné
+    Provider.of<LocationProvider>(context, listen: false).clearRoute();
     _showMerchantDetails(merchant);
   }
 
@@ -139,17 +148,39 @@ class _MapViewScreenState extends State<MapViewScreen> {
                               print("===================================================");
                               print("[MapViewScreen] DEBUG: 'Itinéraire' button pressed for ${merchant.name}. Timestamp: ${DateTime.now()}");
                               print("===================================================");
+                              Navigator.pop(context); // Ferme le BottomSheet
 
-                              // Keep Navigator.pop if it's intended to close sheet before action
-                              Navigator.pop(context);
+                              final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+                              if (locationProvider.currentPosition != null) {
+                                final LatLng destination = LatLng(merchant.latitude, merchant.longitude);
+                                await locationProvider.fetchAndSetRoute(destination);
 
-                              // Add a small delay to ensure print statements flush if it's a timing issue
-                              await Future.delayed(const Duration(milliseconds: 100));
-
-                              _navigateToMerchant(merchant);
+                                if (locationProvider.routeBounds != null && _mapController != null) {
+                                  _mapController!.animateCamera(
+                                    CameraUpdate.newLatLngBounds(locationProvider.routeBounds!, 50),
+                                  );
+                                }
+                                if (locationProvider.routeError != null && mounted) {
+                                   ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(locationProvider.routeError!),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Localisation de l'utilisateur inconnue pour calculer l\'itinéraire.'),
+                                      backgroundColor: Colors.orange,
+                                    ),
+                                  );
+                                }
+                              }
                             },
                             icon: const Icon(Icons.directions),
-                            label: const Text('Itinéraire'),
+                            label: const Text('Afficher Itinéraire'), // Texte du bouton mis à jour
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
@@ -226,54 +257,39 @@ class _MapViewScreenState extends State<MapViewScreen> {
     );
   }
 
-  Future<void> _callMerchant(String phone) async {
-    final success = await _locationService.makePhoneCall(phone);
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'effectuer l\'appel'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  Future<void> _navigateToMerchant(Merchant merchant) async {
-    print("===================================================");
-    print("[MapViewScreen] DEBUG: _navigateToMerchant CALLED for ${merchant.name}. Lat: ${merchant.latitude}, Lng: ${merchant.longitude}. Timestamp: ${DateTime.now()}");
-    print("===================================================");
-
-    // Add a small delay
-    await Future.delayed(const Duration(milliseconds: 100));
-
-    final success = await _locationService.openNavigation(
-      merchant.latitude,
-      merchant.longitude,
-      merchant.name,
-    );
-    if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'ouvrir la navigation'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
+  // _callMerchant et _navigateToMerchant (ancienne version) sont supprimées car la logique est gérée par LocationProvider ou d'autres écrans.
 
   @override
   Widget build(BuildContext context) {
+    final locationProvider = Provider.of<LocationProvider>(context); // Écoute les changements
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Carte',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Effacer l'itinéraire en quittant l'écran
+            Provider.of<LocationProvider>(context, listen: false).clearRoute();
+            Navigator.pop(context);
+          },
         ),
         actions: [
+          // Bouton pour effacer l'itinéraire affiché
+          if (locationProvider.polylineCoordinates.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear_all_rounded), // Ou une autre icône appropriée
+              tooltip: 'Effacer l\'itinéraire',
+              onPressed: () {
+                locationProvider.clearRoute();
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.list),
-            onPressed: () => Navigator.pushNamed(context, '/list'),
+            onPressed: () {
+               Provider.of<LocationProvider>(context, listen: false).clearRoute();
+               Navigator.pushNamed(context, '/list');
+            }
           ),
         ],
       ),
@@ -282,6 +298,21 @@ class _MapViewScreenState extends State<MapViewScreen> {
           return Column(
             children: [
               const FilterBarWidget(),
+              // Afficher les informations sur l'itinéraire si disponibles
+              if (locationProvider.polylineCoordinates.isNotEmpty && !locationProvider.isLoadingRoute)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Colors.blue.withOpacity(0.1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Route: ${locationProvider.routeDistance ?? ""} (${locationProvider.routeDuration ?? ""})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: Stack(
                   children: [
@@ -289,16 +320,57 @@ class _MapViewScreenState extends State<MapViewScreen> {
                       const Center(child: CircularProgressIndicator())
                     else if (merchantProvider.error != null)
                       Center(child: Text("Erreur: ${merchantProvider.error}"))
-                    else if (merchantProvider.merchants.isEmpty)
+                    else if (merchantProvider.merchants.isEmpty && !merchantProvider.isLoading)
                       const Center(child: Text("Aucun point de service trouvé."))
                     else
-                      MapWidget(
-                        merchants: merchantProvider.merchants,
-                        onMerchantSelected: _onMerchantSelected,
-                        showUserLocation: true,
-                        initialZoom: 13.0,
+                      GoogleMap( // Remplacement de MapWidget par GoogleMap direct pour plus de contrôle
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(
+                            locationProvider.effectiveLatitude,
+                            locationProvider.effectiveLongitude,
+                          ),
+                          zoom: 13.0,
+                        ),
+                        onMapCreated: (GoogleMapController controller) {
+                          _mapController = controller;
+                        },
+                        markers: merchantProvider.merchants.map((merchant) {
+                          return Marker(
+                            markerId: MarkerId(merchant.id),
+                            position: LatLng(merchant.latitude, merchant.longitude),
+                            infoWindow: InfoWindow(
+                              title: merchant.name,
+                              snippet: merchant.address,
+                              onTap: () => _onMerchantSelected(merchant),
+                            ),
+                            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure), // Personnaliser
+                          );
+                        }).toSet(),
+                        polylines: {
+                          if (locationProvider.polylineCoordinates.isNotEmpty)
+                            Polyline(
+                              polylineId: const PolylineId('route'),
+                              points: locationProvider.polylineCoordinates,
+                              color: Colors.blue,
+                              width: 5,
+                            ),
+                        },
+                        myLocationEnabled: locationProvider.hasPermission,
+                        myLocationButtonEnabled: true,
+                        zoomControlsEnabled: false, // Peut être réactivé si besoin
                       ),
-                    if (!merchantProvider.isLoading && merchantProvider.error == null)
+                    if (locationProvider.isLoadingRoute)
+                      const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 8),
+                            Text("Calcul de l'itinéraire..."),
+                          ],
+                        ),
+                      ),
+                    if (!merchantProvider.isLoading && merchantProvider.error == null && !locationProvider.isLoadingRoute)
                       Positioned(
                         bottom: 16,
                         left: 16,
