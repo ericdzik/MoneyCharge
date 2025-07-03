@@ -6,7 +6,8 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
-import '../../../services/location_service.dart'; // Ajout de l'import pour LocationService
+import '../../../services/location_service.dart'; // Conservé pour le bouton "Appeler"
+import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
 
 class MerchantDetailScreen extends StatelessWidget {
   final Merchant merchant;

@@ -6,6 +6,7 @@ import '../../../providers/merchant_provider.dart';
 import '../widgets/filter_bar_widget.dart';
 import 'merchant_detail_screen.dart';
 import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
+import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
 // import '../../../services/location_service.dart'; // Retiré car plus utilisé directement
 
 class ListViewScreen extends StatefulWidget {

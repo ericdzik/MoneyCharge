@@ -59,6 +59,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         isVerified: true,
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
         lastLoginAt: DateTime.now().subtract(const Duration(hours: 2)),
+        merchantType: 'Alimentation', // Ajouté
       ),
       MerchantAuthModel(
         id: '2',
@@ -69,6 +70,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         isVerified: false,
         createdAt: DateTime.now().subtract(const Duration(days: 15)),
         lastLoginAt: DateTime.now().subtract(const Duration(days: 1)),
+        merchantType: 'Services Informatiques', // Ajouté
       ),
       MerchantAuthModel(
         id: '3',
@@ -79,6 +81,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         isVerified: true,
         createdAt: DateTime.now().subtract(const Duration(days: 45)),
         lastLoginAt: DateTime.now().subtract(const Duration(hours: 5)),
+        merchantType: 'Services Généraux', // Ajouté
       ),
       MerchantAuthModel(
         id: '4',
@@ -89,6 +92,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         isVerified: false,
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
         lastLoginAt: null,
+        merchantType: 'Électronique', // Ajouté
       ),
     ];
 
