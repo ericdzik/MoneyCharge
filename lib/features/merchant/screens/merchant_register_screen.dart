@@ -27,7 +27,16 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _openingHoursController = TextEditingController();
-  final _servicesController = TextEditingController();
+  final _servicesController = TextEditingController(); // Pourra être une liste de services plus tard
+
+  String? _selectedMerchantType;
+  final List<String> _merchantTypes = [
+    'Électronique',
+    'Alimentation',
+    'Services Généraux',
+    'Point de Recharge',
+    'Autre'
+  ];
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -321,6 +330,35 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   ),
                 const SizedBox(height: AppDimensions.paddingL),
                 // End of Map Section
+
+                // Merchant Type Dropdown
+                DropdownButtonFormField<String>(
+                  value: _selectedMerchantType,
+                  decoration: InputDecoration(
+                    labelText: 'Type de commerce',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surface,
+                  ),
+                  hint: const Text('Sélectionnez un type'),
+                  items: _merchantTypes.map((String type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedMerchantType = newValue;
+                    });
+                  },
+                  validator: (value) =>
+                      value == null ? 'Veuillez sélectionner un type de commerce' : null,
+                ),
+                const SizedBox(height: 16),
+                // End of Merchant Type Dropdown
 
                 CustomTextField(
                   controller: _openingHoursController,
@@ -664,10 +702,11 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         phone: _phoneController.text,
         address: _addressController.text,
         openingHours: _openingHoursController.text,
-        services: _servicesController.text,
+        services: _servicesController.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
         password: _passwordController.text,
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
+        merchantType: _selectedMerchantType!,
       );
 
       if (!mounted) return;
