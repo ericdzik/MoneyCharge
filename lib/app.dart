@@ -28,8 +28,6 @@ import 'features/merchant/screens/edit_merchant_profile_screen.dart'; // AJOUTÉ
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
-import 'dart:async'; // Ajout pour StreamSubscription (bien que non utilisé directement avec addListener)
-
 
 class LocaChargeApp extends StatelessWidget {
   const LocaChargeApp({super.key});
@@ -161,6 +159,7 @@ class LocaChargeApp extends StatelessWidget {
   }
 }
 
+import 'dart:async'; // Ajout pour StreamSubscription (bien que non utilisé directement avec addListener)
 
 // ... autres imports ... // Note: les autres imports sont déjà en haut du fichier.
 

@@ -101,9 +101,9 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   }
 
   // Méthode pour charger les données initiales du marchand (sera remplie plus tard)
- // void _loadMerchantData() {
+  void _loadMerchantData() {
     // Sera implémenté dans la prochaine étape du plan
- // }
+  }
 
   // Méthode pour sauvegarder les modifications
   Future<void> _saveProfile() async {

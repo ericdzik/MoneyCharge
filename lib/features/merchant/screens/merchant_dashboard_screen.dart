@@ -8,8 +8,6 @@ import '../models/merchant_auth_model.dart';
 import '../widgets/merchant_header_widget.dart';
 import '../widgets/dashboard_stats_widget.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../../providers/transaction_provider.dart'; // Importer TransactionProvider
-
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -19,6 +17,7 @@ class MerchantDashboardScreen extends StatefulWidget {
       _MerchantDashboardScreenState();
 }
 
+import '../../../providers/transaction_provider.dart'; // Importer TransactionProvider
 
 class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   // Supprimer les variables d'état pour les données simulées

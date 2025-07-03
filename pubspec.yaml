@@ -24,7 +24,6 @@ dependencies:
   firebase_core: ^2.27.0 # Veuillez vérifier la dernière version sur pub.dev
   firebase_auth: ^4.17.8 # Veuillez vérifier la dernière version sur pub.dev
   cloud_firestore: ^4.15.8 # Veuillez vérifier la dernière version sur pub.dev
-  intl: ^0.20.2
 
 
 dev_dependencies:
