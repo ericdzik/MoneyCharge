@@ -133,7 +133,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => _callMerchant(merchant.phone),
+                            onPressed: () => _callMerchantPhoneNumber(merchant.phone),
                             icon: const Icon(Icons.phone),
                             label: const Text('Appeler'),
                             style: OutlinedButton.styleFrom(
@@ -257,7 +257,22 @@ class _MapViewScreenState extends State<MapViewScreen> {
     );
   }
 
-  // _callMerchant et _navigateToMerchant (ancienne version) sont supprimées car la logique est gérée par LocationProvider ou d'autres écrans.
+  Future<void> _callMerchantPhoneNumber(String phone) async {
+    // S'assurer que LocationService est importé en haut du fichier
+    // import '../../../services/location_service.dart';
+    final locationService = LocationService();
+    final success = await locationService.makePhoneCall(phone);
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d\'effectuer l\'appel.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // _navigateToMerchant (ancienne version) est supprimée car la logique est gérée par LocationProvider.
 
   @override
   Widget build(BuildContext context) {
