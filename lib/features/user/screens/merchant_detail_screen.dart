@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
+import '../../../services/location_service.dart'; // Ajout de l'import pour LocationService
 
 class MerchantDetailScreen extends StatelessWidget {
   final Merchant merchant;
@@ -187,8 +188,21 @@ class MerchantDetailScreen extends StatelessWidget {
               child: CustomButton(
                 text: 'Itinéraire',
                 icon: const Icon(Icons.directions, size: 20),
-                onPressed: () {
-                  // Ouvrir navigation
+                onPressed: () async {
+                  final locationService = LocationService();
+                  final success = await locationService.openNavigation(
+                    merchant.latitude,
+                    merchant.longitude,
+                    merchant.name,
+                  );
+                  if (!success && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Impossible d\'ouvrir la navigation'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
                 },
               ),
             ),

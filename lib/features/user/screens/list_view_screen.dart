@@ -5,6 +5,8 @@ import '../../../core/widgets/merchant_card.dart';
 import '../../../providers/merchant_provider.dart';
 import '../widgets/filter_bar_widget.dart';
 import 'merchant_detail_screen.dart';
+import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
+import '../../../services/location_service.dart'; // Ajout de l'import pour LocationService
 
 class ListViewScreen extends StatefulWidget {
   const ListViewScreen({Key? key}) : super(key: key);
@@ -75,8 +77,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                           );
                         },
                         onDirectionsPressed: () {
-                          // Ouvrir l'app de navigation
-                          _openDirections(merchant.latitude, merchant.longitude);
+                          _openDirections(merchant);
                         },
                       );
                     },
@@ -90,8 +91,20 @@ class _ListViewScreenState extends State<ListViewScreen> {
     );
   }
 
-  void _openDirections(double lat, double lng) {
-    // Intégration avec les apps de navigation
-    // url_launcher: https://maps.google.com/?q=$lat,$lng
+  Future<void> _openDirections(Merchant merchant) async {
+    final locationService = LocationService();
+    final success = await locationService.openNavigation(
+      merchant.latitude,
+      merchant.longitude,
+      merchant.name,
+    );
+    if (!success && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Impossible d\'ouvrir la navigation'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }
