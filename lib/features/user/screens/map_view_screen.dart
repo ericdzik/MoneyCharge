@@ -160,57 +160,72 @@ class _MapViewScreenState extends State<MapViewScreen> {
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () => _callMerchantPhoneNumber(merchant.phone),
-                            icon: const Icon(Icons.phone),
-                            label: const Text('Appeler'),
+                            icon: const Icon(Icons.phone, size: 18),
+                            label: const Text('Appeler', style: TextStyle(fontSize: 13)),
                             style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () async { // Make async for potential delay
-                              print("===================================================");
-                              print("[MapViewScreen] DEBUG: 'Itinéraire' button pressed for ${merchant.name}. Timestamp: ${DateTime.now()}");
-                              print("===================================================");
+                            onPressed: () async {
+                              // Logique pour afficher l'itinéraire DANS L'APP
                               Navigator.pop(context); // Ferme le BottomSheet
-
                               final locationProvider = Provider.of<LocationProvider>(context, listen: false);
                               if (locationProvider.currentPosition != null) {
                                 final LatLng destination = LatLng(merchant.latitude, merchant.longitude);
                                 await locationProvider.fetchAndSetRoute(destination);
-
                                 if (locationProvider.routeBounds != null && _mapController != null) {
                                   _mapController!.animateCamera(
                                     CameraUpdate.newLatLngBounds(locationProvider.routeBounds!, 50),
                                   );
                                 }
                                 if (locationProvider.routeError != null && mounted) {
-                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(locationProvider.routeError!),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              } else {
-                                if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Localisation de l'utilisateur inconnue pour calculer l\'itinéraire.'),
-                                      backgroundColor: Colors.orange,
-                                    ),
+                                    SnackBar(content: Text(locationProvider.routeError!), backgroundColor: Colors.red),
                                   );
                                 }
+                              } else if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Localisation utilisateur inconnue.'), backgroundColor: Colors.orange),
+                                );
                               }
                             },
-                            icon: const Icon(Icons.directions),
-                            label: const Text('Afficher Itinéraire'), // Texte du bouton mis à jour
+                            icon: const Icon(Icons.map_outlined, size: 18), // Icône pour in-app
+                            label: const Text('Voir Carte', style: TextStyle(fontSize: 13)), // Label mis à jour
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
+                              backgroundColor: AppColors.primary.withOpacity(0.8),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              // Logique pour lancer la NAV EXTERNEn
+                              Navigator.pop(context); // Ferme le BottomSheet aussi
+                              final locationService = LocationService();
+                              final success = await locationService.openNavigation(
+                                merchant.latitude,
+                                merchant.longitude,
+                                merchant.name,
+                              );
+                              if (!success && mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Impossible de lancer la navigation externe.'), backgroundColor: Colors.red),
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.navigation_outlined, size: 18), // Icône pour externe
+                            label: const Text('Naviguer', style: TextStyle(fontSize: 13)), // Label mis à jour
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary, // Couleur principale pour l'action primaire
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                             ),
                           ),
                         ),
