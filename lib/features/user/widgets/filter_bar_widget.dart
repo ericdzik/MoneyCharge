@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:provider/provider.dart'; // Ajout de Provider
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -170,7 +171,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                   ),
                   const SizedBox(height: AppDimensions.paddingM),
 
-                  Text('Services Proposés :', style: AppTextStyles.body1Bold),
+                  Text('Services Proposés :', style: AppTextStyles.body1),
                   ...availableServices.map((serviceName) {
                     return CheckboxListTile(
                       title: Text(serviceName),
