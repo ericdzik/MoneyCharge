@@ -1,49 +1,43 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../features/user/models/merchant_model.dart';
-// import '../services/api_service.dart'; // ApiService n'est plus utilisé ici pour charger les marchands
+import '../features/user/models/merchant_model.dart'; // Assurez-vous que ce modèle est à jour
 
 class MerchantProvider with ChangeNotifier {
-  // final ApiService _apiService = ApiService(); // Supprimé
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  List<Merchant> _allLoadedMerchants = []; // Stocke tous les marchands chargés depuis Firestore
-  List<Merchant> _filteredMerchants = []; // Stocke les marchands après filtrage
+  List<Merchant> _allLoadedMerchants = [];
+  List<Merchant> _filteredMerchants = [];
 
   bool _isLoading = false;
   String? _error;
 
   // Variables d'état pour les filtres actifs
-  String? _activeMerchantTypeFilter;
+  String? _activeMerchantTypeFilter; // null signifie 'Tous'
   List<String> _activeServiceFilters = [];
   String? _activeStockServiceFilter;
   bool _onlyShowAvailableStockForService = false;
+  String _searchQuery = '';
 
-  // Le getter public 'merchants' retournera la liste filtrée.
-  // La logique de filtrage sera ajoutée dans une étape ultérieure (Sous-tâche 1.4)
+  // Getters publics
   List<Merchant> get merchants => _filteredMerchants;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Getters pour les filtres actifs (utiles pour l'UI de FilterBarWidget)
+  // Getters pour l'état actuel des filtres
   String? get activeMerchantTypeFilter => _activeMerchantTypeFilter;
-  List<String> get activeServiceFilters => _activeServiceFilters;
+  List<String> get activeServiceFilters => List.unmodifiable(_activeServiceFilters);
   String? get activeStockServiceFilter => _activeStockServiceFilter;
   bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
-
+  String get searchQuery => _searchQuery;
 
   Future<void> loadMerchants({bool forceRefresh = false}) async {
-    if (_allLoadedMerchants.isNotEmpty && !forceRefresh && !_isLoading) {
-      // Si les marchands sont déjà chargés et qu'on ne force pas,
-      // on pourrait juste réappliquer les filtres existants et notifier.
-      // Cependant, pour l'instant, loadMerchants recharge toujours depuis Firestore si appelé.
-      // Une amélioration future pourrait être de ne pas re-fetch si les données sont "fraîches".
-      // Pour l'instant, on s'assure juste de ne pas faire de fetch multiple en parallèle.
-      // _applyCurrentFilters(); // Méthode à créer si on ne re-fetch pas
-      // return;
-    }
+    if (_isLoading && !forceRefresh) return;
 
-    if (_isLoading) return; // Eviter les chargements multiples en parallèle
+    if (_allLoadedMerchants.isNotEmpty && !forceRefresh) {
+        _applyInternalFilters();
+        notifyListeners();
+        return;
+    }
 
     _setLoading(true);
     _error = null;
@@ -55,10 +49,7 @@ class MerchantProvider with ChangeNotifier {
           .where('isVerified', isEqualTo: true)
           .get();
 
-      final rawDocs = querySnapshot.docs;
-      print('[MerchantProvider] Fetched ${rawDocs.length} raw merchant documents.');
-
-      _allLoadedMerchants = rawDocs.map((doc) {
+      _allLoadedMerchants = querySnapshot.docs.map((doc) {
         try {
           return Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>);
         } catch (e) {
@@ -67,14 +58,7 @@ class MerchantProvider with ChangeNotifier {
         }
       }).whereType<Merchant>().toList();
 
-      print('[MerchantProvider] Successfully parsed ${_allLoadedMerchants.length} merchants.');
-
-      // Après avoir chargé tous les marchands, appliquer les filtres courants
-      // La logique de _applyCurrentFilters sera définie dans le getter `merchants` ou une méthode dédiée.
-      // Pour l'instant, on assigne directement à _filteredMerchants, qui sera ensuite filtré par le getter.
-      // À la Sous-tâche 1.4, le getter `merchants` fera le filtrage.
-      // Pour l'instant, pour que l'UI se mette à jour avec la liste complète (avant filtrage):
-      _applyInternalFilters(); // Applique les filtres actuels sur _allLoadedMerchants et met à jour _filteredMerchants
+      _applyInternalFilters();
 
     } catch (e) {
       _error = "Erreur lors du chargement des marchands: ${e.toString()}";
@@ -82,7 +66,7 @@ class MerchantProvider with ChangeNotifier {
       _filteredMerchants = [];
       print(_error);
     } finally {
-      _setLoading(false); // Cela va appeler notifyListeners()
+      _setLoading(false);
     }
   }
 
@@ -92,64 +76,99 @@ class MerchantProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Méthode interne pour appliquer les filtres et mettre à jour _filteredMerchants
-  // Cette méthode sera appelée par loadMerchants et applyFilters.
   void _applyInternalFilters() {
     List<Merchant> tempList = List.from(_allLoadedMerchants);
 
-    if (_activeMerchantTypeFilter != null && _activeMerchantTypeFilter != 'Tous') { // Supposant que 'Tous' est une option pour ne pas filtrer
+    // Filtre par Type de Marchand
+    if (_activeMerchantTypeFilter != null && _activeMerchantTypeFilter!.isNotEmpty) {
       tempList.retainWhere((m) => m.merchantType == _activeMerchantTypeFilter);
     }
 
+    // Filtre par Services Proposés (AU MOINS UN des services sélectionnés)
     if (_activeServiceFilters.isNotEmpty) {
-      tempList.retainWhere((m) =>
-          m.services != null &&
-          _activeServiceFilters.any((sf) => m.services!.contains(sf)));
+      tempList.retainWhere((m) {
+        if (m.services == null || m.services!.isEmpty) return false;
+        return _activeServiceFilters.any((sf) => m.services!.contains(sf));
+      });
     }
 
-    if (_activeStockServiceFilter != null && _activeStockServiceFilter!.isNotEmpty && _onlyShowAvailableStockForService) {
+    // Filtre par Statut de Stock pour un Service Spécifique
+    if (_activeStockServiceFilter != null &&
+        _activeStockServiceFilter!.isNotEmpty &&
+        _onlyShowAvailableStockForService) {
       tempList.retainWhere((m) =>
           m.serviceStockStatus != null &&
           m.serviceStockStatus![_activeStockServiceFilter!] == 'disponible');
     }
 
+    // Filtre par recherche textuelle
+    if (_searchQuery.isNotEmpty) {
+      tempList.retainWhere((m) =>
+          m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          (m.address.toLowerCase().contains(_searchQuery.toLowerCase())));
+    }
     _filteredMerchants = tempList;
-    // notifyListeners(); // Notifié par setLoading(false) dans loadMerchants ou par applyFilters
   }
 
-
-  // Méthode publique pour mettre à jour les filtres depuis l'UI
   void applyFilters({
     String? merchantType,
-    List<String>? services,
-    String? stockService, // Le service spécifique pour lequel on vérifie le stock
-    bool? onlyAvailableStock, // Si true, ne montrer que stock "disponible" pour stockService
+    List<String>? services, // Liste des services à filtrer
+    String? stockService, // Le service unique pour lequel on vérifie le stock
+    bool? onlyAvailableStock, // true si on ne veut que le stock disponible pour stockService
+    String? searchQuery,
     bool clearAll = false,
+    bool clearServiceAndStockFilters = false, // Pour réinitialiser uniquement les filtres du dialogue
+    // Indicateur pour savoir si le filtre merchantType a été explicitement passé
+    // Cela aide à distinguer un appel où merchantType n'est pas pertinent (et ne doit pas être changé)
+    // d'un appel où merchantType est explicitement mis à null (pour "Tous").
+    bool merchantTypeIsSet = false,
   }) {
     if (clearAll) {
       _activeMerchantTypeFilter = null;
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
+      _searchQuery = '';
+    } else if (clearServiceAndStockFilters) {
+      _activeServiceFilters = [];
+      _activeStockServiceFilter = null;
+      _onlyShowAvailableStockForService = false;
     } else {
-      // Mettre à jour les filtres individuellement s'ils sont fournis
-      if (merchantType != null) _activeMerchantTypeFilter = merchantType == 'Tous' ? null : merchantType;
-      if (services != null) _activeServiceFilters = List.from(services); // Créer une nouvelle liste
-      if (stockService != null) _activeStockServiceFilter = stockService.isEmpty ? null : stockService;
-      if (onlyAvailableStock != null) _onlyShowAvailableStockForService = onlyAvailableStock;
+      if (merchantTypeIsSet) { // Mettre à jour _activeMerchantTypeFilter seulement s'il est explicitement fourni
+        _activeMerchantTypeFilter = merchantType; // `null` ici signifie "Tous"
+      }
+      if (services != null) {
+        _activeServiceFilters = List.from(services);
+      }
+
+      // Gérer stockService et onlyAvailableStock
+      // Si stockService est fourni (même vide pour effacer), on le met à jour.
+      // Si onlyAvailableStock est fourni, on le met à jour.
+      // Si stockService devient null/vide, on s'assure que onlyAvailableStock est false.
+      if (stockService != null || (services != null && services.isEmpty)) { // Si services est vidé, stockService doit l'être aussi
+         _activeStockServiceFilter = (stockService == null || stockService.isEmpty) ? null : stockService;
+         if (_activeStockServiceFilter == null) {
+            _onlyShowAvailableStockForService = false;
+         }
+      }
+      if (onlyAvailableStock != null) {
+        _onlyShowAvailableStockForService = onlyAvailableStock;
+      }
+
+      if (searchQuery != null) {
+        _searchQuery = searchQuery;
+      }
     }
 
-    _applyInternalFilters(); // Appliquer les filtres pour mettre à jour _filteredMerchants
-    notifyListeners(); // Notifier l'UI que la liste des marchands (filtrée) a potentiellement changé
+    _applyInternalFilters();
+    notifyListeners();
   }
-
 
   Future<void> refreshMerchants() async {
     await loadMerchants(forceRefresh: true);
   }
 
   Merchant? getMerchantById(String id) {
-    // Devrait chercher dans _filteredMerchants ou _allLoadedMerchants selon le besoin
     try {
       return _allLoadedMerchants.firstWhere((merchant) => merchant.id == id);
     } catch (e) {

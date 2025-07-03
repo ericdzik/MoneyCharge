@@ -111,89 +111,84 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
             );
           }
 
-          // Envelopper la Column principale dans un SingleChildScrollView
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                // Résumé du solde
-                BalanceSummaryWidget(balance: provider.balance),
+          return Column(
+            children: [
+              // Résumé du solde
+              BalanceSummaryWidget(balance: provider.balance),
 
-                // Statistiques par période
-                Container(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  margin: const EdgeInsets.all(AppDimensions.paddingL),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+              // Statistiques par période
+              Container(
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                margin: const EdgeInsets.all(AppDimensions.paddingL),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Statistiques',
+                      style: AppTextStyles.h3.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Statistiques',
-                        style: AppTextStyles.h3.copyWith(
-                          fontWeight: FontWeight.bold,
+                    ),
+                    const SizedBox(height: AppDimensions.paddingM),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            'Revenus',
+                            _getRevenueForCurrentTab(provider),
+                            Icons.trending_up,
+                            AppColors.success,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppDimensions.paddingM),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildStatCard(
-                              'Revenus',
-                              _getRevenueForCurrentTab(provider),
-                              Icons.trending_up,
-                              AppColors.success,
-                            ),
+                        const SizedBox(width: AppDimensions.paddingM),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Dépenses',
+                            _getExpensesForCurrentTab(provider),
+                            Icons.trending_down,
+                            AppColors.outOfStock,
                           ),
-                          const SizedBox(width: AppDimensions.paddingM),
-                          Expanded(
-                            child: _buildStatCard(
-                              'Dépenses',
-                              _getExpensesForCurrentTab(provider),
-                              Icons.trending_down,
-                              AppColors.outOfStock,
-                            ),
+                        ),
+                        const SizedBox(width: AppDimensions.paddingM),
+                        Expanded(
+                          child: _buildStatCard(
+                            'Bénéfice',
+                            _getProfitForCurrentTab(provider),
+                            Icons.account_balance_wallet,
+                            _getProfitForCurrentTab(provider) >= 0
+                                ? AppColors.primary
+                                : AppColors.outOfStock,
                           ),
-                          const SizedBox(width: AppDimensions.paddingM),
-                          Expanded(
-                            child: _buildStatCard(
-                              'Bénéfice',
-                              _getProfitForCurrentTab(provider),
-                              Icons.account_balance_wallet,
-                              _getProfitForCurrentTab(provider) >= 0
-                                  ? AppColors.primary
-                                  : AppColors.outOfStock,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
+              ),
 
-                // Liste des transactions
-                SizedBox( // Envelopper TabBarView dans un SizedBox avec une hauteur fixe pour test
-                  height: 400.0, // Hauteur de test, à ajuster ou rendre dynamique
-                  child: TabBarView(
-                    controller: _tabController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      _buildTransactionsList(provider.todayTransactions),
-                      _buildTransactionsList(provider.weekTransactions),
-                      _buildTransactionsList(provider.monthTransactions),
-                    ],
-                  ),
+              // Liste des transactions
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildTransactionsList(provider.todayTransactions),
+                    _buildTransactionsList(provider.weekTransactions),
+                    _buildTransactionsList(provider.monthTransactions),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           );
         },
       ),
@@ -259,8 +254,6 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     }
 
     return ListView.builder(
-      // Retirer shrinkWrap et NeverScrollableScrollPhysics pour permettre le défilement
-      // à l'intérieur du SizedBox parent du TabBarView.
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingL,
         vertical: AppDimensions.paddingM,

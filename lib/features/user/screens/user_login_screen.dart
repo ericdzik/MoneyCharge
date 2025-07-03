@@ -55,11 +55,11 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
       if (!mounted) return;
 
       if (authProvider.isAuthenticated) {
-        print('[UnifiedLoginScreen._handleLogin] User IS Authenticated. UserType from provider: ${authProvider.userType}. Attempting redirection.');
+        print('[UnifiedLoginScreen._handleLogin] User IS Authenticated. UserType: ${authProvider.userType}');
         final defaultRoute = RouteGuards.getDefaultRouteForUserType(
           authProvider.userType,
         );
-        print('[UnifiedLoginScreen._handleLogin] Navigating to defaultRoute: $defaultRoute for userType: ${authProvider.userType}');
+        print('[UnifiedLoginScreen._handleLogin] Navigating to defaultRoute: $defaultRoute');
         Navigator.pushReplacementNamed(context, defaultRoute);
 
         ScaffoldMessenger.of(context).showSnackBar(

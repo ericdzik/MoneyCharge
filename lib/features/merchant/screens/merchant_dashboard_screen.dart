@@ -8,8 +8,6 @@ import '../models/merchant_auth_model.dart';
 import '../widgets/merchant_header_widget.dart';
 import '../widgets/dashboard_stats_widget.dart';
 import '../../../core/constants/app_routes.dart';
-import '../../../providers/transaction_provider.dart'; // Importer TransactionProvider
-
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -19,27 +17,23 @@ class MerchantDashboardScreen extends StatefulWidget {
       _MerchantDashboardScreenState();
 }
 
-
 class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
-  // Supprimer les variables d'état pour les données simulées
-  // int _totalServices = 8;
-  // int _activeServices = 6;
-  // double _totalRevenue = 125000;
-  // int _totalTransactions = 45;
+  // Remove simulated data
+  // late MerchantAuthModel _merchant;
+  int _totalServices = 8; // Keep for now, will be dynamic later
+  int _activeServices = 6; // Keep for now, will be dynamic later
+  double _totalRevenue = 125000; // Keep for now, will be dynamic later
+  int _totalTransactions = 45; // Keep for now, will be dynamic later
 
-  @override
-  void initState() {
-    super.initState();
-    // Charger les données de transaction lorsque l'écran est initialisé
-    // Utiliser addPostFrameCallback pour s'assurer que le contexte est disponible pour Provider.of
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.isAuthenticated && authProvider.userType == UserType.merchant) {
-        Provider.of<TransactionProvider>(context, listen: false)
-            .fetchTransactionsAndBalance(authProvider);
-      }
-    });
-  }
+  // initState can be removed if _loadMerchantData is removed and no other init logic needed
+  // @override
+  // void initState() {
+  //   super.initState();
+  //   // _loadMerchantData(); // Removed
+  // }
+
+  // _loadMerchantData is removed as we'll use AuthProvider
+  // void _loadMerchantData() { ... }
 
   @override
   Widget build(BuildContext context) {
@@ -90,31 +84,11 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                       style: AppTextStyles.h2.copyWith(fontSize: 20),
                     ),
                     const SizedBox(height: 16),
-                    // Utiliser Consumer<TransactionProvider> pour la section des statistiques
-                    Consumer<TransactionProvider>(
-                      builder: (context, transactionProvider, child) {
-                        if (transactionProvider.isLoading) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (transactionProvider.error != null) {
-                          // Afficher un message d'erreur simple ou un widget d'erreur plus élaboré
-                          return Center(
-                            child: Text(
-                              'Erreur de chargement des statistiques: ${transactionProvider.error}',
-                              style: const TextStyle(color: Colors.red),
-                            ),
-                          );
-                        }
-                        return DashboardStatsWidget(
-                          currentBalance: transactionProvider.balance?.currentBalance,
-                          todayRevenue: transactionProvider.todayRevenue,
-                          todayProfit: transactionProvider.todayProfit,
-                          todayTransactionCount: transactionProvider.todayTransactions.length,
-                          // Les autres paramètres (totalServices, activeServices) sont retirés
-                          // car DashboardStatsWidget a été simplifié pour n'afficher que les 4 métriques financières.
-                          // Si on voulait les garder, il faudrait leur passer des valeurs (simulées ou réelles si disponibles).
-                        );
-                      },
+                    DashboardStatsWidget(
+                      totalServices: _totalServices,
+                      activeServices: _activeServices,
+                      totalRevenue: _totalRevenue,
+                      totalTransactions: _totalTransactions,
                     ),
                     const SizedBox(height: 32),
 
@@ -176,7 +150,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           icon: Icons.person,
           color: Colors.blue,
           onTap: () {
-            Navigator.pushNamed(context, AppRoutes.editMerchantProfile);
+            // Navigation vers le profil
           },
         ),
         _buildActionCard(

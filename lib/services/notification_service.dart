@@ -238,9 +238,9 @@ class NotificationService {
         body,
         tzScheduledDate,
         details,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle, // Corrigé
+        androidAllowWhileIdle: true,
         uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime, // Doit être correctement typé par l'import
+            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
     } catch (e) {

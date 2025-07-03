@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:provider/provider.dart'; // Ajout de Provider
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
-import '../../../providers/merchant_provider.dart'; // Ajout de MerchantProvider
+import '../../../providers/merchant_provider.dart';
+import '../../../core/constants/app_text_styles.dart'; // Ajout pour AppTextStyles
 
 class FilterBarWidget extends StatefulWidget {
   const FilterBarWidget({super.key});
@@ -13,78 +13,105 @@ class FilterBarWidget extends StatefulWidget {
 }
 
 class _FilterBarWidgetState extends State<FilterBarWidget> {
-  // String _selectedFilter = 'Tous'; // Supprimé, l'état sera dans MerchantProvider
-  // final List<String> _filters = [ // Supprimé
-  //   'Tous',
-  //   'Disponible',
-  //   'Stock faible',
-  //   'À proximité',
-  // ];
-  final TextEditingController _searchController = TextEditingController(); // Pour la recherche future
+  final TextEditingController _searchController = TextEditingController();
+  // Liste des services disponibles pour le dialogue de filtre
+  final List<String> _availableServices = ['Recharge crédit', 'Transfert d\'argent', 'Achat de carte SIM'];
+
+
+  @override
+  void initState() {
+    super.initState();
+    // Potentiellement initialiser _searchController.text si on veut qu'il reflète un filtre de recherche existant
+    // final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    // _searchController.text = merchantProvider.searchQuery;
+    // _searchController.addListener(_onSearchChanged); // Pour recherche dynamique
+  }
+
+  // void _onSearchChanged() {
+  //   // Implémenter la logique de debounce ici si nécessaire
+  //   final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+  //   merchantProvider.applyFilters(searchQuery: _searchController.text, updateSearchQuery: true);
+  // }
+
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Accéder au MerchantProvider pour l'état actuel des filtres et pour appliquer les nouveaux filtres
-    final merchantProvider = Provider.of<MerchantProvider>(context);
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.paddingM),
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
-      ),
-      child: Column(
-        children: [
-          Row(
+    // Utiliser Consumer pour reconstruire lorsque les filtres changent dans le provider
+    return Consumer<MerchantProvider>(
+      builder: (context, merchantProvider, child) {
+        return Container(
+          padding: const EdgeInsets.all(AppDimensions.paddingM),
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min, // Pour que la Column ne prenne que la place nécessaire
             children: [
-              Expanded(
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher un point de service...',
-                    prefixIcon: const Icon(Icons.search),
-                    // La recherche sera implémentée plus tard
-                    // suffixIcon: _searchController.text.isNotEmpty
-                    //   ? IconButton(icon: const Icon(Icons.clear), onPressed: () {
-                    //       _searchController.clear();
-                    //       // merchantProvider.applyFilters(searchQuery: ''); // Exemple
-                    //     })
-                    //   : null,
-                    filled: true,
-                    fillColor: AppColors.background,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.paddingM,
-                      vertical: AppDimensions.paddingS,
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Rechercher (nom, adresse)...',
+                        prefixIcon: const Icon(Icons.search),
+                        suffixIcon: _searchController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  merchantProvider.applyFilters(searchQuery: '', updateSearchQuery: true);
+                                },
+                              )
+                            : null,
+                        filled: true,
+                        fillColor: AppColors.background,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.paddingM,
+                          vertical: AppDimensions.paddingS,
+                        ),
+                      ),
+                      onSubmitted: (query) { // Appliquer la recherche sur soumission
+                        merchantProvider.applyFilters(searchQuery: query, updateSearchQuery: true);
+                      },
                     ),
                   ),
-                  // onChanged: (query) {
-                  //   // Déclencher la recherche (avec debounce)
-                  //   // merchantProvider.applyFilters(searchQuery: query); // Exemple
-                  // },
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    onPressed: () => _showFilterDialog(context, merchantProvider),
+                    tooltip: 'Plus de filtres',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.paddingS),
+              SingleChildScrollView( // Pour les chips si trop nombreux
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    _buildMerchantTypeChip(context, merchantProvider, 'Tous', null),
+                    const SizedBox(width: AppDimensions.paddingS),
+                    _buildMerchantTypeChip(context, merchantProvider, 'Boutiques', 'boutique'),
+                    const SizedBox(width: AppDimensions.paddingS),
+                    _buildMerchantTypeChip(context, merchantProvider, 'Ambulants', 'ambulant'),
+                  ],
                 ),
-              ),
-              IconButton( // Bouton pour les filtres avancés (services, stock)
-                icon: const Icon(Icons.filter_list),
-                onPressed: () => _showFilterDialog(context),
-                tooltip: 'Filtres avancés',
-              ),
+              )
             ],
           ),
-          const SizedBox(height: AppDimensions.paddingS),
-          // Filtres par Type de Marchand
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildMerchantTypeChip(context, merchantProvider, 'Tous', null),
-              _buildMerchantTypeChip(context, merchantProvider, 'Boutiques', 'boutique'),
-              _buildMerchantTypeChip(context, merchantProvider, 'Ambulants', 'ambulant'),
-            ],
-          )
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -94,173 +121,177 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
     String label,
     String? filterValue,
   ) {
-    // La sélection est basée sur activeMerchantTypeFilter du provider
     final bool isSelected = provider.activeMerchantTypeFilter == filterValue;
 
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (bool selected) {
-        if (selected) { // Un ChoiceChip ne peut être que sélectionné, pas dé-sélectionné directement par onSelected(false)
-          provider.applyFilters(merchantType: filterValue);
-        }
+        // Un ChoiceChip est sélectionné, on applique la valeur (ou null pour "Tous")
+        // Les ChoiceChip ne se déselectionnent pas par un deuxième clic sur eux-mêmes s'ils font partie d'un groupe.
+        // Le comportement est que seul un peut être actif.
+        // Si l'utilisateur clique sur le même chip déjà sélectionné, onSelected est appelé avec selected = true.
+        // Si on veut permettre de déselectionner en cliquant à nouveau pour revenir à "Tous",
+        // il faudrait une logique comme: provider.applyFilters(merchantType: isSelected ? filterValue : null);
+        // Mais avec un chip "Tous" séparé, la logique actuelle est plus simple:
+        provider.applyFilters(merchantType: filterValue, merchantTypeIsSet: true);
       },
-      backgroundColor: AppColors.background,
+      backgroundColor: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
       selectedColor: AppColors.primary,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppColors.textPrimary,
+        color: isSelected ? AppColors.primary : AppColors.textPrimary,
         fontWeight: FontWeight.w500,
       ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        side: BorderSide(
+          color: isSelected ? AppColors.primary : AppColors.border,
+          width: 1,
+        ),
+      ),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingS, vertical: AppDimensions.paddingXS/2),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS/2),
     );
   }
 
-  void _showFilterDialog(BuildContext context) {
-    // Utiliser le provider pour obtenir l'état actuel des filtres de service/stock
-    // et pour initialiser l'état local du dialogue.
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-
-    // État local pour le dialogue
-    Map<String, bool> dialogSelectedServices = Map.from(
-        merchantProvider.activeServiceFilters.asMap().map((_, s) => MapEntry(s, true))
-    );
-    // S'assurer que tous les services disponibles sont dans la map, même s'ils ne sont pas actifs
-    final availableServices = ['Recharge crédit', 'Transfert d\'argent', 'Achat de carte SIM'];
-    for (var service in availableServices) {
-      dialogSelectedServices.putIfAbsent(service, () => false);
+  void _showFilterDialog(BuildContext context, MerchantProvider merchantProvider) {
+    // État local pour le dialogue, initialisé avec les filtres actifs du provider
+    Map<String, bool> dialogSelectedServices = {};
+    for (var service in _availableServices) {
+      dialogSelectedServices[service] = merchantProvider.activeServiceFilters.contains(service);
     }
 
     String? dialogStockServiceFilter = merchantProvider.activeStockServiceFilter;
-    bool dialogOnlyShowAvailableStock = merchantProvider.onlyShowAvailableStockForService;
+    // Si un service est actif pour le filtre de stock, et qu'il n'est pas dans la liste des services sélectionnés
+    // pour le dialogue, on le désactive (car l'UI du dialogue ne le montrerait pas).
+    if (dialogStockServiceFilter != null && !(dialogSelectedServices[dialogStockServiceFilter] ?? false)) {
+        dialogStockServiceFilter = null;
+    }
+
+    bool dialogOnlyShowAvailableStock = merchantProvider.onlyShowAvailableStockForService && (dialogStockServiceFilter != null);
+
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Important pour les contenus longs
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusM)),
       ),
-      builder: (BuildContext dialogContext) { // Utiliser un nouveau contexte pour le StatefulBuilder
+      builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
-            // Logique pour déterminer si le checkbox de stock doit être affiché
-            List<String> currentlyCheckedServices = dialogSelectedServices.entries
+            List<String> currentlyCheckedServicesInDialog = dialogSelectedServices.entries
                 .where((e) => e.value)
                 .map((e) => e.key)
                 .toList();
-            bool showStockFilterOption = currentlyCheckedServices.length == 1;
-            if (showStockFilterOption && dialogStockServiceFilter == null) {
-                 // Si une seule case est cochée, on présélectionne ce service pour le filtre de stock
-                dialogStockServiceFilter = currentlyCheckedServices.first;
-            } else if (!showStockFilterOption) {
-                // Si plus d'une ou zéro case est cochée, on ne peut pas filtrer par stock pour un service unique
+            bool showStockFilterOptionForDialog = currentlyCheckedServicesInDialog.length == 1;
+
+            // Si l'option de stock doit être affichée et que dialogStockServiceFilter est null,
+            // le pré-remplir avec le seul service coché.
+            if (showStockFilterOptionForDialog && dialogStockServiceFilter == null) {
+                dialogStockServiceFilter = currentlyCheckedServicesInDialog.first;
+            }
+            // Si l'option de stock ne doit PAS être affichée, s'assurer que dialogStockServiceFilter est null
+            // et que dialogOnlyShowAvailableStock est false.
+            else if (!showStockFilterOptionForDialog) {
                 dialogStockServiceFilter = null;
-                // dialogOnlyShowAvailableStock = false; // Optionnel: réinitialiser aussi ce booléen
+                dialogOnlyShowAvailableStock = false;
             }
 
-
-            return Container(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Filtrer par Services et Disponibilité',
-                    style: AppTextStyles.h3.copyWith(fontSize: 18),
-                  ),
-                  const SizedBox(height: AppDimensions.paddingM),
-
-                  Text('Services Proposés :', style: AppTextStyles.body1),
-                  ...availableServices.map((serviceName) {
-                    return CheckboxListTile(
-                      title: Text(serviceName),
-                      value: dialogSelectedServices[serviceName] ?? false,
-                      onChanged: (bool? value) {
-                        setDialogState(() {
-                          dialogSelectedServices[serviceName] = value ?? false;
-                          // Réévaluer si le filtre de stock doit être affiché/modifié
-                           List<String> updatedCheckedServices = dialogSelectedServices.entries
-                              .where((e) => e.value)
-                              .map((e) => e.key)
-                              .toList();
-                          if (updatedCheckedServices.length == 1) {
-                            dialogStockServiceFilter = updatedCheckedServices.first;
-                          } else {
-                            dialogStockServiceFilter = null;
-                            dialogOnlyShowAvailableStock = false; // Réinitialiser si plus d'un service ou aucun
-                          }
-                        });
-                      },
-                      activeColor: AppColors.primary,
-                      controlAffinity: ListTileControlAffinity.leading,
-                    );
-                  }).toList(),
-
-                  const SizedBox(height: AppDimensions.paddingS),
-
-                  if (showStockFilterOption && dialogStockServiceFilter != null)
-                    CheckboxListTile(
-                      title: Text('Uniquement stock disponible pour "$dialogStockServiceFilter"'),
-                      value: dialogOnlyShowAvailableStock,
-                      onChanged: (bool? value) {
-                        setDialogState(() {
-                          dialogOnlyShowAvailableStock = value ?? false;
-                        });
-                      },
-                      activeColor: AppColors.primary,
-                      controlAffinity: ListTileControlAffinity.leading,
+            return Padding( // Ajout de Padding pour éviter que le clavier ne cache les boutons
+              padding: MediaQuery.of(context).viewInsets,
+              child: SingleChildScrollView( // Permettre le défilement si le contenu est trop long
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Filtrer par Services et Disponibilité',
+                      style: AppTextStyles.h3.copyWith(fontSize: 18),
                     ),
+                    const SizedBox(height: AppDimensions.paddingM),
 
-                  const SizedBox(height: AppDimensions.paddingL),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            // Réinitialiser l'état local du dialogue et appliquer des filtres vides pour ces types
-                            setDialogState(() {
-                              for (var key in dialogSelectedServices.keys) {
-                                dialogSelectedServices[key] = false;
-                              }
-                              dialogStockServiceFilter = null;
-                              dialogOnlyShowAvailableStock = false;
-                            });
-                            merchantProvider.applyFilters(
-                              services: [], // Efface les filtres de service
-                              stockService: null, // Efface le filtre de stock
-                              onlyAvailableStock: false,
-                              // Ne pas mettre clearAll:true pour ne pas affecter le type de marchand
-                            );
-                            Navigator.pop(dialogContext); // Utiliser dialogContext
-                          },
-                          child: const Text('Réinitialiser Filtres'),
-                        ),
-                      ),
-                      const SizedBox(width: AppDimensions.paddingM),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            List<String> finalSelectedServices = dialogSelectedServices.entries
-                                .where((e) => e.value)
-                                .map((e) => e.key)
-                                .toList();
+                    Text('Services Proposés :', style: AppTextStyles.body1Bold),
+                    ..._availableServices.map((serviceName) {
+                      return CheckboxListTile(
+                        title: Text(serviceName),
+                        value: dialogSelectedServices[serviceName] ?? false,
+                        onChanged: (bool? value) {
+                          setDialogState(() {
+                            dialogSelectedServices[serviceName] = value ?? false;
+                            // Réévaluer ici, car la logique est dans le builder du StatefulBuilder
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                      );
+                    }).toList(),
 
-                            merchantProvider.applyFilters(
-                              services: finalSelectedServices,
-                              stockService: showStockFilterOption ? dialogStockServiceFilter : null,
-                              onlyAvailableStock: showStockFilterOption ? dialogOnlyShowAvailableStock : false,
-                              // Ne pas mettre clearAll:true pour ne pas affecter le type de marchand
-                            );
-                            Navigator.pop(dialogContext); // Utiliser dialogContext
-                          },
-                          child: const Text('Appliquer'),
-                        ),
+                    const SizedBox(height: AppDimensions.paddingS),
+
+                    if (showStockFilterOptionForDialog && dialogStockServiceFilter != null)
+                      CheckboxListTile(
+                        title: Text('Uniquement stock disponible pour "$dialogStockServiceFilter"'),
+                        value: dialogOnlyShowAvailableStock,
+                        onChanged: (bool? value) {
+                          setDialogState(() {
+                            dialogOnlyShowAvailableStock = value ?? false;
+                          });
+                        },
+                        activeColor: AppColors.primary,
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.paddingS), // Pour l'espace en bas du BottomSheet
-                ],
+
+                    const SizedBox(height: AppDimensions.paddingL),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {
+                              setDialogState(() {
+                                for (var key in dialogSelectedServices.keys) {
+                                  dialogSelectedServices[key] = false;
+                                }
+                                // dialogStockServiceFilter reste null car showStockFilterOptionForDialog deviendra false
+                                // dialogOnlyShowAvailableStock reste false
+                              });
+                              // Appliquer la réinitialisation des filtres de service/stock au provider
+                              merchantProvider.applyFilters(clearServiceAndStockFilters: true);
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Réinitialiser'),
+                          ),
+                        ),
+                        const SizedBox(width: AppDimensions.paddingM),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              List<String> finalSelectedServices = dialogSelectedServices.entries
+                                  .where((e) => e.value)
+                                  .map((e) => e.key)
+                                  .toList();
+
+                              merchantProvider.applyFilters(
+                                services: finalSelectedServices,
+                                updateServices: true,
+                                stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
+                                updateStockService: true,
+                                onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
+                                updateOnlyAvailableStock: true
+                              );
+                              Navigator.pop(dialogContext);
+                            },
+                            child: const Text('Appliquer'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimensions.paddingS),
+                  ],
+                ),
               ),
             );
           },

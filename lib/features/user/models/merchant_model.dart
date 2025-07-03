@@ -13,11 +13,9 @@ class Merchant {
   final double latitude;
   final double longitude;
   final double distance;
-  final String? walkingTime;
-  final String? drivingTime;
-  final List<String> services;
-  final String? merchantType; // Nouveau champ
-  final Map<String, String>? serviceStockStatus; // Nouveau champ
+  final String? walkingTime; // Sera calculé dynamiquement
+  final String? drivingTime; // Sera calculé dynamiquement
+  final List<String> services; // Champ 'servicesOffered' dans Firestore
 
   // Champs calculés côté client, ne pas stocker directement dans Firestore pour ce modèle
   double? clientCalculatedDistance;
@@ -39,8 +37,6 @@ class Merchant {
     this.distance = 0.0, // Sera calculé
     this.walkingTime,
     this.drivingTime,
-    this.merchantType, // Ajouté au constructeur
-    this.serviceStockStatus, // Ajouté au constructeur
     // Initialisation des champs calculés par le client
   }) : clientCalculatedIsOpen = false, clientCalculatedStatus = MerchantStatus.available;
 
@@ -98,13 +94,9 @@ class Merchant {
       latitude: latitude,
       longitude: longitude,
       services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
-      merchantType: data['merchantType'] as String?, // Lire merchantType
-      serviceStockStatus: data['serviceStockStatus'] != null && data['serviceStockStatus'] is Map
-          ? Map<String, String>.from(data['serviceStockStatus'] as Map)
-          : null, // Lire serviceStockStatus
       // isOpen et status pourraient être initialisés à des valeurs par défaut ou déterminés plus tard
-      isOpen: false,
-      status: MerchantStatus.available,
+      isOpen: false, // À calculer dynamiquement
+      status: MerchantStatus.available, // Par défaut, ou à déterminer par la logique de stock future
       // distance, walkingTime, drivingTime seront calculés par LocationProvider ou dans l'UI
     );
   }
@@ -124,8 +116,6 @@ class Merchant {
       'walkingTime': walkingTime,
       'drivingTime': drivingTime,
       'services': services,
-      'merchantType': merchantType, // Ajouter pour la sérialisation
-      'serviceStockStatus': serviceStockStatus, // Ajouter pour la sérialisation
     };
   }
 }

@@ -58,7 +58,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         address: '123 Rue du Commerce, Abidjan',
         isVerified: true,
         createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 2)), merchantType: '',
+        lastLoginAt: DateTime.now().subtract(const Duration(hours: 2)),
       ),
       MerchantAuthModel(
         id: '2',
@@ -68,7 +68,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         address: '456 Avenue de la Paix, Abidjan',
         isVerified: false,
         createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        lastLoginAt: DateTime.now().subtract(const Duration(days: 1)), merchantType: '',
+        lastLoginAt: DateTime.now().subtract(const Duration(days: 1)),
       ),
       MerchantAuthModel(
         id: '3',
@@ -78,7 +78,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         address: '789 Boulevard des Martyrs, Abidjan',
         isVerified: true,
         createdAt: DateTime.now().subtract(const Duration(days: 45)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 5)), merchantType: '',
+        lastLoginAt: DateTime.now().subtract(const Duration(hours: 5)),
       ),
       MerchantAuthModel(
         id: '4',
@@ -88,7 +88,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         address: '321 Rue des Banques, Abidjan',
         isVerified: false,
         createdAt: DateTime.now().subtract(const Duration(days: 7)),
-        lastLoginAt: null, merchantType: '',
+        lastLoginAt: null,
       ),
     ];
 

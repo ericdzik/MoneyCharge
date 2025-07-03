@@ -43,7 +43,6 @@ class User {
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance; // Assurer l'initialisation
   StreamSubscription? _authStateSubscription;
 
   // État d'authentification
@@ -172,8 +171,8 @@ class AuthProvider with ChangeNotifier {
     print('[AuthProvider.loginUnified] Attempting login for: $email');
     _setLoading(true);
     _error = null;
-    // _userType = UserType.unknown; // Réinitialiser avant la tentative pourrait être envisagé
-    // _clearProfiles(); // Effacer les profils avant la tentative
+    // _userType = UserType.unknown; // Reset userType before login attempt? Consider implications.
+    // _clearProfiles(); // Clear profiles before login attempt?
 
     try {
       print('[AuthProvider.loginUnified] Calling _authService.loginUnified...');
@@ -181,41 +180,14 @@ class AuthProvider with ChangeNotifier {
       print('[AuthProvider.loginUnified] _authService.loginUnified returned UID: $uid');
 
       if (uid != null) {
-        // Authentification Firebase réussie. Maintenant, récupérer explicitement le profil.
-        // Il est possible que _listenToAuthChanges soit également déclenché.
-        // Pour s'assurer que loginUnified attend la récupération du profil :
-
-        // Mettre à jour _firebaseUser ici pour refléter l'utilisateur connecté
-        // Cela suppose que _authService.loginUnified a mis à jour currentUser de FirebaseAuth.
-        // Si _authService.authStateChanges est rapide, _firebaseUser pourrait déjà être mis à jour.
-        // Pour être sûr, on peut re-vérifier :
-        if (_firebaseAuth.currentUser != null && _firebaseAuth.currentUser!.uid == uid) {
-          _firebaseUser = _firebaseAuth.currentUser;
-          print('[AuthProvider.loginUnified] Firebase user confirmed: $uid. Fetching profile...');
-          await _fetchUserProfile(uid); // Attendre la récupération du profil
-          if (_userType != UserType.unknown) { // Si le profil a été trouvé et le rôle défini
-            await _updateLastLogin(uid); // Mettre à jour la date de dernière connexion
-          }
-          print('[AuthProvider.loginUnified] Profile fetched. UserType: $_userType');
-        } else {
-          // Cas improbable où currentUser n'est pas (encore) à jour ou ne correspond pas.
-          // Cela pourrait indiquer un problème de timing avec le stream authStateChanges.
-          // On pourrait forcer une nouvelle récupération de l'utilisateur Firebase si nécessaire,
-          // mais _fetchUserProfile(uid) devrait suffire si l'UID est correct.
-          print('[AuthProvider.loginUnified] Firebase currentUser not immediately reflecting the new user or UID mismatch. Relying on uid: $uid for profile fetch.');
-          // uid est garanti non-nul ici à cause du `if (uid != null)` externe.
-          // L'utilisation de uid! rend cela explicite pour l'analyseur si nécessaire.
-          await _fetchUserProfile(uid!);
-           if (_userType != UserType.unknown) {
-            await _updateLastLogin(uid!);
-          }
-          print('[AuthProvider.loginUnified] Profile fetched (after UID mismatch check). UserType: $_userType');
-           // Si _firebaseUser n'est toujours pas défini, cela pourrait être un souci, mais _fetchUserProfile
-           // ne dépend que de l'UID pour récupérer les données Firestore.
-           // L'état _firebaseUser sera de toute façon mis à jour par _listenToAuthChanges.
-        }
+        // At this point, Firebase Auth was successful.
+        // _listenToAuthChanges stream will handle fetching profile and setting userType.
+        // We don't need to explicitly set _userType or _error here if auth was successful.
+        // The crucial part is that _listenToAuthChanges should run and populate the profile.
+        print('[AuthProvider.loginUnified] Firebase Auth successful via service. UID: $uid. Waiting for _listenToAuthChanges to update profile.');
       } else {
-        // Ce cas (uid est null mais pas d'exception) ne devrait pas se produire.
+        // This case (uid is null but no exception from _authService.loginUnified) should ideally not happen.
+        // _authService.loginUnified should throw if Firebase Auth fails.
         _error = "Erreur de connexion: UID non retourné par AuthService.";
         _userType = UserType.unknown;
         _clearProfiles();
@@ -223,13 +195,13 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       print('[AuthProvider.loginUnified] Caught exception: ${e.toString()}');
-      _error = e.toString();
+      _error = e.toString(); // This will capture "Erreur de connexion: Firebase: Error (auth/invalid-credential)..."
       _userType = UserType.unknown;
       _clearProfiles();
       print('[AuthProvider.loginUnified] Exception caught. _error set to: $_error, _userType set to: $_userType');
     } finally {
-      print('[AuthProvider.loginUnified] Finally block. Current _error: $_error, _userType: $_userType, isAuthenticated: $isAuthenticated, firebaseUser UID: ${_firebaseUser?.uid}');
-      _setLoading(false); // Cela appellera notifyListeners()
+      print('[AuthProvider.loginUnified] Finally block. Current _error: $_error, _userType: $_userType, _firebaseUser: ${_firebaseUser?.uid}');
+      _setLoading(false); // This will call notifyListeners()
       print('[AuthProvider.loginUnified] Login attempt finished. isLoading is now false.');
     }
   }
@@ -308,11 +280,11 @@ class AuthProvider with ChangeNotifier {
     required String phone,
     required String address,
     required String openingHours,
-    required List<String> services, // Modifié de String à List<String>
+    required String services,
     required String password,
+    // Add new parameters for location
     required double? latitude,
     required double? longitude,
-    required String merchantType, // Ajouté
   }) async {
     _setLoading(true);
     _error = null;
@@ -333,15 +305,14 @@ class AuthProvider with ChangeNotifier {
           'phone': phone,
           'address': address,
           'openingHours': openingHours,
-          'services': services, // Sauvegarder la liste des services
-          'isVerified': false,
+          'services': services,
+          'isVerified': false, // Les marchands commencent comme non vérifiés
           'isActive': true,
           'lastLoginAt': FieldValue.serverTimestamp(),
-          'latitude': latitude,
-          'longitude': longitude,
-          'merchantType': merchantType, // Sauvegarder le type de marchand
+          'latitude': latitude, // Add latitude to Firestore data
+          'longitude': longitude, // Add longitude to Firestore data
           // Ajouter ici d'autres champs spécifiques aux marchands si nécessaire
-        }, SetOptions(merge: true));
+        }, SetOptions(merge: true)); // merge: true pour ne pas écraser d'autres champs si le doc existe déjà (peu probable ici)
 
         // L'état sera mis à jour par _listenToAuthChanges
       } else {
@@ -361,7 +332,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   UserType _parseUserType(String? role) { // Prend maintenant un String?
-    switch (role?.toLowerCase()) {
+    switch (role?.toLowerCase()) { // Utilise null-safe operator
       case 'merchant':
         return UserType.merchant;
       case 'admin':
@@ -369,65 +340,7 @@ class AuthProvider with ChangeNotifier {
       case 'user':
         return UserType.user;
       default:
-        return UserType.unknown;
-    }
-  }
-
-  Future<bool> updateMerchantProfile({
-    required String businessName,
-    required String phone,
-    required String address,
-    required String openingHours,
-    required List<String> services,
-    required Map<String, String> serviceStockStatus,
-    // Potentiellement d'autres champs comme latitude, longitude si modifiables
-  }) async {
-    _setLoading(true);
-    _error = null;
-
-    if (_firebaseUser == null || _userType != UserType.merchant) {
-      _error = "Aucun marchand connecté pour la mise à jour.";
-      _setLoading(false);
-      return false;
-    }
-    final uid = _firebaseUser!.uid;
-
-    Map<String, dynamic> dataToUpdate = {
-      'name': businessName, // 'name' est utilisé pour businessName dans Firestore
-      'phone': phone,
-      'address': address,
-      'openingHours': openingHours,
-      'services': services,
-      'serviceStockStatus': serviceStockStatus,
-      'lastProfileUpdateAt': FieldValue.serverTimestamp(), // Pour tracer la mise à jour
-    };
-
-    try {
-      await _firestore.collection('users').doc(uid).update(dataToUpdate);
-
-      // Rafraîchir le profil localement
-      // Option 1: Recharger depuis Firestore (plus sûr pour la cohérence)
-      await _fetchUserProfile(uid);
-      // Option 2: Mettre à jour le modèle local (plus rapide, mais attention à la synchro)
-      // if (_merchantProfile != null) {
-      //   _merchantProfile = _merchantProfile!.copyWith(
-      //     businessName: businessName,
-      //     phone: phone,
-      //     address: address,
-      //     openingHours: openingHours,
-      //     services: services,
-      //     serviceStockStatus: serviceStockStatus,
-      //     // lastLoginAt ne change pas ici, createdAt non plus
-      //   );
-      // }
-
-      _setLoading(false);
-      notifyListeners(); // Notifier même si on recharge, car _fetchUserProfile notifie aussi.
-      return true;
-    } catch (e) {
-      _error = "Erreur lors de la mise à jour du profil: ${e.toString()}";
-      _setLoading(false);
-      return false;
+        return UserType.unknown; // Renvoyer unknown si rôle null ou non reconnu
     }
   }
 }
