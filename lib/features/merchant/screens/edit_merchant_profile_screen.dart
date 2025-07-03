@@ -30,7 +30,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   // Gestion des services
   final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d\'argent', 'Carte SIM'];
   Map<String, bool> _selectedServices = {};
-  String _customService = ''; // Pour le service "Autre" s'il est personnalisé
+  // String _customService = ''; // Retiré, _otherServiceController.text est la source de vérité
 
   // Gestion du stock des services
   final List<String> _stockStatusOptions = ['Disponible', 'Faible', 'Épuisé'];
@@ -54,7 +54,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       if (!_predefinedServices.contains(service)) {
         _selectedServices['Autre'] = true; // Cocher "Autre"
         _otherServiceController.text = service; // Remplir le champ "Autre"
-        _customService = service; // Stocker le nom du service personnalisé
+        // _customService = service; // Retiré
       }
     });
     if (_selectedServices['Autre'] == null) { // S'assurer que "Autre" a une entrée
@@ -170,7 +170,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(authProvider.error ?? 'Erreur lors de la mise à jour du profil.'),
-              backgroundColor: AppColors.error, // Assurez-vous d'avoir AppColors.error
+              backgroundColor: Colors.red, // Utilisation de Colors.red directement
             ),
           );
         }
@@ -261,7 +261,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
                     _selectedServices['Autre'] = value ?? false;
                     if (!(_selectedServices['Autre']!)) { // Si "Autre" est décoché, effacer le texte
                         _otherServiceController.clear();
-                        _customService = '';
+                        // _customService = ''; // Retiré
                     }
                     _updateStockStatusMapWithSelectedServices();
                   });
@@ -275,12 +275,9 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
                     controller: _otherServiceController,
                     labelText: 'Précisez le service "Autre"',
                     hintText: 'Ex: Réparation téléphone',
-                    onChanged: (value) {
-                        setState(() {
-                            _customService = value; // Mettre à jour le nom du service personnalisé
-                            _updateStockStatusMapWithSelectedServices();
-                        });
-                    }
+                    // onChanged n'est pas supporté par CustomTextField, la valeur sera lue depuis le controller
+                    // La mise à jour de _customService se fera via le controller avant la sauvegarde si nécessaire
+                    // ou lors du changement de la checkbox "Autre"
                   ),
                 ),
               const SizedBox(height: AppDimensions.paddingL),
