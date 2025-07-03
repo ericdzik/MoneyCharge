@@ -102,7 +102,7 @@ class DashboardStatsWidget extends StatelessWidget {
           Text(
             title,
             style: AppTextStyles.body2.copyWith(
-              color: AppColors.textOnSurface.withOpacity(0.9), // Légèrement plus visible
+              color: AppColors.textDisabled.withOpacity(0.9), // Légèrement plus visible
               fontWeight: FontWeight.w500,
               fontSize: 12, // Taille de police pour le titre
             ),

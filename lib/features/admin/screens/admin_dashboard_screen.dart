@@ -50,46 +50,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   void _loadMerchants() {
     // Simulation de données marchands
     _merchants = [
-      MerchantAuthModel(
-        id: '1',
-        email: 'boutique1@example.com',
-        businessName: 'Boutique Express',
-        phone: '+225 0123456789',
-        address: '123 Rue du Commerce, Abidjan',
-        isVerified: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      MerchantAuthModel(
-        id: '2',
-        email: 'boutique2@example.com',
-        businessName: 'Cyber Café Central',
-        phone: '+225 0123456790',
-        address: '456 Avenue de la Paix, Abidjan',
-        isVerified: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        lastLoginAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      MerchantAuthModel(
-        id: '3',
-        email: 'boutique3@example.com',
-        businessName: 'Point Service Plus',
-        phone: '+225 0123456791',
-        address: '789 Boulevard des Martyrs, Abidjan',
-        isVerified: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 45)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-      MerchantAuthModel(
-        id: '4',
-        email: 'boutique4@example.com',
-        businessName: 'E-Services',
-        phone: '+225 0123456792',
-        address: '321 Rue des Banques, Abidjan',
-        isVerified: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 7)),
-        lastLoginAt: null,
-      ),
+      
     ];
 
     setState(() {
