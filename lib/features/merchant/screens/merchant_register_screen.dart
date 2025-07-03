@@ -27,7 +27,11 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _openingHoursController = TextEditingController();
-  final _servicesController = TextEditingController(); // Pourra être une liste de services plus tard
+  // final _servicesController = TextEditingController(); // Ancien champ texte pour les services, sera remplacé
+  late TextEditingController _otherServiceController; // Pour le service "Autre"
+
+  final List<String> _predefinedServices = ['Recharge de crédit', 'Transfert d\'argent', 'Achat de crédit'];
+  Map<String, bool> _selectedServices = {};
 
   String? _selectedMerchantType;
   final List<String> _merchantTypes = [
@@ -59,6 +63,12 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   void initState() {
     super.initState();
     _requestLocationPermissionAndFetch();
+    _otherServiceController = TextEditingController();
+    // Initialiser _selectedServices avec tous les services prédéfinis à false
+    for (var service in _predefinedServices) {
+      _selectedServices[service] = false;
+    }
+    _selectedServices['Autre'] = false; // Ajouter l'option "Autre"
   }
 
   Future<void> _requestLocationPermissionAndFetch() async {
@@ -126,7 +136,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _openingHoursController.dispose();
-    _servicesController.dispose();
+    // _servicesController.dispose(); // Ancien contrôleur
+    _otherServiceController.dispose(); // Nouveau contrôleur pour "Autre"
     super.dispose();
   }
 
@@ -373,18 +384,55 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                CustomTextField(
-                  controller: _servicesController,
-                  labelText: 'Services proposés',
-                  hintText: 'Ex: Recharge crédit, Cartes SIM, Forfaits data',
-                  maxLines: 2,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez décrire vos services';
-                    }
-                    return null;
-                  },
+                // Section Services Proposés
+                Text(
+                  'Services Proposés',
+                  style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
                 ),
+                const SizedBox(height: AppDimensions.paddingS),
+                ..._predefinedServices.map((service) {
+                  return CheckboxListTile(
+                    title: Text(service),
+                    value: _selectedServices[service],
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _selectedServices[service] = value ?? false;
+                      });
+                    },
+                    activeColor: AppColors.primary,
+                    controlAffinity: ListTileControlAffinity.leading,
+                  );
+                }).toList(),
+                CheckboxListTile(
+                  title: const Text('Autre'),
+                  value: _selectedServices['Autre'],
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _selectedServices['Autre'] = value ?? false;
+                      if (!(_selectedServices['Autre']!)) {
+                        _otherServiceController.clear();
+                      }
+                    });
+                  },
+                  activeColor: AppColors.primary,
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+                if (_selectedServices['Autre'] == true)
+                  Padding(
+                    padding: const EdgeInsets.only(left: AppDimensions.paddingXL, right: AppDimensions.paddingM, bottom: AppDimensions.paddingM),
+                    child: CustomTextField(
+                      controller: _otherServiceController,
+                      labelText: 'Précisez le service "Autre"',
+                      hintText: 'Ex: Réparation téléphone',
+                      validator: (value) {
+                        if (_selectedServices['Autre'] == true && (value == null || value.isEmpty)) {
+                          return 'Veuillez préciser le service "Autre"';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                // Fin Section Services Proposés
                 const SizedBox(height: 24),
 
                 // Informations de connexion
@@ -695,6 +743,31 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       return;
     }
 
+    // Construire la liste finale des services
+    List<String> finalServices = [];
+    _selectedServices.forEach((serviceName, isSelected) {
+      if (isSelected) {
+        if (serviceName == 'Autre') {
+          if (_otherServiceController.text.trim().isNotEmpty) {
+            finalServices.add(_otherServiceController.text.trim());
+          }
+        } else {
+          finalServices.add(serviceName);
+        }
+      }
+    });
+
+    // Validation: s'assurer qu'au moins un service est sélectionné ou que "Autre" est rempli
+    if (finalServices.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez sélectionner au moins un service ou préciser le service "Autre".'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     try {
       await authProvider.registerMerchant(
         businessName: _businessNameController.text,
@@ -702,7 +775,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         phone: _phoneController.text,
         address: _addressController.text,
         openingHours: _openingHoursController.text,
-        services: _servicesController.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
+        // services: _servicesController.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(), // Ancienne méthode
+        services: finalServices, // Nouvelle méthode
         password: _passwordController.text,
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
