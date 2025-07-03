@@ -361,7 +361,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   UserType _parseUserType(String? role) { // Prend maintenant un String?
-    switch (role?.toLowerCase()) { // Utilise null-safe operator
+    switch (role?.toLowerCase()) {
       case 'merchant':
         return UserType.merchant;
       case 'admin':
@@ -369,7 +369,65 @@ class AuthProvider with ChangeNotifier {
       case 'user':
         return UserType.user;
       default:
-        return UserType.unknown; // Renvoyer unknown si rôle null ou non reconnu
+        return UserType.unknown;
+    }
+  }
+
+  Future<bool> updateMerchantProfile({
+    required String businessName,
+    required String phone,
+    required String address,
+    required String openingHours,
+    required List<String> services,
+    required Map<String, String> serviceStockStatus,
+    // Potentiellement d'autres champs comme latitude, longitude si modifiables
+  }) async {
+    _setLoading(true);
+    _error = null;
+
+    if (_firebaseUser == null || _userType != UserType.merchant) {
+      _error = "Aucun marchand connecté pour la mise à jour.";
+      _setLoading(false);
+      return false;
+    }
+    final uid = _firebaseUser!.uid;
+
+    Map<String, dynamic> dataToUpdate = {
+      'name': businessName, // 'name' est utilisé pour businessName dans Firestore
+      'phone': phone,
+      'address': address,
+      'openingHours': openingHours,
+      'services': services,
+      'serviceStockStatus': serviceStockStatus,
+      'lastProfileUpdateAt': FieldValue.serverTimestamp(), // Pour tracer la mise à jour
+    };
+
+    try {
+      await _firestore.collection('users').doc(uid).update(dataToUpdate);
+
+      // Rafraîchir le profil localement
+      // Option 1: Recharger depuis Firestore (plus sûr pour la cohérence)
+      await _fetchUserProfile(uid);
+      // Option 2: Mettre à jour le modèle local (plus rapide, mais attention à la synchro)
+      // if (_merchantProfile != null) {
+      //   _merchantProfile = _merchantProfile!.copyWith(
+      //     businessName: businessName,
+      //     phone: phone,
+      //     address: address,
+      //     openingHours: openingHours,
+      //     services: services,
+      //     serviceStockStatus: serviceStockStatus,
+      //     // lastLoginAt ne change pas ici, createdAt non plus
+      //   );
+      // }
+
+      _setLoading(false);
+      notifyListeners(); // Notifier même si on recharge, car _fetchUserProfile notifie aussi.
+      return true;
+    } catch (e) {
+      _error = "Erreur lors de la mise à jour du profil: ${e.toString()}";
+      _setLoading(false);
+      return false;
     }
   }
 }

@@ -13,7 +13,8 @@ class MerchantAuthModel {
   final DateTime? lastLoginAt;
   final double? latitude;
   final double? longitude;
-  final String merchantType; // Nouveau champ
+  final String merchantType;
+  final Map<String, String>? serviceStockStatus; // Nouveau champ
 
   MerchantAuthModel({
     required this.id,
@@ -28,7 +29,8 @@ class MerchantAuthModel {
     this.lastLoginAt,
     this.latitude,
     this.longitude,
-    required this.merchantType, // Ajouté au constructeur
+    required this.merchantType,
+    this.serviceStockStatus, // Ajouté au constructeur
   });
 
   // factory MerchantAuthModel.fromJson(Map<String, dynamic> json) {
@@ -68,7 +70,10 @@ class MerchantAuthModel {
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
       latitude: (data['latitude'] as num?)?.toDouble(),
       longitude: (data['longitude'] as num?)?.toDouble(),
-      merchantType: data['merchantType'] as String? ?? 'boutique', // Lire merchantType, valeur par défaut 'boutique'
+      merchantType: data['merchantType'] as String? ?? 'boutique',
+      serviceStockStatus: data['serviceStockStatus'] != null && data['serviceStockStatus'] is Map
+          ? Map<String, String>.from(data['serviceStockStatus'] as Map)
+          : null, // Lire serviceStockStatus
     );
   }
 
@@ -86,7 +91,8 @@ class MerchantAuthModel {
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
       'latitude': latitude,
       'longitude': longitude,
-      'merchantType': merchantType, // Ajouter merchantType
+      'merchantType': merchantType,
+      'serviceStockStatus': serviceStockStatus, // Ajouter serviceStockStatus
     };
   }
 
@@ -103,7 +109,8 @@ class MerchantAuthModel {
     DateTime? lastLoginAt,
     double? latitude,
     double? longitude,
-    String? merchantType, // Ajouté
+    String? merchantType,
+    Map<String, String>? serviceStockStatus, // Ajouté
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -118,7 +125,8 @@ class MerchantAuthModel {
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
-      merchantType: merchantType ?? this.merchantType, // Ajouté
+      merchantType: merchantType ?? this.merchantType,
+      serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus, // Ajouté
     );
   }
 }
