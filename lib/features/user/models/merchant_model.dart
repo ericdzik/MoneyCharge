@@ -16,6 +16,8 @@ class Merchant {
   final String? walkingTime; // Sera calculé dynamiquement
   final String? drivingTime; // Sera calculé dynamiquement
   final List<String> services; // Champ 'servicesOffered' dans Firestore
+  final String? merchantType; // Ajout du type de marchand
+  final Map<String, String>? serviceStockStatus; // Ajout du statut du stock des services
 
   // Champs calculés côté client, ne pas stocker directement dans Firestore pour ce modèle
   double? clientCalculatedDistance;
@@ -31,6 +33,8 @@ class Merchant {
     required this.latitude,
     required this.longitude,
     required this.services,
+    this.merchantType, // Ajouté au constructeur
+    this.serviceStockStatus, // Ajouté au constructeur
     // Ces champs sont maintenant calculés ou ont des valeurs par défaut
     this.isOpen = false, // Sera calculé
     this.status = MerchantStatus.available, // Par défaut, ou à déterminer
@@ -59,6 +63,10 @@ class Merchant {
       walkingTime: json['walkingTime'] as String?,
       drivingTime: json['drivingTime'] as String?,
       services: List<String>.from(json['services'] as List? ?? []),
+      merchantType: json['merchantType'] as String?,
+      serviceStockStatus: json['serviceStockStatus'] != null
+          ? Map<String, String>.from(json['serviceStockStatus'] as Map)
+          : null,
     );
   }
 
@@ -77,27 +85,30 @@ class Merchant {
       longitude = geoPoint.longitude;
     } else {
       // Fallback si location n'est pas un GeoPoint ou est manquant
-      // Vous pourriez vouloir logger une erreur ici ou utiliser des valeurs par défaut plus significatives
       latitude = (data['latitude'] as num?)?.toDouble() ?? 0.0;
       longitude = (data['longitude'] as num?)?.toDouble() ?? 0.0;
     }
 
-    // Les champs comme isOpen, status, distance, walkingTime, drivingTime
-    // devront être calculés dynamiquement côté client.
-    // Pour l'instant, on initialise avec des valeurs par défaut.
+    Map<String, String>? serviceStockStatusMap;
+    if (data['serviceStockStatus'] != null && data['serviceStockStatus'] is Map) {
+      serviceStockStatusMap = (data['serviceStockStatus'] as Map).map(
+            (key, value) => MapEntry(key.toString(), value.toString()),
+      );
+    }
+
     return Merchant(
       id: userDoc.id, // UID de l'utilisateur/marchand
-      name: data['name'] as String? ?? data['businessName'] as String? ?? 'Nom du Business Indisponible', // 'name' est le champ standard pour les marchands
+      name: data['name'] as String? ?? data['businessName'] as String? ?? 'Nom du Business Indisponible',
       address: data['address'] as String? ?? 'Adresse Indisponible',
       phone: data['phone'] as String? ?? 'Téléphone Indisponible',
       hours: data['openingHours'] as String? ?? 'Horaires Indisponibles',
       latitude: latitude,
       longitude: longitude,
       services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
-      // isOpen et status pourraient être initialisés à des valeurs par défaut ou déterminés plus tard
+      merchantType: data['merchantType'] as String?, // Lecture depuis Firestore
+      serviceStockStatus: serviceStockStatusMap, // Lecture depuis Firestore
       isOpen: false, // À calculer dynamiquement
       status: MerchantStatus.available, // Par défaut, ou à déterminer par la logique de stock future
-      // distance, walkingTime, drivingTime seront calculés par LocationProvider ou dans l'UI
     );
   }
 
@@ -116,6 +127,8 @@ class Merchant {
       'walkingTime': walkingTime,
       'drivingTime': drivingTime,
       'services': services,
+      'merchantType': merchantType,
+      'serviceStockStatus': serviceStockStatus,
     };
   }
 }
