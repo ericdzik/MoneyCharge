@@ -8,6 +8,7 @@ import '../models/merchant_auth_model.dart';
 import '../widgets/merchant_header_widget.dart';
 import '../widgets/dashboard_stats_widget.dart';
 import '../../../core/constants/app_routes.dart';
+import 'edit_merchant_profile_screen.dart'; // Ajout de l'import
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -98,7 +99,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                       style: AppTextStyles.h2.copyWith(fontSize: 20),
                     ),
                     const SizedBox(height: 16),
-                    _buildQuickActions(),
+                    _buildQuickActions(currentMerchant), // Passer currentMerchant
                     const SizedBox(height: 32),
 
                     // Activité récente
@@ -118,7 +119,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     );
   }
 
-  Widget _buildQuickActions() {
+  Widget _buildQuickActions(MerchantAuthModel merchant) { // Accepter merchant
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -150,7 +151,12 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           icon: Icons.person,
           color: Colors.blue,
           onTap: () {
-            // Navigation vers le profil
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => EditMerchantProfileScreen(merchant: merchant),
+              ),
+            );
           },
         ),
         _buildActionCard(
