@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart'; // Ajout de l'import
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MerchantAuthModel {
   final String id;
@@ -7,12 +7,14 @@ class MerchantAuthModel {
   final String phone;
   final String address;
   final String? openingHours;
-  final String? services;
+  final List<String>? services; // Modifié
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
-  final double? latitude; // Added latitude
-  final double? longitude; // Added longitude
+  final double? latitude;
+  final double? longitude;
+  final String merchantType; // Ajouté
+  final Map<String, String>? serviceStockStatus; // Ajouté
 
   MerchantAuthModel({
     required this.id,
@@ -21,68 +23,71 @@ class MerchantAuthModel {
     required this.phone,
     required this.address,
     this.openingHours,
-    this.services,
+    this.services, // Modifié
     this.isVerified = false,
     required this.createdAt,
     this.lastLoginAt,
-    this.latitude, // Added to constructor
-    this.longitude, // Added to constructor
+    this.latitude,
+    this.longitude,
+    required this.merchantType, // Ajouté
+    this.serviceStockStatus, // Ajouté
   });
-
-  // factory MerchantAuthModel.fromJson(Map<String, dynamic> json) {
-  //   return MerchantAuthModel(
-  //     id: json['id'] ?? '',
-  //     email: json['email'] ?? '',
-  //     businessName: json['businessName'] ?? '',
-  //     phone: json['phone'] ?? '',
-  //     address: json['address'] ?? '',
-  //     openingHours: json['openingHours'],
-  //     services: json['services'],
-  //     isVerified: json['isVerified'] ?? false,
-  //     createdAt: DateTime.parse(
-  //       json['createdAt'] ?? DateTime.now().toIso8601String(),
-  //     ),
-  //     lastLoginAt: json['lastLoginAt'] != null
-  //         ? DateTime.parse(json['lastLoginAt'])
-  //         : null,
-  //     latitude: (json['latitude'] as num?)?.toDouble(),
-  //     longitude: (json['longitude'] as num?)?.toDouble(),
-  //   );
-  // }
 
   factory MerchantAuthModel.fromFirestore(
       DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data()!;
+
+    List<String>? servicesList;
+    if (data['services'] != null) {
+      if (data['services'] is String) {
+        // Gérer le cas où c'est une chaîne (ancien format potentiel)
+        // On pourrait la splitter par un délimiteur ou la mettre dans une liste d'un seul élément
+        servicesList = [data['services'] as String];
+      } else if (data['services'] is List) {
+        servicesList = List<String>.from(data['services'] as List);
+      }
+    }
+
+    Map<String, String>? stockStatus;
+    if (data['serviceStockStatus'] != null && data['serviceStockStatus'] is Map) {
+      stockStatus = Map<String, String>.from(data['serviceStockStatus'] as Map);
+    }
+
     return MerchantAuthModel(
-      id: snapshot.id, // Utiliser l'ID du document (qui est l'UID)
+      id: snapshot.id,
       email: data['email'] as String? ?? '',
-      businessName: data['name'] as String? ?? '', // Firestore 'name' field for businessName
+      businessName: data['name'] as String? ?? '', // Firestore 'name' field
       phone: data['phone'] as String? ?? '',
       address: data['address'] as String? ?? '',
       openingHours: data['openingHours'] as String?,
-      services: data['services'] as String?,
+      services: servicesList, // Modifié
       isVerified: data['isVerified'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
-      latitude: (data['latitude'] as num?)?.toDouble(), // Read latitude
-      longitude: (data['longitude'] as num?)?.toDouble(), // Read longitude
+      latitude: (data['latitude'] as num?)?.toDouble(),
+      longitude: (data['longitude'] as num?)?.toDouble(),
+      merchantType: data['merchantType'] as String? ?? 'boutique', // Ajouté avec défaut
+      serviceStockStatus: stockStatus, // Ajouté
     );
   }
 
-  Map<String, dynamic> toJson() { // Or toFirestoreMap
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'email': email,
-      'businessName': businessName, // Should match Firestore field 'name' if that's the convention
+      // Utiliser 'name' pour businessName si c'est la convention dans Firestore pour ce modèle
+      'name': businessName,
       'phone': phone,
       'address': address,
       'openingHours': openingHours,
-      'services': services,
+      'services': services, // Sera une liste
       'isVerified': isVerified,
-      'createdAt': Timestamp.fromDate(createdAt), // Use Timestamp for Firestore
+      'createdAt': Timestamp.fromDate(createdAt),
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
-      'latitude': latitude, // Add latitude
-      'longitude': longitude, // Add longitude
+      'latitude': latitude,
+      'longitude': longitude,
+      'merchantType': merchantType, // Ajouté
+      'serviceStockStatus': serviceStockStatus, // Ajouté
     };
   }
 
@@ -93,12 +98,14 @@ class MerchantAuthModel {
     String? phone,
     String? address,
     String? openingHours,
-    String? services,
+    List<String>? services, // Modifié
     bool? isVerified,
     DateTime? createdAt,
     DateTime? lastLoginAt,
-    double? latitude, // Added to copyWith
-    double? longitude, // Added to copyWith
+    double? latitude,
+    double? longitude,
+    String? merchantType, // Ajouté
+    Map<String, String>? serviceStockStatus, // Ajouté
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -113,6 +120,8 @@ class MerchantAuthModel {
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      merchantType: merchantType ?? this.merchantType,
+      serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus,
     );
   }
 }

@@ -117,11 +117,12 @@ class MerchantProvider with ChangeNotifier {
     bool? onlyAvailableStock, // true si on ne veut que le stock disponible pour stockService
     String? searchQuery,
     bool clearAll = false,
-    bool clearServiceAndStockFilters = false, // Pour réinitialiser uniquement les filtres du dialogue
-    // Indicateur pour savoir si le filtre merchantType a été explicitement passé
-    // Cela aide à distinguer un appel où merchantType n'est pas pertinent (et ne doit pas être changé)
-    // d'un appel où merchantType est explicitement mis à null (pour "Tous").
+    bool clearServiceAndStockFilters = false,
     bool merchantTypeIsSet = false,
+    bool servicesIsSet = false,
+    bool stockServiceIsSet = false, // Ajouté pour la cohérence
+    bool onlyAvailableStockIsSet = false, // Ajouté pour la cohérence
+    bool searchQueryIsSet = false, // Renommé depuis updateSearchQuery
   }) {
     if (clearAll) {
       _activeMerchantTypeFilter = null;
@@ -133,30 +134,38 @@ class MerchantProvider with ChangeNotifier {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
+      // Ne pas toucher aux autres filtres comme merchantType ou searchQuery
     } else {
-      if (merchantTypeIsSet) { // Mettre à jour _activeMerchantTypeFilter seulement s'il est explicitement fourni
-        _activeMerchantTypeFilter = merchantType; // `null` ici signifie "Tous"
+      if (merchantTypeIsSet) {
+        _activeMerchantTypeFilter = merchantType;
       }
-      if (services != null) {
+      if (servicesIsSet && services != null) {
         _activeServiceFilters = List.from(services);
+      } else if (servicesIsSet && services == null) { // Explicitly clearing service filters
+        _activeServiceFilters = [];
       }
 
-      // Gérer stockService et onlyAvailableStock
-      // Si stockService est fourni (même vide pour effacer), on le met à jour.
-      // Si onlyAvailableStock est fourni, on le met à jour.
-      // Si stockService devient null/vide, on s'assure que onlyAvailableStock est false.
-      if (stockService != null || (services != null && services.isEmpty)) { // Si services est vidé, stockService doit l'être aussi
+      if (stockServiceIsSet) {
          _activeStockServiceFilter = (stockService == null || stockService.isEmpty) ? null : stockService;
-         if (_activeStockServiceFilter == null) {
+         // Si stockService est explicitement mis à null/vide, et onlyAvailableStockIsSet n'est pas true,
+         // alors onlyShowAvailableStockForService doit être false.
+         if (_activeStockServiceFilter == null && !onlyAvailableStockIsSet) {
             _onlyShowAvailableStockForService = false;
          }
       }
-      if (onlyAvailableStock != null) {
+      if (onlyAvailableStockIsSet && onlyAvailableStock != null) {
         _onlyShowAvailableStockForService = onlyAvailableStock;
+        // Si on met à jour onlyAvailableStock, et que _activeStockServiceFilter est null,
+        // cela n'a pas de sens, donc on s'assure que _onlyShowAvailableStockForService est false.
+        if (_activeStockServiceFilter == null) {
+            _onlyShowAvailableStockForService = false;
+        }
       }
 
-      if (searchQuery != null) {
+      if (searchQueryIsSet && searchQuery != null) {
         _searchQuery = searchQuery;
+      } else if (searchQueryIsSet && searchQuery == null) { // Explicitly clearing search query
+        _searchQuery = '';
       }
     }
 

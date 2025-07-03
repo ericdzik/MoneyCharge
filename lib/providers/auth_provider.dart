@@ -1,21 +1,19 @@
 import 'dart:async'; // Pour StreamSubscription
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Pour l'objet User de Firebase
-// cloud_firestore est déjà importé ici, mais vérifions qu'il n'y a pas de redondance ou de mauvaise place
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
 import '../services/auth_service.dart';
 
-// L'enum UserType peut rester, il sera mappé depuis le rôle String de Firestore
 enum UserType { user, merchant, admin, unknown }
 
 class User {
-  final String id; // Corresponds à l'UID de Firebase Auth
+  final String id;
   final String name;
   final String email;
   final String? phone;
-  final DateTime? createdAt; // Peut être null si le timestamp n'est pas encore écrit
+  final DateTime? createdAt;
   final DateTime? lastLoginAt;
 
   User({
@@ -30,7 +28,7 @@ class User {
   factory User.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data()!;
     return User(
-      id: snapshot.id, // Utiliser l'ID du document (qui est l'UID)
+      id: snapshot.id,
       name: data['name'] as String? ?? '',
       email: data['email'] as String? ?? '',
       phone: data['phone'] as String?,
@@ -43,31 +41,26 @@ class User {
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance;
   StreamSubscription? _authStateSubscription;
 
-  // État d'authentification
-  fb_auth.User? _firebaseUser; // Utilisateur Firebase Auth
+  fb_auth.User? _firebaseUser;
   bool _isLoading = false;
   String? _error;
-  UserType _userType = UserType.unknown; // Initialisé à unknown
+  UserType _userType = UserType.unknown;
 
-  // Données de profil de l'application (venant de Firestore)
-  User? _appUserProfile; // Pour le rôle 'user'
-  MerchantAuthModel? _merchantProfile; // Pour le rôle 'merchant'
-  AdminModel? _adminProfile; // Pour le rôle 'admin'
+  User? _appUserProfile;
+  MerchantAuthModel? _merchantProfile;
+  AdminModel? _adminProfile;
 
-  // Getters
   bool get isAuthenticated => _firebaseUser != null && _userType != UserType.unknown;
   bool get isLoading => _isLoading;
   String? get error => _error;
   UserType get userType => _userType;
-
-  // Getters pour les profils spécifiques. L'UI devra vérifier le userType avant d'y accéder.
   User? get appUserProfile => _appUserProfile;
   MerchantAuthModel? get merchantProfile => _merchantProfile;
   AdminModel? get adminProfile => _adminProfile;
   String? get userId => _firebaseUser?.uid;
-
 
   AuthProvider() {
     _listenToAuthChanges();
@@ -80,12 +73,12 @@ class AuthProvider with ChangeNotifier {
       if (_firebaseUser != null) {
         try {
           await _fetchUserProfile(_firebaseUser!.uid);
-          if (_userType != UserType.unknown) { // Si le profil a été trouvé et le rôle défini
+          if (_userType != UserType.unknown) {
             await _updateLastLogin(_firebaseUser!.uid);
           }
         } catch (e) {
           _error = "Erreur lors de la récupération du profil: ${e.toString()}";
-          _userType = UserType.unknown; // Marquer comme inconnu si le profil n'est pas trouvé
+          _userType = UserType.unknown;
           _clearProfiles();
         }
       } else {
@@ -97,36 +90,28 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _fetchUserProfile(String uid) async {
-    print('-----------------------------------------------------');
-    print('[AuthProvider._fetchUserProfile] Fetching profile for UID: $uid');
     try {
       final docSnapshot = await _firestore.collection('users').doc(uid).get();
       if (docSnapshot.exists) {
         final data = docSnapshot.data()!;
         final role = data['role'] as String?;
-        print('[AuthProvider._fetchUserProfile] Firestore role string: "$role"');
         _userType = _parseUserType(role);
-        print('[AuthProvider._fetchUserProfile] Parsed UserType: $_userType');
 
-        // Créer l'objet profil approprié
         switch (_userType) {
           case UserType.admin:
-            _adminProfile = AdminModel.fromFirestore(docSnapshot); // Supposant une méthode factory
-            _appUserProfile = null;
-            _merchantProfile = null;
+            _adminProfile = AdminModel.fromFirestore(docSnapshot);
+            _appUserProfile = null; _merchantProfile = null;
             break;
           case UserType.merchant:
-            _merchantProfile = MerchantAuthModel.fromFirestore(docSnapshot); // Supposant une méthode factory
-            _appUserProfile = null;
-            _adminProfile = null;
+            _merchantProfile = MerchantAuthModel.fromFirestore(docSnapshot);
+            _appUserProfile = null; _adminProfile = null;
             break;
           case UserType.user:
-            _appUserProfile = User.fromFirestore(docSnapshot); // Supposant une méthode factory
-            _merchantProfile = null;
-            _adminProfile = null;
+            _appUserProfile = User.fromFirestore(docSnapshot);
+            _merchantProfile = null; _adminProfile = null;
             break;
-          default: // unknown ou rôle non géré
-             _error = "Rôle utilisateur non reconnu: $role";
+          default:
+            _error = "Rôle utilisateur non reconnu: $role";
             _clearProfiles();
             _userType = UserType.unknown;
         }
@@ -139,7 +124,7 @@ class AuthProvider with ChangeNotifier {
       _error = "Erreur Firestore lors de la récupération du profil: ${e.toString()}";
       _userType = UserType.unknown;
       _clearProfiles();
-      rethrow; // Pour que l'appelant puisse aussi gérer l'erreur
+      rethrow;
     }
   }
 
@@ -149,7 +134,6 @@ class AuthProvider with ChangeNotifier {
         'lastLoginAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      // Erreur non critique, on peut la logger mais ne pas bloquer l'utilisateur
       print("Erreur lors de la mise à jour de lastLoginAt: $e");
     }
   }
@@ -166,59 +150,27 @@ class AuthProvider with ChangeNotifier {
     super.dispose();
   }
 
-  // Connexion unifiée
   Future<void> loginUnified(String email, String password) async {
-    print('[AuthProvider.loginUnified] Attempting login for: $email');
     _setLoading(true);
     _error = null;
-    // _userType = UserType.unknown; // Reset userType before login attempt? Consider implications.
-    // _clearProfiles(); // Clear profiles before login attempt?
-
     try {
-      print('[AuthProvider.loginUnified] Calling _authService.loginUnified...');
       final uid = await _authService.loginUnified(email, password);
-      print('[AuthProvider.loginUnified] _authService.loginUnified returned UID: $uid');
-
       if (uid != null) {
-        // At this point, Firebase Auth was successful.
-        // _listenToAuthChanges stream will handle fetching profile and setting userType.
-        // We don't need to explicitly set _userType or _error here if auth was successful.
-        // The crucial part is that _listenToAuthChanges should run and populate the profile.
-        print('[AuthProvider.loginUnified] Firebase Auth successful via service. UID: $uid. Waiting for _listenToAuthChanges to update profile.');
+        if (_firebaseAuth.currentUser != null && _firebaseAuth.currentUser!.uid == uid) {
+          _firebaseUser = _firebaseAuth.currentUser;
+          await _fetchUserProfile(uid);
+          if (_userType != UserType.unknown) {
+            await _updateLastLogin(uid);
+          }
+        } else {
+          await _fetchUserProfile(uid!); // uid is not null here
+           if (_userType != UserType.unknown) {
+            await _updateLastLogin(uid!); // uid is not null here
+          }
+        }
       } else {
-        // This case (uid is null but no exception from _authService.loginUnified) should ideally not happen.
-        // _authService.loginUnified should throw if Firebase Auth fails.
         _error = "Erreur de connexion: UID non retourné par AuthService.";
         _userType = UserType.unknown;
-        _clearProfiles();
-        print('[AuthProvider.loginUnified] AuthService returned null UID without exception. Error set.');
-      }
-    } catch (e) {
-      print('[AuthProvider.loginUnified] Caught exception: ${e.toString()}');
-      _error = e.toString(); // This will capture "Erreur de connexion: Firebase: Error (auth/invalid-credential)..."
-      _userType = UserType.unknown;
-      _clearProfiles();
-      print('[AuthProvider.loginUnified] Exception caught. _error set to: $_error, _userType set to: $_userType');
-    } finally {
-      print('[AuthProvider.loginUnified] Finally block. Current _error: $_error, _userType: $_userType, _firebaseUser: ${_firebaseUser?.uid}');
-      _setLoading(false); // This will call notifyListeners()
-      print('[AuthProvider.loginUnified] Login attempt finished. isLoading is now false.');
-    }
-  }
-
-  // Inscription utilisateur
-  Future<void> registerUser(String name, String email, String password) async {
-    _setLoading(true);
-    _error = null;
-    try {
-      // AuthService.registerUser s'occupe de créer l'utilisateur dans Auth ET son profil dans Firestore.
-      final uid = await _authService.registerUser(name, email, password);
-      if (uid != null) {
-        // Comme pour login, on se fie à _listenToAuthChanges pour peupler le profil.
-        // L'utilisateur sera automatiquement connecté après l'inscription.
-      } else {
-         _error = "Erreur d'inscription: UID non retourné.";
-         _userType = UserType.unknown;
         _clearProfiles();
       }
     } catch (e) {
@@ -230,14 +182,31 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Déconnexion
+  Future<void> registerUser(String name, String email, String password) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final uid = await _authService.registerUser(name, email, password);
+      if (uid == null) {
+         _error = "Erreur d'inscription: UID non retourné.";
+         _userType = UserType.unknown;
+        _clearProfiles();
+      }
+      // _listenToAuthChanges s'occupera de fetch le profil
+    } catch (e) {
+      _error = e.toString();
+      _userType = UserType.unknown;
+      _clearProfiles();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> logout() async {
     _setLoading(true);
     _error = null;
     try {
       await _authService.logout();
-      // _listenToAuthChanges mettra à jour _firebaseUser à null,
-      // ce qui nettoiera les profils et mettra _userType à unknown.
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -245,13 +214,11 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Réinitialiser le mot de passe
   Future<void> resetPassword(String email) async {
     _setLoading(true);
-    clearError(); // Utiliser la nouvelle méthode pour clearer l'erreur
+    clearError();
     try {
       await _authService.resetPassword(email);
-      // Peut-être afficher un message de succès à l'utilisateur via un autre mécanisme
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -262,59 +229,45 @@ class AuthProvider with ChangeNotifier {
   void clearError() {
     if (_error != null) {
       _error = null;
-      notifyListeners(); // Notifier si l'erreur est effectivement clearée
+      notifyListeners();
     }
   }
 
-  // Méthode de debug pour forcer la connexion admin - À SUPPRIMER ou adapter pour Firebase
-  // La méthode forceAdminLogin() est supprimée.
-
-  // L'ancienne méthode checkAuthStatus est remplacée par _listenToAuthChanges.
-  // L'ancienne méthode initialize est remplacée par le constructeur qui appelle _listenToAuthChanges.
-
-  // Inscription marchand avec informations complètes - À REVOIR pour Firebase
-  // Cette méthode devra créer un utilisateur Auth, puis un document marchand dans Firestore.
   Future<void> registerMerchant({
     required String businessName,
     required String email,
     required String phone,
     required String address,
     required String openingHours,
-    required String services,
+    required List<String> services, // CHANGED to List<String>
     required String password,
-    // Add new parameters for location
     required double? latitude,
     required double? longitude,
+    required String merchantType, // ADDED
   }) async {
     _setLoading(true);
     _error = null;
     try {
-      // 1. Créer l'utilisateur dans Firebase Auth
-      final uid = await _authService.registerUser(businessName, email, password); // Utilise businessName comme 'name' pour l'instant
-
+      final uid = await _authService.registerUser(businessName, email, password);
       if (uid != null) {
-        // 2. Créer/Mettre à jour le document utilisateur dans Firestore avec le rôle 'merchant'
-        // et les informations spécifiques au marchand.
-        // Cela pourrait être une méthode dans AuthService ou directement ici.
         await _firestore.collection('users').doc(uid).set({
           'uid': uid,
           'email': email,
-          'name': businessName, // ou un champ 'contactName' et 'businessName' séparé
-          'role': 'merchant', // Définir explicitement le rôle
+          'name': businessName,
+          'role': 'merchant',
+          'merchantType': merchantType, // ADDED
           'createdAt': FieldValue.serverTimestamp(),
           'phone': phone,
           'address': address,
           'openingHours': openingHours,
-          'services': services,
-          'isVerified': false, // Les marchands commencent comme non vérifiés
+          'services': services, // CHANGED to List<String>
+          'isVerified': false,
           'isActive': true,
           'lastLoginAt': FieldValue.serverTimestamp(),
-          'latitude': latitude, // Add latitude to Firestore data
-          'longitude': longitude, // Add longitude to Firestore data
-          // Ajouter ici d'autres champs spécifiques aux marchands si nécessaire
-        }, SetOptions(merge: true)); // merge: true pour ne pas écraser d'autres champs si le doc existe déjà (peu probable ici)
-
-        // L'état sera mis à jour par _listenToAuthChanges
+          'latitude': latitude,
+          'longitude': longitude,
+          // serviceStockStatus sera initialisé/géré par EditMerchantProfileScreen
+        }, SetOptions(merge: true));
       } else {
         _error = "Erreur lors de la création du compte marchand.";
       }
@@ -325,14 +278,56 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Méthodes privées
+  Future<bool> updateMerchantProfile({
+    required String businessName,
+    required String phone,
+    required String address,
+    required String openingHours,
+    required List<String> services,
+    required Map<String, String> serviceStockStatus,
+  }) async {
+    _setLoading(true);
+    _error = null;
+
+    if (_firebaseUser == null || _userType != UserType.merchant) {
+      _error = "Aucun marchand connecté pour la mise à jour.";
+      _setLoading(false);
+      return false;
+    }
+    final uid = _firebaseUser!.uid;
+
+    Map<String, dynamic> dataToUpdate = {
+      'name': businessName,
+      'phone': phone,
+      'address': address,
+      'openingHours': openingHours,
+      'services': services,
+      'serviceStockStatus': serviceStockStatus,
+      'lastProfileUpdateAt': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await _firestore.collection('users').doc(uid).update(dataToUpdate);
+      await _fetchUserProfile(uid); // Recharger pour la cohérence
+
+      _setLoading(false);
+      // notifyListeners(); // _fetchUserProfile ou _setLoading le fait déjà
+      return true;
+    } catch (e) {
+      _error = "Erreur lors de la mise à jour du profil: ${e.toString()}";
+      _setLoading(false);
+      return false;
+    }
+  }
+
   void _setLoading(bool loading) {
+    if(_isLoading == loading) return;
     _isLoading = loading;
     notifyListeners();
   }
 
-  UserType _parseUserType(String? role) { // Prend maintenant un String?
-    switch (role?.toLowerCase()) { // Utilise null-safe operator
+  UserType _parseUserType(String? role) {
+    switch (role?.toLowerCase()) {
       case 'merchant':
         return UserType.merchant;
       case 'admin':
@@ -340,7 +335,7 @@ class AuthProvider with ChangeNotifier {
       case 'user':
         return UserType.user;
       default:
-        return UserType.unknown; // Renvoyer unknown si rôle null ou non reconnu
+        return UserType.unknown;
     }
   }
 }

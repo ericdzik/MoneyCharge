@@ -67,7 +67,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                                 icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
-                                  merchantProvider.applyFilters(searchQuery: '', updateSearchQuery: true);
+                                  merchantProvider.applyFilters(searchQuery: '', searchQueryIsSet: true);
                                 },
                               )
                             : null,
@@ -82,8 +82,8 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                           vertical: AppDimensions.paddingS,
                         ),
                       ),
-                      onSubmitted: (query) { // Appliquer la recherche sur soumission
-                        merchantProvider.applyFilters(searchQuery: query, updateSearchQuery: true);
+                      onSubmitted: (query) {
+                        merchantProvider.applyFilters(searchQuery: query, searchQueryIsSet: true);
                       },
                     ),
                   ),
@@ -131,9 +131,9 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
         // Les ChoiceChip ne se déselectionnent pas par un deuxième clic sur eux-mêmes s'ils font partie d'un groupe.
         // Le comportement est que seul un peut être actif.
         // Si l'utilisateur clique sur le même chip déjà sélectionné, onSelected est appelé avec selected = true.
-        // Si on veut permettre de déselectionner en cliquant à nouveau pour revenir à "Tous",
-        // il faudrait une logique comme: provider.applyFilters(merchantType: isSelected ? filterValue : null);
-        // Mais avec un chip "Tous" séparé, la logique actuelle est plus simple:
+        // On applique toujours la valeur du chip. Si c'est "Tous", filterValue est null.
+        // Le ChoiceChip gère sa propre sélection visuelle.
+        // On informe le provider que merchantType a été explicitement choisi.
         provider.applyFilters(merchantType: filterValue, merchantTypeIsSet: true);
       },
       backgroundColor: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
@@ -212,7 +212,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
 
-                    Text('Services Proposés :', style: AppTextStyles.body1Bold),
+                    Text('Services Proposés :', style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold)),
                     ..._availableServices.map((serviceName) {
                       return CheckboxListTile(
                         title: Text(serviceName),
@@ -276,11 +276,11 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
 
                               merchantProvider.applyFilters(
                                 services: finalSelectedServices,
-                                updateServices: true,
+                                servicesIsSet: true, // Corrigé
                                 stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
-                                updateStockService: true,
+                                stockServiceIsSet: true, // Corrigé
                                 onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
-                                updateOnlyAvailableStock: true
+                                onlyAvailableStockIsSet: true // Corrigé
                               );
                               Navigator.pop(dialogContext);
                             },
