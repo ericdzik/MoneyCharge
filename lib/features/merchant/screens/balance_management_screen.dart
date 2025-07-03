@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Assurez-vous que cet import est présent pour Timestamp
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -79,20 +79,25 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
           ],
         ),
       ),
-      body: Column(
-        children: [
+      body: Column( // Début du Column principal
+        children: [ // Liste des enfants du Column
+          // Premier enfant: BalanceSummary ou Padding
           if (transactionProvider.balance != null)
-            BalanceSummaryWidget(balance: transactionProvider.balance!),
+            BalanceSummaryWidget(balance: transactionProvider.balance!)
           else
             const Padding(
               padding: EdgeInsets.all(AppDimensions.paddingM),
               child: Text("Solde non disponible.", style: AppTextStyles.body1),
             ),
 
+          // Deuxième enfant: contenu conditionnel (chargement, erreur, ou TabBarView)
+          // Ce bloc if/else if/else doit produire UN SEUL widget (ou une liste de widgets si Collection-if est utilisé à l'intérieur)
+          // pour être un enfant valide du Column.
+          // Chaque branche retourne un Expanded, ce qui est un Widget unique.
           if (transactionProvider.isLoadingTransactions && transactionProvider.merchantTransactions.isEmpty)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (transactionProvider.transactionsError != null && transactionProvider.merchantTransactions.isEmpty)
-            Expanded(
+            Expanded( // Ce bloc est l'enfant du Column si la condition est vraie
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -110,7 +115,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
                 ),
               ),
             )
-          else
+          else // Ce bloc est l'enfant du Column si les conditions précédentes sont fausses
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -208,7 +213,6 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
     super.dispose();
   }
 
-  // Helper pour afficher le texte des TransactionType dans le Dropdown
   String _getTransactionTypeDisplayText(TransactionType type) {
     switch (type) {
       case TransactionType.sale:
