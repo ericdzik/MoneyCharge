@@ -62,8 +62,18 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     }
 
 
-    // Initialiser _serviceStockStatus
-    _serviceStockStatus = Map<String, String>.from(widget.merchant.serviceStockStatus ?? {});
+    // Initialiser _serviceStockStatus avec validation
+    final initialStockStatus = widget.merchant.serviceStockStatus ?? {};
+    initialStockStatus.forEach((service, status) {
+      if (_stockStatusOptions.contains(status)) {
+        _serviceStockStatus[service] = status;
+      } else {
+        // Si le statut de Firestore n'est pas dans nos options valides,
+        // on met une valeur par défaut.
+        _serviceStockStatus[service] = _stockStatusOptions.first;
+        print("Alerte: Statut de stock invalide '$status' pour le service '$service' depuis Firestore. Remplacé par défaut.");
+      }
+    });
     // S'assurer que tous les services sélectionnés ont une entrée de stock
     _updateStockStatusMapWithSelectedServices();
   }
