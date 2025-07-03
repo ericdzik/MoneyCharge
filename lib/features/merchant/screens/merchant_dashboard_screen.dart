@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Import Provider
-import '../../../providers/auth_provider.dart'; // Import AuthProvider
+import 'package:provider/provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -8,7 +8,7 @@ import '../models/merchant_auth_model.dart';
 import '../widgets/merchant_header_widget.dart';
 import '../widgets/dashboard_stats_widget.dart';
 import '../../../core/constants/app_routes.dart';
-import 'edit_merchant_profile_screen.dart'; // Ajout de l'import
+import 'edit_merchant_profile_screen.dart';
 import '../../../providers/transaction_provider.dart'; // Ajout de l'import pour TransactionProvider
 import '../../../models/transaction_model.dart'; // Ajout de l'import pour TransactionModel et enums
 
@@ -21,42 +21,28 @@ class MerchantDashboardScreen extends StatefulWidget {
 }
 
 class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
-  // Remove simulated data
-  // late MerchantAuthModel _merchant;
-  int _totalServices = 8; // Keep for now, will be dynamic later
-  int _activeServices = 6; // Keep for now, will be dynamic later
-  double _totalRevenue = 125000; // Keep for now, will be dynamic later
-  int _totalTransactions = 45; // Sera remplacé par transactionProvider.totalSalesTransactionsCount
-
   @override
   void initState() {
     super.initState();
-    // Utiliser addPostFrameCallback pour appeler les providers après la construction initiale du widget
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) { // Vérifier si le widget est toujours dans l'arbre
+      if (mounted) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         if (authProvider.merchantProfile != null) {
           Provider.of<TransactionProvider>(context, listen: false)
-              .fetchMerchantTransactions(authProvider); // Passer authProvider entier
+              .fetchMerchantTransactions(authProvider);
         } else {
-          // Gérer le cas où merchantProfile est null, peut-être après une déconnexion rapide
-          // ou si l'utilisateur accède directement à cet écran sans être correctement authentifié comme marchand.
-          // AuthProvider devrait déjà gérer la redirection si non authentifié/non marchand.
           print("[MerchantDashboardScreen] initState: merchantProfile est null, impossible de fetch les transactions.");
         }
       }
     });
   }
 
-  // _loadMerchantData est supprimé car on utilise les Providers
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final transactionProvider = Provider.of<TransactionProvider>(context); // Écouter les changements
+    final transactionProvider = Provider.of<TransactionProvider>(context);
     final MerchantAuthModel? currentMerchant = authProvider.merchantProfile;
 
-    // Gérer l'état de chargement initial pour les deux providers
     if ((authProvider.isLoading || transactionProvider.isLoadingTransactions) && currentMerchant == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -64,8 +50,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
 
     if (currentMerchant == null) {
-      // This case should ideally be handled by RouteGuards if a non-merchant tries to access
-      // or if the profile somehow failed to load after auth.
       return Scaffold(
         appBar: AppBar(title: const Text("Erreur Profil Marchand")),
         body: const Center(
@@ -83,79 +67,79 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header du marchand
-            MerchantHeaderWidget(merchant: currentMerchant, onLogout: () => _handleLogout(context)),
-
-            // Contenu principal
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Statistiques
-                    Text(
-                      'Aperçu',
-                      style: AppTextStyles.h2.copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: 16),
-                    // Utiliser les données réelles des providers
-                    Builder( // Utiliser un Builder pour obtenir un contexte à jour pour les providers si nécessaire
-                      builder: (context) {
-                        final int totalServicesCount = currentMerchant.services?.length ?? 0;
-                        final int activeServicesCount = currentMerchant.serviceStockStatus?.entries
-                            .where((entry) => entry.value.toLowerCase() == 'disponible')
-                            .length ?? 0;
-
-                        return DashboardStatsWidget(
-                          totalServices: totalServicesCount,
-                          activeServices: activeServicesCount,
-                          totalRevenue: transactionProvider.totalRevenue,
-                          totalTransactions: transactionProvider.totalSalesTransactionsCount,
-                        );
-                      }
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Afficher une erreur de transaction si elle existe
-                    if (transactionProvider.transactionsError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
-                        child: Text(
-                          "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
-                          style: AppTextStyles.body2.copyWith(color: Colors.red),
-                        ),
+        child: RefreshIndicator( // Ajout du RefreshIndicator
+          onRefresh: () async {
+            // Mettre à jour le profil et les transactions
+            // On suppose que fetchUserProfile dans AuthProvider est appelé si nécessaire
+            // ou que le profil est déjà à jour.
+             if (authProvider.merchantProfile != null) {
+                await Provider.of<TransactionProvider>(context, listen: false)
+                    .fetchMerchantTransactions(authProvider);
+             }
+          },
+          child: Column(
+            children: [
+              MerchantHeaderWidget(merchant: currentMerchant, onLogout: () => _handleLogout(context)),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Aperçu',
+                        style: AppTextStyles.h2.copyWith(fontSize: 20),
                       ),
+                      const SizedBox(height: 16),
+                      Builder(
+                        builder: (context) {
+                          final int totalServicesCount = currentMerchant.services?.length ?? 0;
+                          final int activeServicesCount = currentMerchant.serviceStockStatus?.entries
+                              .where((entry) => entry.value.toLowerCase() == 'disponible')
+                              .length ?? 0;
 
-                    // Actions rapides
-                    Text(
-                      'Actions rapides',
-                      style: AppTextStyles.h2.copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildQuickActions(currentMerchant), // Passer currentMerchant
-                    const SizedBox(height: 32),
-
-                    // Activité récente
-                    Text(
-                      'Activité récente',
-                      style: AppTextStyles.h2.copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildRecentActivity(),
-                  ],
+                          return DashboardStatsWidget(
+                            totalServices: totalServicesCount,
+                            activeServices: activeServicesCount,
+                            totalRevenue: transactionProvider.totalRevenue,
+                            totalTransactions: transactionProvider.totalSalesTransactionsCount,
+                          );
+                        }
+                      ),
+                      const SizedBox(height: 32),
+                      if (transactionProvider.transactionsError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                          child: Text(
+                            "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
+                            style: AppTextStyles.body2.copyWith(color: Colors.red),
+                          ),
+                        ),
+                      Text(
+                        'Actions rapides',
+                        style: AppTextStyles.h2.copyWith(fontSize: 20),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildQuickActions(currentMerchant),
+                      const SizedBox(height: 32),
+                      Text(
+                        'Activité récente',
+                        style: AppTextStyles.h2.copyWith(fontSize: 20),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildRecentActivity(), // Sera mis à jour pour utiliser TransactionProvider
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildQuickActions(MerchantAuthModel merchant) { // Accepter merchant
+  Widget _buildQuickActions(MerchantAuthModel merchant) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -178,7 +162,11 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           icon: Icons.receipt_long,
           color: Colors.green,
           onTap: () {
-            // Navigation vers les transactions
+             // TODO: Naviguer vers un écran d'historique complet des transactions
+             // Pour l'instant, peut-être juste un SnackBar ou rien
+             ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Navigation vers l\'historique des transactions (TODO)'))
+             );
           },
         ),
         _buildActionCard(
@@ -201,7 +189,10 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           icon: Icons.support_agent,
           color: Colors.orange,
           onTap: () {
-            // Navigation vers le support
+            // TODO: Navigation vers le support
+             ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Navigation vers le support (TODO)'))
+             );
           },
         ),
       ],
@@ -218,6 +209,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        // ... (contenu de _buildActionCard inchangé) ...
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -262,29 +254,40 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   }
 
   Widget _buildRecentActivity() {
-    // Consommer TransactionProvider pour obtenir les transactions récentes
-    final transactionProvider = Provider.of<TransactionProvider>(context, listen: true); // listen:true pour reconstruire si les transactions changent
+    final transactionProvider = Provider.of<TransactionProvider>(context);
 
     if (transactionProvider.isLoadingTransactions && transactionProvider.recentTransactions.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: CircularProgressIndicator(),
+      ));
+    }
+
+    if (transactionProvider.transactionsError != null && transactionProvider.recentTransactions.isEmpty) {
+        return Center(child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+            "Erreur: ${transactionProvider.transactionsError}",
+            style: AppTextStyles.body1.copyWith(color: Colors.red),
+            textAlign: TextAlign.center,
+        ),
+        ));
     }
 
     if (transactionProvider.recentTransactions.isEmpty) {
-      return const Center(child: Text('Aucune activité récente.'));
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text('Aucune activité récente.'),
+      ));
     }
 
-    // Utiliser transactionProvider.recentTransactions
     return Column(
-      children: transactionProvider.recentTransactions.map((transaction) {
-        // Adapter l'affichage pour utiliser les champs de TransactionModel
-        // Ceci est un exemple, vous devrez l'ajuster en fonction des champs de TransactionModel
-        // et de la façon dont vous voulez afficher chaque type/statut de transaction.
+      children: transactionProvider.recentTransactions.map<Widget>((transaction) { // Explicitement Widget
         String description = '${transaction.typeDisplay}: ${transaction.serviceName} - ${transaction.amount.toStringAsFixed(0)} FCFA';
         if (transaction.userId != null && transaction.userId!.isNotEmpty) {
-          description += ' (Client: ${transaction.userId!.substring(0,5)}...)'; // Exemple
+          description += ' (Client: ${transaction.userId!.substring(0,5)}...)';
         }
 
-        // Calculer un temps relatif simple (pourrait être amélioré avec un package comme `timeago`)
         final timeAgo = DateTime.now().difference(transaction.timestamp.toDate());
         String timeDisplay;
         if (timeAgo.inMinutes < 1) {
@@ -336,7 +339,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                           ),
                         ),
                         Text(
-                          transaction.statusDisplay, // Afficher le statut de la transaction
+                          transaction.statusDisplay,
                           style: AppTextStyles.caption.copyWith(
                             color: _getTransactionStatusColor(transaction.status),
                             fontWeight: FontWeight.bold,
@@ -350,7 +353,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
             ],
           ),
         );
-      }).toList(),
+      }).toList(), // .cast<Widget>() n'est plus nécessaire si map retourne explicitement Widget
     );
   }
 
@@ -363,7 +366,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       case TransactionType.refund:
         return Colors.orange;
       case TransactionType.withdrawal:
-        return AppColors.primary; // Ou une autre couleur
+        return AppColors.primary;
       default:
         return AppColors.textSecondary;
     }
@@ -398,26 +401,23 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
   }
 
-
-  void _handleLogout(BuildContext dialogContext) { // Renamed context to avoid conflict
+  void _handleLogout(BuildContext dialogContext) {
     final authProvider = Provider.of<AuthProvider>(dialogContext, listen: false);
     showDialog(
-      context: dialogContext, // Use the passed context for the dialog
-      builder: (BuildContext alertContext) => AlertDialog( // Use a different context for AlertDialog builder
+      context: dialogContext,
+      builder: (BuildContext alertContext) => AlertDialog(
         title: const Text('Déconnexion'),
         content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(alertContext), // Use alertContext to pop dialog
+            onPressed: () => Navigator.pop(alertContext),
             child: const Text('Annuler'),
           ),
           ElevatedButton(
             onPressed: () async {
-              Navigator.pop(alertContext); // Dismiss dialog first
+              Navigator.pop(alertContext);
               await authProvider.logout();
-              // Ensure context is still valid if there are other async operations before navigation
-              if (mounted) { // Check if the main screen's state is still mounted
-                 // Navigate to the main login screen, not merchant-specific one
+              if (mounted) {
                 Navigator.pushNamedAndRemoveUntil(dialogContext, AppRoutes.login, (route) => false);
               }
             },
