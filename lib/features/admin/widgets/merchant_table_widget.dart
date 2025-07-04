@@ -19,6 +19,10 @@ class MerchantTableWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Déterminer si on utilise PopupMenuButton en fonction de la largeur de l'écran
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool usePopupMenu = screenWidth < 450; // Seuil pour petits écrans
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -128,16 +132,9 @@ class MerchantTableWidget extends StatelessWidget {
                       ),
                     ),
                     DataCell(
-                      LayoutBuilder( // Utiliser LayoutBuilder pour obtenir la largeur disponible pour cette cellule
-                        builder: (context, constraints) {
-                          // Définir un seuil. Si la largeur est trop petite, utiliser PopupMenuButton
-                          // Ce seuil est arbitraire et pourrait nécessiter des ajustements.
-                          // DataTable alloue de l'espace, donc constraints.maxWidth ici peut être grand.
-                          // Il est souvent mieux de se baser sur la largeur globale de l'écran.
-                          final screenWidth = MediaQuery.of(context).size.width;
-                          bool usePopupMenu = screenWidth < 450; // Seuil pour petits écrans
-
-                          List<Widget> actions = [
+                      Builder( // Utilisation de Builder pour obtenir un context frais si MediaQuery est utilisé intensivement
+                        builder: (context) { // Le context ici est celui de la cellule
+                          List<Widget> actionWidgets = [
                             IconButton(
                               icon: const Icon(Icons.visibility, size: 18, color: AppColors.primary),
                               tooltip: 'Voir détails',
@@ -145,7 +142,7 @@ class MerchantTableWidget extends StatelessWidget {
                             ),
                           ];
 
-                          if (usePopupMenu) {
+                          if (usePopupMenu) { // usePopupMenu est défini au début de la méthode build du widget parent
                             List<PopupMenuEntry<String>> popupItems = [];
                             if (!merchant.isVerified) {
                               popupItems.add(
@@ -157,7 +154,7 @@ class MerchantTableWidget extends StatelessWidget {
                             );
 
                             if (popupItems.isNotEmpty) {
-                              actions.add(
+                              actionWidgets.add(
                                 PopupMenuButton<String>(
                                   icon: const Icon(Icons.more_vert, size: 18),
                                   tooltip: 'Plus d\'actions',
@@ -174,13 +171,13 @@ class MerchantTableWidget extends StatelessWidget {
                             }
                           } else {
                             if (!merchant.isVerified) {
-                              actions.add(IconButton(
+                              actionWidgets.add(IconButton(
                                 icon: const Icon(Icons.verified, size: 18, color: Colors.green),
                                 tooltip: 'Vérifier',
                                 onPressed: () => onVerify(merchant),
                               ));
                             }
-                            actions.add(IconButton(
+                            actionWidgets.add(IconButton(
                               icon: const Icon(Icons.block, size: 18, color: Colors.red),
                               tooltip: 'Suspendre',
                               onPressed: () => onSuspend(merchant),
@@ -189,7 +186,7 @@ class MerchantTableWidget extends StatelessWidget {
 
                           return Row(
                             mainAxisSize: MainAxisSize.min,
-                            children: actions,
+                            children: actionWidgets,
                           );
                         },
                       ),
