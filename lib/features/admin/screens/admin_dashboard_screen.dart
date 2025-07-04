@@ -169,16 +169,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 24),
           Text('Statistiques de la plateforme', style: AppTextStyles.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
-          // Temporarily commented out to isolate the issue
-          // AdminStatsWidget(
-          //   totalUsers: _platformStats['totalUsers']?.toInt() ?? 0,
-          //   totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0,
-          //   activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0,
-          //   totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0,
-          //   totalTransactions: _platformStats['totalTransactions']?.toInt() ?? 0,
-          //   pendingVerifications: _platformStats['pendingVerifications']?.toInt() ?? 0,
-          // ),
-          const Text("AdminStatsWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)),
+          // Décommentons AdminStatsWidget
+          AdminStatsWidget(
+            totalUsers: _platformStats['totalUsers']?.toInt() ?? 0,
+            totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0,
+            activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0,
+            totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0,
+            totalTransactions: _platformStats['totalTransactions']?.toInt() ?? 0,
+            pendingVerifications: _platformStats['pendingVerifications']?.toInt() ?? 0,
+          ),
+          // const Text("AdminStatsWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)), // On enlève le message temporaire
           const SizedBox(height: 32),
           Text('Actions rapides', style: AppTextStyles.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
