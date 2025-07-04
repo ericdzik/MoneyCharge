@@ -19,7 +19,8 @@ class MerchantProvider with ChangeNotifier {
   String _searchQuery = '';
 
   // Getters publics
-  List<Merchant> get merchants => _filteredMerchants;
+  List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
+  List<Merchant> get allLoadedMerchantsForAdminView => List.unmodifiable(_allLoadedMerchants); // For admin view (unfiltered by default)
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -33,8 +34,11 @@ class MerchantProvider with ChangeNotifier {
   Future<void> loadMerchants({bool forceRefresh = false}) async {
     if (_isLoading && !forceRefresh) return;
 
+    // If _allLoadedMerchants is not empty and we are not forcing a refresh,
+    // it means we might have already loaded data (e.g., for admin).
+    // We should just apply user filters and notify.
     if (_allLoadedMerchants.isNotEmpty && !forceRefresh) {
-        _applyInternalFilters();
+        _applyInternalFilters(); // Apply user-facing filters
         notifyListeners();
         return;
     }
@@ -43,10 +47,11 @@ class MerchantProvider with ChangeNotifier {
     _error = null;
 
     try {
+      // This query is for user-facing views: verified merchants only
       final querySnapshot = await _firestore
           .collection('users')
           .where('role', isEqualTo: 'merchant')
-          .where('isVerified', isEqualTo: true)
+          .where('isVerified', isEqualTo: true) // Users typically see only verified merchants
           .get();
 
       _allLoadedMerchants = querySnapshot.docs.map((doc) {
@@ -58,7 +63,7 @@ class MerchantProvider with ChangeNotifier {
         }
       }).whereType<Merchant>().toList();
 
-      _applyInternalFilters();
+      _applyInternalFilters(); // Apply user-facing filters to the loaded verified merchants
 
     } catch (e) {
       _error = "Erreur lors du chargement des marchands: ${e.toString()}";
@@ -69,6 +74,62 @@ class MerchantProvider with ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<void> loadAllMerchantsForAdmin({bool forceRefresh = false}) async {
+    if (_isLoading && !forceRefresh) return;
+
+    // If _allLoadedMerchants is not empty and we are not forcing a refresh,
+    // it means we might have already loaded data.
+    // For admin, we don't apply user filters by default to _allLoadedMerchants.
+    // So, if it's already populated, we might not need to do anything unless forceRefresh is true.
+    if (_allLoadedMerchants.isNotEmpty && !forceRefresh) {
+        // For admin, we usually want the full list, so no filters applied here by default.
+        // If filters were ever applied to _allLoadedMerchants directly, this would be an issue.
+        // The getter `allLoadedMerchantsForAdminView` ensures an unmodifiable list.
+        // We also need to ensure _filteredMerchants is up-to-date if it's used by admin view,
+        // but typically admin view would use `allLoadedMerchantsForAdminView`.
+        // For safety, let's assume admin view will use a direct, unfiltered list.
+        notifyListeners(); // Notify if there's a listener for isLoading or error states.
+        return;
+    }
+
+    _setLoading(true);
+    _error = null;
+
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'merchant')
+          // No 'isVerified' filter for admin
+          .get();
+
+      _allLoadedMerchants = querySnapshot.docs.map((doc) {
+        try {
+          return Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>);
+        } catch (e) {
+          print('[MerchantProvider] Error parsing merchant for admin ${doc.id}: $e');
+          return null;
+        }
+      }).whereType<Merchant>().toList();
+
+      // For admin, we typically don't filter _allLoadedMerchants by default.
+      // If the admin screen needs a filtered view, it should apply its own filters
+      // or use a separate filtered list.
+      // The user-facing `_filteredMerchants` should be updated based on user filters.
+      // If admin also uses `merchants` getter, then filters might apply.
+      // Let's ensure _filteredMerchants is also updated, perhaps with no filters initially for admin.
+      _filteredMerchants = List.from(_allLoadedMerchants); // Admin sees all by default if using 'merchants' getter
+
+    } catch (e) {
+      _error = "Erreur lors du chargement des marchands pour admin: ${e.toString()}";
+      _allLoadedMerchants = [];
+      _filteredMerchants = [];
+      print(_error);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
 
   void _setLoading(bool loading) {
     if (_isLoading == loading) return;
