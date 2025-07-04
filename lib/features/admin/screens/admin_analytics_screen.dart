@@ -238,12 +238,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
-        );
-          }
         ),
-      
       ],
-    
     );
   }
 

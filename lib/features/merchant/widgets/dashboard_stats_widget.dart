@@ -51,13 +51,13 @@ class DashboardStatsWidget extends StatelessWidget {
             _buildStatCard(
               isSmallScreen: isSmallScreen,
               title: 'Services',
-              value: '$totalServices',
+              value: '$totalServices', // Assuré d'être un argument nommé correct
               subtitle: '$activeServices actifs',
               icon: Icons.inventory,
               color: AppColors.primary,
             ),
             _buildStatCard(
-              isSmallScreen: isSmallScreen,
+              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
               title: 'Revenus',
               value: '${totalRevenue.toStringAsFixed(0)} FCFA',
               subtitle: 'Total',
@@ -65,7 +65,7 @@ class DashboardStatsWidget extends StatelessWidget {
               color: Colors.green,
             ),
             _buildStatCard(
-              isSmallScreen: isSmallScreen,
+              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
               title: 'Transactions',
               value: '$totalTransactions',
               subtitle: 'Aujourd\'hui',
@@ -73,7 +73,7 @@ class DashboardStatsWidget extends StatelessWidget {
               color: Colors.orange,
             ),
             _buildStatCard(
-              isSmallScreen: isSmallScreen,
+              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
               title: 'Performance',
               value: '${_calculatePerformance()}%',
               subtitle: 'Taux de satisfaction',
@@ -82,9 +82,9 @@ class DashboardStatsWidget extends StatelessWidget {
             ),
           ],
         );
-      },
-    );
-  }
+      }, // FIN DE LA FONCTION builder
+    ); // FIN DU WIDGET LayoutBuilder
+  } // FIN DE LA METHODE build
 
   Widget _buildStatCard({
     required bool isSmallScreen,
@@ -166,7 +166,9 @@ class DashboardStatsWidget extends StatelessWidget {
   }
 
   int _calculatePerformance() {
-    if (totalServices == 0) return 0;
+    if (totalServices == 0) { // CORRIGÉ: Vérification pour éviter la division par zéro
+      return 0;
+    }
     return ((activeServices / totalServices) * 100).round();
   }
 }

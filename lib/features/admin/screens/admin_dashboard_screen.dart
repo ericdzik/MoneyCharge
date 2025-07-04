@@ -169,14 +169,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 24),
           Text('Statistiques de la plateforme', style: AppTextStyles.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
-          AdminStatsWidget(
-            totalUsers: _platformStats['totalUsers']?.toInt() ?? 0, // Still mock
-            totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0, // Now real
-            activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0, // Now real
-            totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0, // Still mock
-            totalTransactions: _platformStats['totalTransactions']?.toInt() ?? 0, // Still mock
-            pendingVerifications: _platformStats['pendingVerifications']?.toInt() ?? 0, // Now real
-          ),
+          // Temporarily commented out to isolate the issue
+          // AdminStatsWidget(
+          //   totalUsers: _platformStats['totalUsers']?.toInt() ?? 0,
+          //   totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0,
+          //   activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0,
+          //   totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0,
+          //   totalTransactions: _platformStats['totalTransactions']?.toInt() ?? 0,
+          //   pendingVerifications: _platformStats['pendingVerifications']?.toInt() ?? 0,
+          // ),
+          const Text("AdminStatsWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)),
           const SizedBox(height: 32),
           Text('Actions rapides', style: AppTextStyles.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
@@ -184,12 +186,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 32),
           Text('Gestion des marchands', style: AppTextStyles.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
-          MerchantTableWidget(
-            merchants: _merchants, // Now uses real data (after mapping)
-            onVerify: _verifyMerchant,
-            onSuspend: _suspendMerchant,
-            onViewDetails: _viewMerchantDetails,
-          ),
+          // Temporarily commented out to isolate the issue
+          // MerchantTableWidget(
+          //   merchants: _merchants,
+          //   onVerify: _verifyMerchant,
+          //   onSuspend: _suspendMerchant,
+          //   onViewDetails: _viewMerchantDetails,
+          // ),
+          const Text("MerchantTableWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)),
         ],
       ),
     );
