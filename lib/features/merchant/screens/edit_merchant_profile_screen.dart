@@ -62,16 +62,24 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     }
 
 
-    // Initialiser _serviceStockStatus avec validation
+    // Initialiser _serviceStockStatus avec validation et normalisation de la casse
     final initialStockStatus = widget.merchant.serviceStockStatus ?? {};
-    initialStockStatus.forEach((service, status) {
-      if (_stockStatusOptions.contains(status)) {
-        _serviceStockStatus[service] = status;
-      } else {
-        // Si le statut de Firestore n'est pas dans nos options valides,
-        // on met une valeur par défaut.
-        _serviceStockStatus[service] = _stockStatusOptions.first;
-        print("Alerte: Statut de stock invalide '$status' pour le service '$service' depuis Firestore. Remplacé par défaut.");
+    initialStockStatus.forEach((service, statusFromFirestore) {
+      String normalizedStatus = _stockStatusOptions.firstWhere(
+        (option) => option.toLowerCase() == statusFromFirestore.toLowerCase(),
+        orElse: () {
+          // Si aucune correspondance insensible à la casse n'est trouvée, utiliser la valeur par défaut
+          // et logger une alerte plus spécifique si le statut n'était pas vide.
+          if (statusFromFirestore.isNotEmpty) {
+            print("Alerte: Statut de stock inconnu '$statusFromFirestore' pour le service '$service' depuis Firestore. Remplacé par défaut '${_stockStatusOptions.first}'.");
+          }
+          return _stockStatusOptions.first;
+        }
+      );
+      _serviceStockStatus[service] = normalizedStatus;
+      // Optionnel: logger si une normalisation de casse a eu lieu mais que la valeur était "logiquement" la même
+      if (normalizedStatus.toLowerCase() == statusFromFirestore.toLowerCase() && normalizedStatus != statusFromFirestore && statusFromFirestore.isNotEmpty) {
+         print("Info: Statut de stock '$statusFromFirestore' pour le service '$service' normalisé en '$normalizedStatus' (casse).");
       }
     });
     // S'assurer que tous les services sélectionnés ont une entrée de stock
