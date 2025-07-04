@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Added for Provider
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/constants/app_routes.dart'; // Added for AppRoutes.login
 import '../models/admin_model.dart';
 import '../widgets/admin_stats_widget.dart';
 import '../widgets/merchant_table_widget.dart';
 import '../../merchant/models/merchant_auth_model.dart';
+import '../services/admin_firestore_service.dart'; // Added
+import '../../../providers/auth_provider.dart'; // Added
+import '../../../providers/merchant_provider.dart'; // Added
+// Removed AdminMockDataService import as it's being replaced for primary data
+// import '../services/admin_mock_data_service.dart';
+
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -15,22 +23,22 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  final AdminMockDataService _mockDataService = AdminMockDataService(); // Keep for some mock stats initially
+  // final AdminMockDataService _mockDataService = AdminMockDataService(); // Will be removed
+  final AdminFirestoreService _adminFirestoreService = AdminFirestoreService(); // Added
   AdminModel? _admin;
-  List<MerchantAuthModel> _merchants = []; // Will hold real merchant data
+  List<MerchantAuthModel> _merchants = [];
   Map<String, dynamic> _platformStats = {};
   bool _isLoading = true;
   bool _isMounted = false;
-  String? _dataError; // To store any error messages during data loading
+  String? _dataError;
 
 
   @override
   void initState() {
     super.initState();
     _isMounted = true;
-    // Delay fetching data until after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isMounted) { // Check if still mounted before proceeding
+      if (_isMounted) {
         _loadAllAdminData();
       }
     });
@@ -38,18 +46,71 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   @override
   void dispose() {
-    _isMounted = false; // Set to false when the widget is disposed
+    _isMounted = false;
     super.dispose();
   }
 
   Future<void> _loadAllAdminData() async {
-    if (!_isMounted) return; // Don't do anything if not mounted
-
     if (!_isMounted) return;
 
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
+      _dataError = null;
     });
+
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+
+      String? adminId = authProvider.userId;
+      if (adminId == null) {
+        throw Exception("Admin ID not found. User may not be logged in or not an admin.");
+      }
+
+      // Fetch admin profile
+      final adminProfileFuture = _adminFirestoreService.getAdminProfile(adminId);
+      // Fetch platform statistics
+      final platformStatsFuture = _adminFirestoreService.getPlatformStatistics();
+      // Load merchants via provider (this will also set its internal loading state)
+      final merchantLoadFuture = merchantProvider.loadAllMerchantsForAdmin(forceRefresh: true);
+
+      // Await all futures
+      final results = await Future.wait([
+        adminProfileFuture,
+        platformStatsFuture,
+        merchantLoadFuture.then((_) => merchantProvider.adminMerchants) // Ensure provider is done, then get merchants
+      ]);
+
+      if (!_isMounted) return;
+
+      final AdminModel? fetchedAdmin = results[0] as AdminModel?;
+      final Map<String, dynamic> fetchedStats = results[1] as Map<String, dynamic>;
+      // Merchants are already updated in the provider, now get them for local state if needed
+      // or rely on Consumer/Selector for MerchantTableWidget. For simplicity here, we get them.
+      final List<MerchantAuthModel> fetchedMerchants = merchantProvider.adminMerchants;
+
+
+      if (fetchedAdmin == null) {
+        // If admin profile is null, it could mean the user is not a valid admin in Firestore
+        // or their role is not 'admin'
+        throw Exception("Profil administrateur non trouvé ou invalide.");
+      }
+
+      setState(() {
+        _admin = fetchedAdmin;
+        _platformStats = fetchedStats;
+        _merchants = fetchedMerchants; // Update local merchants list
+        _isLoading = false;
+      });
+
+    } catch (e) {
+      if (!_isMounted) return;
+      print("Error loading admin data: $e");
+      setState(() {
+        _dataError = "Erreur lors du chargement des données: ${e.toString()}";
+        _isLoading = false;
+      });
+    }
   }
 
   @override
