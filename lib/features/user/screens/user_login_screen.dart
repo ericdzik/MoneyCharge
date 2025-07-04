@@ -343,6 +343,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                         ),
                       ),
                     ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppDimensions.paddingL),

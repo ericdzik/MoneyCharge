@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../../providers/merchant_provider.dart';
 import '../../../providers/location_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLngBounds
+import '../../../core/constants/app_dimensions.dart';
 
 class MapViewScreen extends StatefulWidget {
   final Merchant? targetMerchant; // Marchand optionnel à cibler
