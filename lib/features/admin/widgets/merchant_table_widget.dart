@@ -72,6 +72,7 @@ class MerchantTableWidget extends StatelessWidget {
               columns: const [
                 DataColumn(label: Text('Nom')),
                 DataColumn(label: Text('Email')),
+                DataColumn(label: Text('Type')), // Nouvelle colonne
                 DataColumn(label: Text('Statut')),
                 DataColumn(label: Text('Date d\'inscription')),
                 DataColumn(label: Text('Actions')),
@@ -80,14 +81,19 @@ class MerchantTableWidget extends StatelessWidget {
                 return DataRow(
                   cells: [
                     DataCell(
-                      Text(
-                        merchant.businessName,
-                        style: AppTextStyles.body2.copyWith(
-                          fontWeight: FontWeight.w600,
+                      SizedBox(
+                        width: 150, // Donner une largeur pour éviter le débordement du nom
+                        child: Text(
+                          merchant.businessName,
+                          style: AppTextStyles.body2.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    DataCell(Text(merchant.email)),
+                    DataCell(SizedBox(width: 180, child: Text(merchant.email, overflow: TextOverflow.ellipsis))),
+                    DataCell(SizedBox(width: 120, child: Text(merchant.merchantType, overflow: TextOverflow.ellipsis))), // Affichage du type
                     DataCell(
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -112,41 +118,51 @@ class MerchantTableWidget extends StatelessWidget {
                       ),
                     ),
                     DataCell(
-                      Text(
-                        _formatDate(merchant.createdAt),
-                        style: AppTextStyles.caption,
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          _formatDate(merchant.createdAt),
+                          style: AppTextStyles.caption,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.visibility,
-                              size: 18,
-                              color: AppColors.primary,
-                            ),
-                            onPressed: () => onViewDetails(merchant),
-                          ),
-                          if (!merchant.isVerified)
+                      SizedBox( // Encapsuler la Row dans un SizedBox pour potentiellement contrôler la largeur
+                        width: 150, // Ajuster cette largeur au besoin
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min, // Important pour que la Row ne prenne que l'espace nécessaire
+                          children: [
                             IconButton(
                               icon: const Icon(
-                                Icons.verified,
+                                Icons.visibility,
                                 size: 18,
-                                color: Colors.green,
+                                color: AppColors.primary,
                               ),
-                              onPressed: () => onVerify(merchant),
+                              tooltip: 'Voir détails',
+                              onPressed: () => onViewDetails(merchant),
                             ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.block,
-                              size: 18,
-                              color: Colors.red,
+                            if (!merchant.isVerified)
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.verified,
+                                  size: 18,
+                                  color: Colors.green,
+                                ),
+                                tooltip: 'Vérifier',
+                                onPressed: () => onVerify(merchant),
+                              ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.block,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                              tooltip: 'Suspendre',
+                              onPressed: () => onSuspend(merchant),
                             ),
-                            onPressed: () => onSuspend(merchant),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -160,6 +176,7 @@ class MerchantTableWidget extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    // Format plus complet pour la date
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)}';
   }
 }

@@ -6,6 +6,10 @@ import '../models/admin_model.dart';
 import '../widgets/admin_stats_widget.dart';
 import '../widgets/merchant_table_widget.dart';
 import '../../merchant/models/merchant_auth_model.dart';
+import '../services/admin_mock_data_service.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/merchant_provider.dart'; // Import MerchantProvider
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -15,91 +19,102 @@ class AdminDashboardScreen extends StatefulWidget {
 }
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
-  late AdminModel _admin;
-  List<MerchantAuthModel> _merchants = [];
+  final AdminMockDataService _mockDataService = AdminMockDataService(); // Keep for some mock stats initially
+  AdminModel? _admin;
+  List<MerchantAuthModel> _merchants = []; // Will hold real merchant data
+  Map<String, dynamic> _platformStats = {};
   bool _isLoading = true;
+  bool _isMounted = false;
+  String? _dataError; // To store any error messages during data loading
 
-  // Statistiques simulées
-  final int _totalUsers = 1250;
-  final int _totalMerchants = 85;
-  final int _activeMerchants = 72;
-  final double _totalRevenue = 2500000;
-  final int _totalTransactions = 156;
-  final int _pendingVerifications = 8;
 
   @override
   void initState() {
     super.initState();
-    _loadAdminData();
-    _loadMerchants();
-  }
-
-  void _loadAdminData() {
-    _admin = AdminModel(
-      id: '1',
-      email: 'admin@locacharge.com',
-      name: 'Administrateur Principal',
-      role: AdminRole.superAdmin,
-      isActive: true,
-      createdAt: DateTime.now().subtract(const Duration(days: 365)),
-      lastLoginAt: DateTime.now().subtract(const Duration(hours: 1)),
-      permissions: ['all'],
-    );
-  }
-
-  void _loadMerchants() {
-    // Simulation de données marchands
-    _merchants = [
-      MerchantAuthModel(
-        id: '1',
-        email: 'boutique1@example.com',
-        businessName: 'Boutique Express',
-        phone: '+225 0123456789',
-        address: '123 Rue du Commerce, Abidjan',
-        isVerified: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 2)),
-        merchantType: 'Alimentation', // Ajouté
-      ),
-      MerchantAuthModel(
-        id: '2',
-        email: 'boutique2@example.com',
-        businessName: 'Cyber Café Central',
-        phone: '+225 0123456790',
-        address: '456 Avenue de la Paix, Abidjan',
-        isVerified: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        lastLoginAt: DateTime.now().subtract(const Duration(days: 1)),
-        merchantType: 'Services Informatiques', // Ajouté
-      ),
-      MerchantAuthModel(
-        id: '3',
-        email: 'boutique3@example.com',
-        businessName: 'Point Service Plus',
-        phone: '+225 0123456791',
-        address: '789 Boulevard des Martyrs, Abidjan',
-        isVerified: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 45)),
-        lastLoginAt: DateTime.now().subtract(const Duration(hours: 5)),
-        merchantType: 'Services Généraux', // Ajouté
-      ),
-      MerchantAuthModel(
-        id: '4',
-        email: 'boutique4@example.com',
-        businessName: 'E-Services',
-        phone: '+225 0123456792',
-        address: '321 Rue des Banques, Abidjan',
-        isVerified: false,
-        createdAt: DateTime.now().subtract(const Duration(days: 7)),
-        lastLoginAt: null,
-        merchantType: 'Électronique', // Ajouté
-      ),
-    ];
-
-    setState(() {
-      _isLoading = false;
+    _isMounted = true;
+    // Delay fetching data until after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_isMounted) { // Check if still mounted before proceeding
+        _loadAllAdminData();
+      }
     });
   }
+
+  @override
+  void dispose() {
+    _isMounted = false; // Set to false when the widget is disposed
+    super.dispose();
+  }
+
+  Future<void> _loadAllAdminData() async {
+    if (!_isMounted) return; // Don't do anything if not mounted
+
+    if (!_isMounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _dataError = null;
+    });
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+
+    // Step 1: Get Real Admin Profile
+    _admin = authProvider.adminProfile;
+
+    try {
+      // Step 2: Load Real Merchants
+      await merchantProvider.loadAllMerchantsForAdmin(forceRefresh: true);
+      if (!_isMounted) return;
+
+      _merchants = merchantProvider.allLoadedMerchantsForAdminView.map((m) {
+        return MerchantAuthModel(
+          id: m.id,
+          email: m.email ?? 'N/A',
+          businessName: m.name,
+          phone: m.phone ?? 'N/A',
+          address: m.address,
+          openingHours: m.hours,
+          services: m.services,
+          isVerified: m.isVerified ?? false,
+          createdAt: m.createdAt ?? DateTime.now(),
+          lastLoginAt: m.lastLoginAt,
+          latitude: m.latitude,
+          longitude: m.longitude,
+          merchantType: m.merchantType ?? 'Indéfini',
+          serviceStockStatus: m.serviceStockStatus,
+        );
+      }).toList();
+
+      // Step 3: Calculate some stats from real merchants and merge with remaining mock stats
+      Map<String, dynamic> initialMockStats = _mockDataService.getMockPlatformStats(); // For totalUsers, totalRevenue, etc.
+
+      int actualTotalMerchants = _merchants.length;
+      int actualPendingVerifications = _merchants.where((m) => !m.isVerified).length;
+      int actualActiveMerchants = _merchants.where((m) => m.isVerified).length;
+
+      // Update _platformStats: start with mock, then override with real data where available
+      _platformStats = {
+        ...initialMockStats, // Start with all mock stats
+        'totalMerchants': actualTotalMerchants,
+        'pendingVerifications': actualPendingVerifications,
+        'activeMerchants': actualActiveMerchants,
+        // totalUsers, totalRevenue, totalTransactions will remain from initialMockStats for now
+      };
+
+    } catch (e) {
+      if (!_isMounted) return;
+      print("Error loading admin data: $e");
+      _dataError = "Erreur de chargement des données: ${e.toString()}";
+    } finally {
+      if (_isMounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -112,67 +127,127 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         elevation: 0,
         actions: [
           IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Rafraîchir les données',
+            onPressed: _loadAllAdminData,
+          ),
+          IconButton(
             icon: const Icon(Icons.notifications),
             onPressed: _showNotifications,
           ),
-          IconButton(icon: const Icon(Icons.logout), onPressed: _handleLogout),
+          IconButton(icon: const Icon(Icons.logout), onPressed: () => _handleLogout(context)),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(AppDimensions.paddingL),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // En-tête admin
-                  _buildAdminHeader(),
-                  const SizedBox(height: 24),
+      body: _buildBody(),
+    );
+  }
 
-                  // Statistiques
-                  Text(
-                    'Statistiques de la plateforme',
-                    style: AppTextStyles.h2.copyWith(fontSize: 20),
-                  ),
-                  const SizedBox(height: 16),
-                  AdminStatsWidget(
-                    totalUsers: _totalUsers,
-                    totalMerchants: _totalMerchants,
-                    activeMerchants: _activeMerchants,
-                    totalRevenue: _totalRevenue,
-                    totalTransactions: _totalTransactions,
-                    pendingVerifications: _pendingVerifications,
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Actions rapides
-                  Text(
-                    'Actions rapides',
-                    style: AppTextStyles.h2.copyWith(fontSize: 20),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildQuickActions(),
-                  const SizedBox(height: 32),
-
-                  // Gestion des marchands
-                  Text(
-                    'Gestion des marchands',
-                    style: AppTextStyles.h2.copyWith(fontSize: 20),
-                  ),
-                  const SizedBox(height: 16),
-                  MerchantTableWidget(
-                    merchants: _merchants,
-                    onVerify: _verifyMerchant,
-                    onSuspend: _suspendMerchant,
-                    onViewDetails: _viewMerchantDetails,
-                  ),
-                ],
-              ),
-            ),
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_dataError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 48),
+              const SizedBox(height: 16),
+              Text(_dataError!, textAlign: TextAlign.center, style: AppTextStyles.body1.copyWith(color: Colors.red)),
+              const SizedBox(height: 16),
+              ElevatedButton(onPressed: _loadAllAdminData, child: const Text('Réessayer'))
+            ],
+          ),
+        ),
+      );
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppDimensions.paddingL),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAdminHeader(),
+          const SizedBox(height: 24),
+          Text('Statistiques de la plateforme', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+          const SizedBox(height: 16),
+          AdminStatsWidget(
+            totalUsers: _platformStats['totalUsers']?.toInt() ?? 0, // Still mock
+            totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0, // Now real
+            activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0, // Now real
+            totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0, // Still mock
+            totalTransactions: _platformStats['totalTransactions']?.toInt() ?? 0, // Still mock
+            pendingVerifications: _platformStats['pendingVerifications']?.toInt() ?? 0, // Now real
+          ),
+          const SizedBox(height: 32),
+          Text('Actions rapides', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+          const SizedBox(height: 16),
+          _buildQuickActions(),
+          const SizedBox(height: 32),
+          Text('Gestion des marchands', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+          const SizedBox(height: 16),
+          MerchantTableWidget(
+            merchants: _merchants, // Now uses real data (after mapping)
+            onVerify: _verifyMerchant,
+            onSuspend: _suspendMerchant,
+            onViewDetails: _viewMerchantDetails,
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAdminHeader() {
+    if (_admin == null && !_isLoading) { // If not loading and admin is still null, show error/placeholder
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 25,
+              backgroundColor: AppColors.onPrimary,
+              child: Icon(Icons.person_outline, color: AppColors.primary),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'Profil Admin non disponible',
+              style: AppTextStyles.h2.copyWith(
+                color: AppColors.onPrimary,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (_admin == null && _isLoading) { // If loading and admin is null
+       return Container( // Placeholder while loading specifically for admin header
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const CircleAvatar(
+              radius: 25,
+              backgroundColor: AppColors.onPrimary,
+              child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)),
+            ),
+            const SizedBox(width: 16),
+            Text(
+              'Chargement...',
+              style: AppTextStyles.h2.copyWith(color: AppColors.onPrimary, fontSize: 18),
+            ),
+          ],
+        ),
+      );
+    }
+    // If _admin is not null
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -185,7 +260,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             radius: 25,
             backgroundColor: AppColors.onPrimary,
             child: Text(
-              _admin.name[0],
+              _admin!.name.isNotEmpty ? _admin!.name[0] : 'A',
               style: AppTextStyles.h2.copyWith(
                 color: AppColors.primary,
                 fontSize: 20,
@@ -198,7 +273,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _admin.name,
+                  _admin!.name,
                   style: AppTextStyles.h2.copyWith(
                     color: AppColors.onPrimary,
                     fontSize: 18,
@@ -206,14 +281,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _admin.roleText,
+                  _admin!.roleText,
                   style: AppTextStyles.body2.copyWith(
                     color: AppColors.onPrimary.withOpacity(0.8),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Dernière connexion: ${_formatDate(_admin.lastLoginAt)}',
+                  'Dernière connexion: ${_formatDate(_admin!.lastLoginAt)}',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.onPrimary.withOpacity(0.6),
                   ),
@@ -227,38 +302,40 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActions() {
+    final pendingVerifications = _platformStats['pendingVerifications']?.toInt() ?? 0;
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.2,
+      childAspectRatio: 1.2, // Adjust if necessary for content
       children: [
         _buildActionCard(
           title: 'Vérifications',
-          subtitle: '$_pendingVerifications en attente',
+          subtitle: '$pendingVerifications en attente', // Will be updated with real data later
           icon: Icons.verified_user,
           color: Colors.orange,
           onTap: _showPendingVerifications,
         ),
         _buildActionCard(
           title: 'Rapports',
-          subtitle: 'Générer des rapports',
+          subtitle: 'Générer des rapports', // Placeholder
           icon: Icons.assessment,
           color: Colors.blue,
           onTap: _generateReports,
         ),
         _buildActionCard(
           title: 'Utilisateurs',
-          subtitle: 'Gérer les utilisateurs',
+          subtitle: 'Gérer les utilisateurs', // Placeholder
           icon: Icons.people,
           color: AppColors.primary,
           onTap: _manageUsers,
         ),
         _buildActionCard(
           title: 'Support',
-          subtitle: 'Tickets support',
+          subtitle: 'Tickets support', // Placeholder
           icon: Icons.support_agent,
           color: Colors.green,
           onTap: _showSupportTickets,
@@ -321,6 +398,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _verifyMerchant(MerchantAuthModel merchant) {
+    // TODO: Implement actual Firestore update for verification
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -332,15 +410,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            onPressed: () {
-              // Logique de vérification
+            onPressed: () async {
               Navigator.pop(context);
+              // Simulate update for now, then reload data
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${merchant.businessName} a été vérifié'),
+                  content: Text('${merchant.businessName} a été marqué comme vérifié (simulé).'),
                   backgroundColor: Colors.green,
                 ),
               );
+              // In a real app, you'd call a service method to update Firestore,
+              // then reload data or update local state optimistically.
+              // For now, we can reload all data to see the change if it were real.
+              // Or, update locally:
+              if(_isMounted) {
+                setState(() {
+                  final index = _merchants.indexWhere((m) => m.id == merchant.id);
+                  if (index != -1) {
+                    // This is a local update, actual verification needs Firestore call
+                    // _merchants[index] = merchant.copyWith(isVerified: true);
+                  }
+                  // To reflect a real change, you'd typically call _loadAllAdminData()
+                  // or a more specific data refresh method after a Firestore update.
+                });
+              }
             },
             child: const Text('Vérifier'),
           ),
@@ -350,6 +443,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _suspendMerchant(MerchantAuthModel merchant) {
+    // TODO: Implement actual Firestore update for suspension
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -362,14 +456,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Logique de suspension
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${merchant.businessName} a été suspendu'),
+                  content: Text('${merchant.businessName} a été suspendu (simulé).'),
                   backgroundColor: Colors.red,
                 ),
               );
+              // Similar to verify, update Firestore then refresh or update locally.
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Suspendre'),
@@ -384,16 +478,30 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(merchant.businessName),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Email: ${merchant.email}'),
-            Text('Téléphone: ${merchant.phone}'),
-            Text('Adresse: ${merchant.address}'),
-            Text('Statut: ${merchant.isVerified ? "Vérifié" : "En attente"}'),
-            Text('Inscrit le: ${_formatDate(merchant.createdAt)}'),
-          ],
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SelectableText('ID: ${merchant.id}'), // Make IDs selectable for easy copying
+              SelectableText('Email: ${merchant.email}'),
+              Text('Téléphone: ${merchant.phone}'),
+              Text('Adresse: ${merchant.address}'),
+              Text('Type: ${merchant.merchantType}'),
+              Text('Horaires: ${merchant.openingHours ?? 'Non spécifié'}'),
+              Text('Services: ${merchant.services?.join(', ') ?? 'Non spécifiés'}'),
+              Text('Statut: ${merchant.isVerified ? "Vérifié" : "En attente de vérification"}'),
+              Text('Inscrit le: ${_formatDate(merchant.createdAt)}'),
+              Text('Dernière connexion: ${_formatDate(merchant.lastLoginAt)}'),
+              if (merchant.latitude != null && merchant.longitude != null)
+                Text('Coordonnées: ${merchant.latitude}, ${merchant.longitude}'),
+              if (merchant.serviceStockStatus != null && merchant.serviceStockStatus!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text('Statut du stock des services:', style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold)),
+                ...merchant.serviceStockStatus!.entries.map((entry) => Text(' - ${entry.key}: ${entry.value}')),
+              ]
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -406,60 +514,63 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _showNotifications() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Notifications')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Affichage des notifications (simulé)')));
   }
 
-  void _handleLogout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
+  void _handleLogout(BuildContext navContext) async { // navContext for Navigator
+    final authProvider = Provider.of<AuthProvider>(navContext, listen: false);
+    bool? confirmLogout = await showDialog<bool>(
+      context: navContext, // Use navContext for dialog
+      builder: (dialogContext) => AlertDialog( // Use dialogContext for builder
         title: const Text('Déconnexion'),
         content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext, false), // Use dialogContext
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pushReplacementNamed(context, '/admin/login');
-            },
+            onPressed: () => Navigator.pop(dialogContext, true), // Use dialogContext
             child: const Text('Déconnexion'),
           ),
         ],
       ),
     );
+
+    if (confirmLogout == true) {
+      await authProvider.logout();
+      // Ensure context is still valid before navigating
+      if (mounted && navContext.mounted) {
+         // Using pushReplacementNamed to clear the stack up to login
+        Navigator.pushReplacementNamed(navContext, AppRoutes.login);
+      }
+    }
   }
 
   void _showPendingVerifications() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Vérifications en attente')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Affichage des vérifications en attente (simulé)')));
   }
 
   void _generateReports() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Génération de rapports')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Génération de rapports (simulé)')));
   }
 
   void _manageUsers() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Gestion des utilisateurs')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Gestion des utilisateurs (simulé)')));
   }
 
   void _showSupportTickets() {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Tickets de support')));
+    ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Affichage des tickets de support (simulé)')));
   }
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'Jamais';
-    return '${date.day}/${date.month}/${date.year} à ${date.hour}:${date.minute}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} '
+           'à ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
