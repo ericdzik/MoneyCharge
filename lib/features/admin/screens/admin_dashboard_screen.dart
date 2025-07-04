@@ -10,6 +10,7 @@ import '../services/admin_mock_data_service.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/merchant_provider.dart'; // Import MerchantProvider
+import '../../../core/constants/app_routes.dart'; // Import AppRoutes
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -63,28 +64,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     _admin = authProvider.adminProfile;
 
     try {
-      // Step 2: Load Real Merchants
+      // Step 2: Load Real Merchants (MerchantProvider now returns List<MerchantAuthModel> via adminMerchants getter)
       await merchantProvider.loadAllMerchantsForAdmin(forceRefresh: true);
       if (!_isMounted) return;
 
-      _merchants = merchantProvider.allLoadedMerchantsForAdminView.map((m) {
-        return MerchantAuthModel(
-          id: m.id,
-          email: m.email ?? 'N/A',
-          businessName: m.name,
-          phone: m.phone ?? 'N/A',
-          address: m.address,
-          openingHours: m.hours,
-          services: m.services,
-          isVerified: m.isVerified ?? false,
-          createdAt: m.createdAt ?? DateTime.now(),
-          lastLoginAt: m.lastLoginAt,
-          latitude: m.latitude,
-          longitude: m.longitude,
-          merchantType: m.merchantType ?? 'Indéfini',
-          serviceStockStatus: m.serviceStockStatus,
-        );
-      }).toList();
+      _merchants = merchantProvider.adminMerchants; // Directly use the list of MerchantAuthModel
 
       // Step 3: Calculate some stats from real merchants and merge with remaining mock stats
       Map<String, dynamic> initialMockStats = _mockDataService.getMockPlatformStats(); // For totalUsers, totalRevenue, etc.
