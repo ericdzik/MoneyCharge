@@ -19,6 +19,12 @@ class Merchant {
   final String? merchantType; // Ajout du type de marchand
   final Map<String, String>? serviceStockStatus; // Ajout du statut du stock des services
 
+  // Nouveaux champs pour correspondre à MerchantAuthModel et aux besoins de l'admin
+  final String? email;
+  final bool? isVerified;
+  final DateTime? createdAt;
+  final DateTime? lastLoginAt;
+
   // Champs calculés côté client, ne pas stocker directement dans Firestore pour ce modèle
   double? clientCalculatedDistance;
   bool clientCalculatedIsOpen; // Basé sur 'hours' et l'heure actuelle
@@ -27,21 +33,24 @@ class Merchant {
   Merchant({
     required this.id,
     required this.name, // businessName depuis Firestore
+    this.email, // Nouveau
     required this.address,
     required this.phone,
     required this.hours, // openingHours depuis Firestore
     required this.latitude,
     required this.longitude,
     required this.services,
-    this.merchantType, // Ajouté au constructeur
-    this.serviceStockStatus, // Ajouté au constructeur
+    this.merchantType,
+    this.serviceStockStatus,
+    this.isVerified, // Nouveau
+    this.createdAt, // Nouveau
+    this.lastLoginAt, // Nouveau
     // Ces champs sont maintenant calculés ou ont des valeurs par défaut
-    this.isOpen = false, // Sera calculé
-    this.status = MerchantStatus.available, // Par défaut, ou à déterminer
-    this.distance = 0.0, // Sera calculé
+    this.isOpen = false,
+    this.status = MerchantStatus.available,
+    this.distance = 0.0,
     this.walkingTime,
     this.drivingTime,
-    // Initialisation des champs calculés par le client
   }) : clientCalculatedIsOpen = false, clientCalculatedStatus = MerchantStatus.available;
 
 
@@ -97,25 +106,32 @@ class Merchant {
     }
 
     return Merchant(
-      id: userDoc.id, // UID de l'utilisateur/marchand
-      name: data['name'] as String? ?? data['businessName'] as String? ?? 'Nom du Business Indisponible',
+      id: userDoc.id,
+      name: data['name'] as String? ?? data['businessName'] as String? ?? 'Nom Indisponible',
+      email: data['email'] as String?, // Lecture de l'email
       address: data['address'] as String? ?? 'Adresse Indisponible',
       phone: data['phone'] as String? ?? 'Téléphone Indisponible',
       hours: data['openingHours'] as String? ?? 'Horaires Indisponibles',
       latitude: latitude,
       longitude: longitude,
       services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
-      merchantType: data['merchantType'] as String?, // Lecture depuis Firestore
-      serviceStockStatus: serviceStockStatusMap, // Lecture depuis Firestore
-      isOpen: false, // À calculer dynamiquement
-      status: MerchantStatus.available, // Par défaut, ou à déterminer par la logique de stock future
+      merchantType: data['merchantType'] as String?,
+      serviceStockStatus: serviceStockStatusMap,
+      isVerified: data['isVerified'] as bool?, // Lecture de isVerified
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(), // Lecture de createdAt
+      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(), // Lecture de lastLoginAt
+      isOpen: false,
+      status: MerchantStatus.available,
     );
   }
 
   Map<String, dynamic> toJson() {
+    // Note: This toJson might need updates if Merchant objects are ever written back to Firestore
+    // with these new fields. For now, it's primarily for client-side use or other serializations.
     return {
       'id': id,
       'name': name,
+      'email': email,
       'address': address,
       'phone': phone,
       'hours': hours,
@@ -129,6 +145,9 @@ class Merchant {
       'services': services,
       'merchantType': merchantType,
       'serviceStockStatus': serviceStockStatus,
+      'isVerified': isVerified,
+      'createdAt': createdAt?.toIso8601String(),
+      'lastLoginAt': lastLoginAt?.toIso8601String(),
     };
   }
 }

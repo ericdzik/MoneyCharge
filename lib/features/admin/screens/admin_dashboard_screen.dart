@@ -6,10 +6,6 @@ import '../models/admin_model.dart';
 import '../widgets/admin_stats_widget.dart';
 import '../widgets/merchant_table_widget.dart';
 import '../../merchant/models/merchant_auth_model.dart';
-import '../services/admin_mock_data_service.dart';
-import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../providers/merchant_provider.dart'; // Import MerchantProvider
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -52,69 +48,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (!_isMounted) return;
 
     setState(() {
-      _isLoading = true;
-      _dataError = null;
+      _isLoading = false;
     });
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-
-    // Step 1: Get Real Admin Profile
-    _admin = authProvider.adminProfile;
-
-    try {
-      // Step 2: Load Real Merchants
-      await merchantProvider.loadAllMerchantsForAdmin(forceRefresh: true);
-      if (!_isMounted) return;
-
-      _merchants = merchantProvider.allLoadedMerchantsForAdminView.map((m) {
-        return MerchantAuthModel(
-          id: m.id,
-          email: m.email ?? 'N/A',
-          businessName: m.name,
-          phone: m.phone ?? 'N/A',
-          address: m.address,
-          openingHours: m.hours,
-          services: m.services,
-          isVerified: m.isVerified ?? false,
-          createdAt: m.createdAt ?? DateTime.now(),
-          lastLoginAt: m.lastLoginAt,
-          latitude: m.latitude,
-          longitude: m.longitude,
-          merchantType: m.merchantType ?? 'Indéfini',
-          serviceStockStatus: m.serviceStockStatus,
-        );
-      }).toList();
-
-      // Step 3: Calculate some stats from real merchants and merge with remaining mock stats
-      Map<String, dynamic> initialMockStats = _mockDataService.getMockPlatformStats(); // For totalUsers, totalRevenue, etc.
-
-      int actualTotalMerchants = _merchants.length;
-      int actualPendingVerifications = _merchants.where((m) => !m.isVerified).length;
-      int actualActiveMerchants = _merchants.where((m) => m.isVerified).length;
-
-      // Update _platformStats: start with mock, then override with real data where available
-      _platformStats = {
-        ...initialMockStats, // Start with all mock stats
-        'totalMerchants': actualTotalMerchants,
-        'pendingVerifications': actualPendingVerifications,
-        'activeMerchants': actualActiveMerchants,
-        // totalUsers, totalRevenue, totalTransactions will remain from initialMockStats for now
-      };
-
-    } catch (e) {
-      if (!_isMounted) return;
-      print("Error loading admin data: $e");
-      _dataError = "Erreur de chargement des données: ${e.toString()}";
-    } finally {
-      if (_isMounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
   }
-
 
   @override
   Widget build(BuildContext context) {

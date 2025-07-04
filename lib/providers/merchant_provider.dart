@@ -5,8 +5,10 @@ import '../features/user/models/merchant_model.dart'; // Assurez-vous que ce mod
 class MerchantProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  List<Merchant> _allLoadedMerchants = [];
-  List<Merchant> _filteredMerchants = [];
+  List<Merchant> _allLoadedMerchants = []; // For user view
+  List<Merchant> _filteredMerchants = []; // For user view
+
+  List<MerchantAuthModel> _adminMerchantList = []; // For admin view
 
   bool _isLoading = false;
   String? _error;
@@ -20,7 +22,12 @@ class MerchantProvider with ChangeNotifier {
 
   // Getters publics
   List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
+<<<<<<< HEAD
   List<Merchant> get allLoadedMerchantsForAdminView => List.unmodifiable(_allLoadedMerchants); // For admin view (unfiltered by default)
+=======
+  // List<Merchant> get allLoadedMerchantsForAdminView => List.unmodifiable(_allLoadedMerchants); // Old getter, to be replaced or removed if not used elsewhere for this exact type
+  List<MerchantAuthModel> get adminMerchants => List.unmodifiable(_adminMerchantList); // New getter for admin
+>>>>>>> 9dbdb7f1d84b71da4fe25a7536678d32cad6017f
   bool get isLoading => _isLoading;
   String? get error => _error;
 
@@ -78,6 +85,7 @@ class MerchantProvider with ChangeNotifier {
   Future<void> loadAllMerchantsForAdmin({bool forceRefresh = false}) async {
     if (_isLoading && !forceRefresh) return;
 
+<<<<<<< HEAD
     // If _allLoadedMerchants is not empty and we are not forcing a refresh,
     // it means we might have already loaded data.
     // For admin, we don't apply user filters by default to _allLoadedMerchants.
@@ -90,6 +98,13 @@ class MerchantProvider with ChangeNotifier {
         // but typically admin view would use `allLoadedMerchantsForAdminView`.
         // For safety, let's assume admin view will use a direct, unfiltered list.
         notifyListeners(); // Notify if there's a listener for isLoading or error states.
+=======
+    // This method will now populate _adminMerchantList with MerchantAuthModel
+    if (_isLoading && !forceRefresh) return;
+
+    if (_adminMerchantList.isNotEmpty && !forceRefresh) {
+        notifyListeners();
+>>>>>>> 9dbdb7f1d84b71da4fe25a7536678d32cad6017f
         return;
     }
 
@@ -100,6 +115,7 @@ class MerchantProvider with ChangeNotifier {
       final querySnapshot = await _firestore
           .collection('users')
           .where('role', isEqualTo: 'merchant')
+<<<<<<< HEAD
           // No 'isVerified' filter for admin
           .get();
 
@@ -124,6 +140,28 @@ class MerchantProvider with ChangeNotifier {
       _error = "Erreur lors du chargement des marchands pour admin: ${e.toString()}";
       _allLoadedMerchants = [];
       _filteredMerchants = [];
+=======
+          .get();
+
+      // Import MerchantAuthModel if not already imported
+      // Assumes 'package:locacharge/features/merchant/models/merchant_auth_model.dart'
+      _adminMerchantList = querySnapshot.docs.map((doc) {
+        try {
+          // Directly create MerchantAuthModel from the Firestore document
+          return MerchantAuthModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+        } catch (e) {
+          print('[MerchantProvider] Error parsing merchant for admin MerchantAuthModel ${doc.id}: $e');
+          return null;
+        }
+      }).whereType<MerchantAuthModel>().toList();
+
+      // _allLoadedMerchants and _filteredMerchants (type Merchant) are not affected by this method directly.
+      // This keeps user-facing merchant list separate.
+
+    } catch (e) {
+      _error = "Erreur lors du chargement des marchands pour admin: ${e.toString()}";
+      _adminMerchantList = []; // Clear on error
+>>>>>>> 9dbdb7f1d84b71da4fe25a7536678d32cad6017f
       print(_error);
     } finally {
       _setLoading(false);
@@ -137,7 +175,7 @@ class MerchantProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void _applyInternalFilters() {
+  void _applyInternalFilters() { // This applies to _allLoadedMerchants (type Merchant) for user view
     List<Merchant> tempList = List.from(_allLoadedMerchants);
 
     // Filtre par Type de Marchand
@@ -148,8 +186,10 @@ class MerchantProvider with ChangeNotifier {
     // Filtre par Services Proposés (AU MOINS UN des services sélectionnés)
     if (_activeServiceFilters.isNotEmpty) {
       tempList.retainWhere((m) {
-        if (m.services == null || m.services!.isEmpty) return false;
-        return _activeServiceFilters.any((sf) => m.services!.contains(sf));
+        // Merchant model might use 'services' or 'servicesOffered'. Ensure consistency.
+        // The Merchant model uses 'services'.
+        if (m.services.isEmpty) return false;
+        return _activeServiceFilters.any((sf) => m.services.contains(sf));
       });
     }
 
@@ -159,7 +199,7 @@ class MerchantProvider with ChangeNotifier {
         _onlyShowAvailableStockForService) {
       tempList.retainWhere((m) =>
           m.serviceStockStatus != null &&
-          m.serviceStockStatus![_activeStockServiceFilter!] == 'disponible');
+          m.serviceStockStatus![_activeStockServiceFilter!]?.toLowerCase() == 'disponible');
     }
 
     // Filtre par recherche textuelle
@@ -171,19 +211,19 @@ class MerchantProvider with ChangeNotifier {
     _filteredMerchants = tempList;
   }
 
-  void applyFilters({
+  void applyFilters({ // This applies to user-facing filters
     String? merchantType,
-    List<String>? services, // Liste des services à filtrer
-    String? stockService, // Le service unique pour lequel on vérifie le stock
-    bool? onlyAvailableStock, // true si on ne veut que le stock disponible pour stockService
+    List<String>? services,
+    String? stockService,
+    bool? onlyAvailableStock,
     String? searchQuery,
     bool clearAll = false,
     bool clearServiceAndStockFilters = false,
     bool merchantTypeIsSet = false,
     bool servicesIsSet = false,
-    bool stockServiceIsSet = false, // Ajouté pour la cohérence
-    bool onlyAvailableStockIsSet = false, // Ajouté pour la cohérence
-    bool searchQueryIsSet = false, // Renommé depuis updateSearchQuery
+    bool stockServiceIsSet = false,
+    bool onlyAvailableStockIsSet = false,
+    bool searchQueryIsSet = false,
   }) {
     if (clearAll) {
       _activeMerchantTypeFilter = null;
@@ -195,29 +235,24 @@ class MerchantProvider with ChangeNotifier {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
-      // Ne pas toucher aux autres filtres comme merchantType ou searchQuery
     } else {
       if (merchantTypeIsSet) {
         _activeMerchantTypeFilter = merchantType;
       }
       if (servicesIsSet && services != null) {
         _activeServiceFilters = List.from(services);
-      } else if (servicesIsSet && services == null) { // Explicitly clearing service filters
+      } else if (servicesIsSet && services == null) {
         _activeServiceFilters = [];
       }
 
       if (stockServiceIsSet) {
          _activeStockServiceFilter = (stockService == null || stockService.isEmpty) ? null : stockService;
-         // Si stockService est explicitement mis à null/vide, et onlyAvailableStockIsSet n'est pas true,
-         // alors onlyShowAvailableStockForService doit être false.
          if (_activeStockServiceFilter == null && !onlyAvailableStockIsSet) {
             _onlyShowAvailableStockForService = false;
          }
       }
       if (onlyAvailableStockIsSet && onlyAvailableStock != null) {
         _onlyShowAvailableStockForService = onlyAvailableStock;
-        // Si on met à jour onlyAvailableStock, et que _activeStockServiceFilter est null,
-        // cela n'a pas de sens, donc on s'assure que _onlyShowAvailableStockForService est false.
         if (_activeStockServiceFilter == null) {
             _onlyShowAvailableStockForService = false;
         }
@@ -225,7 +260,7 @@ class MerchantProvider with ChangeNotifier {
 
       if (searchQueryIsSet && searchQuery != null) {
         _searchQuery = searchQuery;
-      } else if (searchQueryIsSet && searchQuery == null) { // Explicitly clearing search query
+      } else if (searchQueryIsSet && searchQuery == null) {
         _searchQuery = '';
       }
     }
@@ -234,15 +269,31 @@ class MerchantProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshMerchants() async {
+  Future<void> refreshMerchants() async { // Refreshes user-facing merchants
     await loadMerchants(forceRefresh: true);
   }
 
-  Merchant? getMerchantById(String id) {
+  Future<void> refreshAdminMerchants() async { // Refreshes admin-facing merchants
+    await loadAllMerchantsForAdmin(forceRefresh: true);
+  }
+
+
+  Merchant? getMerchantById(String id) { // Gets from user-facing list
     try {
       return _allLoadedMerchants.firstWhere((merchant) => merchant.id == id);
     } catch (e) {
       return null;
     }
   }
+
+  // It might be useful to have a similar getter for admin if needed by ID elsewhere.
+  // MerchantAuthModel? getAdminMerchantById(String id) {
+  //   try {
+  //     return _adminMerchantList.firstWhere((merchant) => merchant.id == id);
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 }
+// Ensure MerchantAuthModel is imported if not already via other files
+// import '../features/merchant/models/merchant_auth_model.dart';
