@@ -23,20 +23,20 @@ class DashboardStatsWidget extends StatelessWidget {
         final screenWidth = constraints.maxWidth;
         int crossAxisCount;
         double childAspectRatio;
-        bool isSmallScreen = false; // Pour ajuster le contenu des cartes si nécessaire
+        bool isSmallScreen = false;
 
-        if (screenWidth < 360) { // Very small screens
+        if (screenWidth < 360) {
           crossAxisCount = 1;
-          childAspectRatio = 3.5; // Cartes plus hautes
+          childAspectRatio = 3.5;
           isSmallScreen = true;
-        } else if (screenWidth < 600) { // Small screens (typical phones portrait)
+        } else if (screenWidth < 600) {
           crossAxisCount = 2;
-          childAspectRatio = 1.6; // Légèrement ajusté
-        } else if (screenWidth < 900) { // Medium screens
-          crossAxisCount = 2; // Peut rester à 2 ou passer à 3 si le design le permet
-          childAspectRatio = 1.8; // Plus d'espace horizontal par carte
-        } else { // Large screens
-          crossAxisCount = 4; // Ou 3 si on veut des cartes plus larges
+          childAspectRatio = 1.6;
+        } else if (screenWidth < 900) {
+          crossAxisCount = 2;
+          childAspectRatio = 1.8;
+        } else {
+          crossAxisCount = 4;
           childAspectRatio = 1.5;
         }
 
@@ -44,52 +44,56 @@ class DashboardStatsWidget extends StatelessWidget {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 12, // Réduit pour les petits écrans
-          mainAxisSpacing: 12,  // Réduit pour les petits écrans
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
           childAspectRatio: childAspectRatio,
           children: [
             _buildStatCard(
               isSmallScreen: isSmallScreen,
               title: 'Services',
-          value: '$totalServices',
-          subtitle: '$activeServices actifs',
-          icon: Icons.inventory,
-          color: AppColors.primary,
-        ),
-        _buildStatCard(
-          title: 'Revenus',
-          value: '${totalRevenue.toStringAsFixed(0)} FCFA',
-          subtitle: 'Total',
-          icon: Icons.monetization_on,
-          color: Colors.green,
-        ),
-        _buildStatCard(
-          title: 'Transactions',
-          value: '$totalTransactions',
-          subtitle: 'Aujourd\'hui',
-          icon: Icons.receipt_long,
-          color: Colors.orange,
-        ),
-        _buildStatCard(
-          title: 'Performance',
-          value: '${_calculatePerformance()}%',
-          subtitle: 'Taux de satisfaction',
-          icon: Icons.trending_up,
-          color: Colors.blue,
-        ),
-      ],
+              value: '$totalServices',
+              subtitle: '$activeServices actifs',
+              icon: Icons.inventory,
+              color: AppColors.primary,
+            ),
+            _buildStatCard(
+              isSmallScreen: isSmallScreen,
+              title: 'Revenus',
+              value: '${totalRevenue.toStringAsFixed(0)} FCFA',
+              subtitle: 'Total',
+              icon: Icons.monetization_on,
+              color: Colors.green,
+            ),
+            _buildStatCard(
+              isSmallScreen: isSmallScreen,
+              title: 'Transactions',
+              value: '$totalTransactions',
+              subtitle: 'Aujourd\'hui',
+              icon: Icons.receipt_long,
+              color: Colors.orange,
+            ),
+            _buildStatCard(
+              isSmallScreen: isSmallScreen,
+              title: 'Performance',
+              value: '${_calculatePerformance()}%',
+              subtitle: 'Taux de satisfaction',
+              icon: Icons.trending_up,
+              color: Colors.blue,
+            ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildStatCard({
-    required bool isSmallScreen, // Ajout du paramètre
+    required bool isSmallScreen,
     required String title,
     required String value,
     required String subtitle,
     required IconData icon,
     required Color color,
   }) {
-    // isSmallScreen est déterminé par le LayoutBuilder parent
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
@@ -105,7 +109,7 @@ class DashboardStatsWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Répartir l'espace
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -162,7 +166,7 @@ class DashboardStatsWidget extends StatelessWidget {
   }
 
   int _calculatePerformance() {
-    if (totalTransactions == 0) return 0;
+    if (totalServices == 0) return 0;
     return ((activeServices / totalServices) * 100).round();
   }
 }
