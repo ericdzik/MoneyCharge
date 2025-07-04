@@ -128,41 +128,70 @@ class MerchantTableWidget extends StatelessWidget {
                       ),
                     ),
                     DataCell(
-                      SizedBox( // Encapsuler la Row dans un SizedBox pour potentiellement contrôler la largeur
-                        width: 150, // Ajuster cette largeur au besoin
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min, // Important pour que la Row ne prenne que l'espace nécessaire
-                          children: [
+                      LayoutBuilder( // Utiliser LayoutBuilder pour obtenir la largeur disponible pour cette cellule
+                        builder: (context, constraints) {
+                          // Définir un seuil. Si la largeur est trop petite, utiliser PopupMenuButton
+                          // Ce seuil est arbitraire et pourrait nécessiter des ajustements.
+                          // DataTable alloue de l'espace, donc constraints.maxWidth ici peut être grand.
+                          // Il est souvent mieux de se baser sur la largeur globale de l'écran.
+                          final screenWidth = MediaQuery.of(context).size.width;
+                          bool usePopupMenu = screenWidth < 450; // Seuil pour petits écrans
+
+                          List<Widget> actions = [
                             IconButton(
-                              icon: const Icon(
-                                Icons.visibility,
-                                size: 18,
-                                color: AppColors.primary,
-                              ),
+                              icon: const Icon(Icons.visibility, size: 18, color: AppColors.primary),
                               tooltip: 'Voir détails',
                               onPressed: () => onViewDetails(merchant),
                             ),
-                            if (!merchant.isVerified)
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.verified,
-                                  size: 18,
-                                  color: Colors.green,
+                          ];
+
+                          if (usePopupMenu) {
+                            List<PopupMenuEntry<String>> popupItems = [];
+                            if (!merchant.isVerified) {
+                              popupItems.add(
+                                const PopupMenuItem(value: 'verify', child: Text('Vérifier')),
+                              );
+                            }
+                            popupItems.add(
+                              const PopupMenuItem(value: 'suspend', child: Text('Suspendre')),
+                            );
+
+                            if (popupItems.isNotEmpty) {
+                              actions.add(
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert, size: 18),
+                                  tooltip: 'Plus d\'actions',
+                                  onSelected: (value) {
+                                    if (value == 'verify') {
+                                      onVerify(merchant);
+                                    } else if (value == 'suspend') {
+                                      onSuspend(merchant);
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) => popupItems,
                                 ),
+                              );
+                            }
+                          } else {
+                            if (!merchant.isVerified) {
+                              actions.add(IconButton(
+                                icon: const Icon(Icons.verified, size: 18, color: Colors.green),
                                 tooltip: 'Vérifier',
                                 onPressed: () => onVerify(merchant),
-                              ),
-                            IconButton(
-                              icon: const Icon(
-                                Icons.block,
-                                size: 18,
-                                color: Colors.red,
-                              ),
+                              ));
+                            }
+                            actions.add(IconButton(
+                              icon: const Icon(Icons.block, size: 18, color: Colors.red),
                               tooltip: 'Suspendre',
                               onPressed: () => onSuspend(merchant),
-                            ),
-                          ],
-                        ),
+                            ));
+                          }
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: actions,
+                          );
+                        },
                       ),
                     ),
                   ],

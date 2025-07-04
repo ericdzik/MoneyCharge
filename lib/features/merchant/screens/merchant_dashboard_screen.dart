@@ -140,62 +140,81 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   }
 
   Widget _buildQuickActions(MerchantAuthModel merchant) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.2,
-      children: [
-        _buildActionCard(
-          title: 'Gérer le solde',
-          subtitle: 'Transactions et inventaire',
-          icon: Icons.account_balance_wallet,
-          color: AppColors.primary,
-          onTap: () =>
-              Navigator.pushNamed(context, AppRoutes.balanceManagement),
-        ),
-        _buildActionCard(
-          title: 'Transactions',
-          subtitle: 'Voir l\'historique',
-          icon: Icons.receipt_long,
-          color: Colors.green,
-          onTap: () {
-             // TODO: Naviguer vers un écran d'historique complet des transactions
-             // Pour l'instant, peut-être juste un SnackBar ou rien
-             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Navigation vers l\'historique des transactions (TODO)'))
-             );
-          },
-        ),
-        _buildActionCard(
-          title: 'Profil',
-          subtitle: 'Modifier les informations',
-          icon: Icons.person,
-          color: Colors.blue,
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => EditMerchantProfileScreen(merchant: merchant),
-              ),
-            );
-          },
-        ),
-        _buildActionCard(
-          title: 'Support',
-          subtitle: 'Contacter l\'assistance',
-          icon: Icons.support_agent,
-          color: Colors.orange,
-          onTap: () {
-            // TODO: Navigation vers le support
-             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Navigation vers le support (TODO)'))
-             );
-          },
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        int crossAxisCount;
+        double childAspectRatio;
+
+        if (screenWidth < 360) { // Very small screens
+          crossAxisCount = 1;
+          childAspectRatio = 2.8; // Plus grand pour une seule colonne
+        } else if (screenWidth < 600) { // Small screens (typical phones portrait)
+          crossAxisCount = 2;
+          childAspectRatio = 1.3; // Ajusté pour un meilleur espacement
+        } else if (screenWidth < 900) { // Medium screens (tablets portrait, large phones landscape)
+          crossAxisCount = 3;
+          childAspectRatio = 1.2;
+        } else { // Large screens
+          crossAxisCount = 4;
+          childAspectRatio = 1.2;
+        }
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: childAspectRatio,
+          children: [
+            _buildActionCard(
+              title: 'Gérer le solde',
+              subtitle: 'Transactions et inventaire',
+              icon: Icons.account_balance_wallet,
+              color: AppColors.primary,
+              onTap: () =>
+                  Navigator.pushNamed(context, AppRoutes.balanceManagement),
+            ),
+            _buildActionCard(
+              title: 'Transactions',
+              subtitle: 'Voir l\'historique',
+              icon: Icons.receipt_long,
+              color: Colors.green,
+              onTap: () {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Navigation vers l\'historique des transactions (TODO)'))
+                 );
+              },
+            ),
+            _buildActionCard(
+              title: 'Profil',
+              subtitle: 'Modifier les informations',
+              icon: Icons.person,
+              color: Colors.blue,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => EditMerchantProfileScreen(merchant: merchant),
+                  ),
+                );
+              },
+            ),
+            _buildActionCard(
+              title: 'Support',
+              subtitle: 'Contacter l\'assistance',
+              icon: Icons.support_agent,
+              color: Colors.orange,
+              onTap: () {
+                 ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Navigation vers le support (TODO)'))
+                 );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -206,46 +225,57 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final bool isVerySmallScreen = MediaQuery.of(context).size.width < 360;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        // ... (contenu de _buildActionCard inchangé) ...
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12), // Padding réduit
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(isVerySmallScreen ? 8 : 10),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 32),
+              child: Icon(icon, color: color, size: isVerySmallScreen ? 24 : 28),
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: AppTextStyles.h3.copyWith(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
+            SizedBox(height: isVerySmallScreen ? 6 : 8),
+            Flexible(
+              child: Text(
+                title,
+                style: AppTextStyles.h3.copyWith(fontSize: isVerySmallScreen ? 13 : 15),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
               ),
-              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: isVerySmallScreen ? 3 : 4),
+            Flexible(
+              child: Text(
+                subtitle,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: isVerySmallScreen ? 10 : 11,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              ),
             ),
           ],
         ),

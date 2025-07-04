@@ -18,16 +18,39 @@ class DashboardStatsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
-      children: [
-        _buildStatCard(
-          title: 'Services',
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        int crossAxisCount;
+        double childAspectRatio;
+        bool isSmallScreen = false; // Pour ajuster le contenu des cartes si nécessaire
+
+        if (screenWidth < 360) { // Very small screens
+          crossAxisCount = 1;
+          childAspectRatio = 3.5; // Cartes plus hautes
+          isSmallScreen = true;
+        } else if (screenWidth < 600) { // Small screens (typical phones portrait)
+          crossAxisCount = 2;
+          childAspectRatio = 1.6; // Légèrement ajusté
+        } else if (screenWidth < 900) { // Medium screens
+          crossAxisCount = 2; // Peut rester à 2 ou passer à 3 si le design le permet
+          childAspectRatio = 1.8; // Plus d'espace horizontal par carte
+        } else { // Large screens
+          crossAxisCount = 4; // Ou 3 si on veut des cartes plus larges
+          childAspectRatio = 1.5;
+        }
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 12, // Réduit pour les petits écrans
+          mainAxisSpacing: 12,  // Réduit pour les petits écrans
+          childAspectRatio: childAspectRatio,
+          children: [
+            _buildStatCard(
+              isSmallScreen: isSmallScreen,
+              title: 'Services',
           value: '$totalServices',
           subtitle: '$activeServices actifs',
           icon: Icons.inventory,
@@ -59,60 +82,78 @@ class DashboardStatsWidget extends StatelessWidget {
   }
 
   Widget _buildStatCard({
+    required bool isSmallScreen, // Ajout du paramètre
     required String title,
     required String value,
     required String subtitle,
     required IconData icon,
     required Color color,
   }) {
+    // isSmallScreen est déterminé par le LayoutBuilder parent
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Répartir l'espace
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isSmallScreen ? 5 : 7),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18),
               ),
-              const Spacer(),
-              Text(
-                title,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+              Flexible(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.right,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: isSmallScreen ? 9 : 11,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: isSmallScreen ? 14 : 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
+          Flexible(
+            child: Text(
+              subtitle,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: isSmallScreen ? 9 : 10,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: isSmallScreen ? 2 : 1,
             ),
           ),
         ],

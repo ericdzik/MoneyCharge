@@ -110,73 +110,72 @@ class AdminStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: isSmallScreen ? 8 : 16,
-      ),
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12), // Réduction du padding général
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10), // Léger ajustement
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08), // Ombre plus subtile
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Pour mieux répartir l'espace vertical
         children: [
-          Flexible(
-            child: Row( // Corrected Flexible usage
-              children: [
-                Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 4 : 8),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(icon, color: color, size: isSmallScreen ? 16 : 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: EdgeInsets.all(isSmallScreen ? 5 : 7), // Ajustement
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                const Spacer(),
-                Text(
+                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18), // Icônes plus petites
+              ),
+              // Flexible pour permettre au titre de prendre l'espace et de s'ajuster
+              Flexible(
+                child: Text(
                   title,
+                  textAlign: TextAlign.right, // Alignement à droite pour le titre près de l'icône
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: isSmallScreen ? 10 : null,
+                    fontSize: isSmallScreen ? 9 : 11, // Police plus petite
                   ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-              ],
-            ),
-          ),
-          if (!isSmallScreen) // Only add this SizedBox if not small screen
-             SizedBox(height: 12),
-          // If isSmallScreen, the SizedBox was conditionally removed in a previous step.
-          // If it should be present but smaller: SizedBox(height: isSmallScreen ? 6 : 12)
-          // For now, keeping the logic where it's absent for small screens to maximize space.
-
-          Flexible(
-            child: Text(
-              value,
-              style: AppTextStyles.h2.copyWith(
-                fontSize: isSmallScreen ? 16 : 20,
-                fontWeight: FontWeight.bold,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: isSmallScreen ? 1 : 2,
+            ],
+          ),
+          // Utilisation de Flexible et FittedBox pour les valeurs et sous-titres
+          // afin qu'ils s'adaptent à l'espace disponible.
+          Flexible(
+            child: FittedBox( // FittedBox pour que le texte 'value' se réduise si besoin
+              fit: BoxFit.scaleDown, // Assure que le texte ne dépasse pas
+              child: Text(
+                value,
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: isSmallScreen ? 14 : 18, // Police plus petite
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1, // Forcer sur une ligne, FittedBox gère la taille
+              ),
             ),
           ),
-          SizedBox(height: isSmallScreen ? 2 : 4),
           Flexible(
             child: Text(
               subtitle,
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: isSmallScreen ? 10 : null,
+                fontSize: isSmallScreen ? 9 : 10, // Police plus petite
               ),
               overflow: TextOverflow.ellipsis,
-              maxLines: 2,
+              maxLines: isSmallScreen ? 2 : 1, // Permettre 2 lignes sur très petit écran si besoin
             ),
           ),
         ],

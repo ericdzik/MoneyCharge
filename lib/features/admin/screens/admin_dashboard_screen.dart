@@ -300,58 +300,74 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildQuickActions() {
     final pendingVerifications = _platformStats['pendingVerifications']?.toInt() ?? 0;
-    final screenWidth = MediaQuery.of(context).size.width;
-    int crossAxisCount;
-    double childAspectRatio;
 
-    if (screenWidth < 600) { // Small screens
-      crossAxisCount = 1;
-      childAspectRatio = 2.5; // Taller cards for single column
-    } else if (screenWidth < 900) { // Medium screens
-      crossAxisCount = 2;
-      childAspectRatio = 1.2; // Original aspect ratio
-    } else { // Large screens
-      crossAxisCount = 3; // Show more cards in a row if space allows
-      childAspectRatio = 1.3;
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        int crossAxisCount;
+        double childAspectRatio;
 
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: crossAxisCount,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: childAspectRatio,
-      children: [
-        _buildActionCard(
-          title: 'Vérifications',
-          subtitle: '$pendingVerifications en attente', // Will be updated with real data later
-          icon: Icons.verified_user,
-          color: Colors.orange,
-          onTap: _showPendingVerifications,
-        ),
-        _buildActionCard(
-          title: 'Rapports',
-          subtitle: 'Générer des rapports', // Placeholder
-          icon: Icons.assessment,
-          color: Colors.blue,
-          onTap: _generateReports,
-        ),
-        _buildActionCard(
-          title: 'Utilisateurs',
-          subtitle: 'Gérer les utilisateurs', // Placeholder
-          icon: Icons.people,
-          color: AppColors.primary,
-          onTap: _manageUsers,
-        ),
-        _buildActionCard(
-          title: 'Support',
-          subtitle: 'Tickets support', // Placeholder
-          icon: Icons.support_agent,
-          color: Colors.green,
-          onTap: _showSupportTickets,
-        ),
-      ],
+        if (screenWidth < 360) { // Very small screens
+          crossAxisCount = 1;
+          childAspectRatio = 2.8;
+        } else if (screenWidth < 600) { // Small screens (typical phones portrait)
+          crossAxisCount = 2;
+          childAspectRatio = 1.5;
+        } else if (screenWidth < 900) { // Medium screens (tablets portrait, large phones landscape)
+          crossAxisCount = 3;
+          childAspectRatio = 1.2;
+        } else if (screenWidth < 1200) { // Large screens (tablets landscape)
+          crossAxisCount = 4;
+          childAspectRatio = 1.3;
+        } else { // Extra large screens
+          crossAxisCount = 5;
+          childAspectRatio = 1.3;
+        }
+
+        // Ajustement pour éviter que les cartes ne soient trop larges sur les écrans très larges
+        // en limitant le nombre de colonnes si nécessaire, ou en ajustant l'aspect ratio.
+        // Par exemple, si crossAxisCount devient trop élevé, les cartes peuvent devenir trop minces.
+        // Pour cet exemple, nous allons garder les valeurs ci-dessus.
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: childAspectRatio,
+          children: [
+            _buildActionCard(
+              title: 'Vérifications',
+              subtitle: '$pendingVerifications en attente',
+              icon: Icons.verified_user,
+              color: Colors.orange,
+              onTap: _showPendingVerifications,
+            ),
+            _buildActionCard(
+              title: 'Rapports',
+              subtitle: 'Générer des rapports',
+              icon: Icons.assessment,
+              color: Colors.blue,
+              onTap: _generateReports,
+            ),
+            _buildActionCard(
+              title: 'Utilisateurs',
+              subtitle: 'Gérer les utilisateurs',
+              icon: Icons.people,
+              color: AppColors.primary,
+              onTap: _manageUsers,
+            ),
+            _buildActionCard(
+              title: 'Support',
+              subtitle: 'Tickets support',
+              icon: Icons.support_agent,
+              color: Colors.green,
+              onTap: _showSupportTickets,
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -362,45 +378,60 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
+    // isSmallScreen peut être dérivé du LayoutBuilder parent si nécessaire,
+    // ou nous pouvons utiliser MediaQuery ici pour des ajustements ponctuels.
+    // Pour simplifier, nous allons rendre les cartes plus compactes de manière générale.
+    final bool isVerySmallScreen = MediaQuery.of(context).size.width < 360;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12), // Padding réduit
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 6,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center, // Centrer verticalement
+          crossAxisAlignment: CrossAxisAlignment.center, // Centrer horizontalement
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(isVerySmallScreen ? 8 : 10), // Padding réduit pour l'icône
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: 32),
+              child: Icon(icon, color: color, size: isVerySmallScreen ? 24 : 28), // Taille d'icône réduite
             ),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: AppTextStyles.h3.copyWith(fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
+            SizedBox(height: isVerySmallScreen ? 6 : 8), // Espace réduit
+            Flexible( // Flexible pour que le texte puisse prendre plusieurs lignes si nécessaire
+              child: Text(
+                title,
+                style: AppTextStyles.h3.copyWith(fontSize: isVerySmallScreen ? 13 : 15), // Taille de police réduite
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis, // Ajout pour le titre aussi
+                maxLines: 2, // Permettre au titre de prendre 2 lignes
               ),
-              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: isVerySmallScreen ? 3 : 4), // Espace réduit
+            Flexible( // Flexible pour le sous-titre
+              child: Text(
+                subtitle,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: isVerySmallScreen ? 10 : 11, // Taille de police réduite
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2, // Permettre au sous-titre de prendre 2 lignes
+              ),
             ),
           ],
         ),
