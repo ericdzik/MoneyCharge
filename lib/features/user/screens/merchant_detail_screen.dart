@@ -47,12 +47,18 @@ class MerchantDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header avec image et statut
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, Color(0xFFEF4444)],
+            LayoutBuilder( // Use LayoutBuilder to make height responsive
+              builder: (context, constraints) {
+                double headerHeight = constraints.maxWidth * 0.5; // Example: 2:1 aspect ratio
+                if (headerHeight < 150) headerHeight = 150; // Min height
+                if (headerHeight > 300) headerHeight = 300; // Max height
+
+                return Container(
+                  width: double.infinity,
+                  height: headerHeight,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary, Color(0xFFEF4444)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -172,34 +178,70 @@ class MerchantDetailScreen extends StatelessWidget {
           color: AppColors.surface,
           border: Border(top: BorderSide(color: AppColors.border)),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: CustomButton(
-                text: 'Appeler',
-                type: ButtonType.outline,
-                icon: const Icon(Icons.phone, size: 20),
-                onPressed: () {
-                  // Lancer l'appel
-                },
-              ),
-            ),
-            const SizedBox(width: AppDimensions.paddingM),
-            Expanded(
-              child: CustomButton(
-                text: 'Itinéraire',
-                icon: const Icon(Icons.directions, size: 20),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => MapViewScreen(targetMerchant: merchant),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            bool useColumnLayout = constraints.maxWidth < 360; // Threshold for narrow screens
+
+            if (useColumnLayout) {
+              return Column(
+                mainAxisSize: MainAxisSize.min, // Important for Column in BottomAppBar
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CustomButton(
+                    text: 'Appeler',
+                    type: ButtonType.outline,
+                    icon: const Icon(Icons.phone, size: 20),
+                    onPressed: () {
+                      // Lancer l'appel
+                    },
+                  ),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  CustomButton(
+                    text: 'Itinéraire',
+                    icon: const Icon(Icons.directions, size: 20),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MapViewScreen(targetMerchant: merchant),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              );
+            } else {
+              return Row(
+                children: [
+                  Expanded(
+                    child: CustomButton(
+                      text: 'Appeler',
+                      type: ButtonType.outline,
+                      icon: const Icon(Icons.phone, size: 20),
+                      onPressed: () {
+                        // Lancer l'appel
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
-          ],
+                  ),
+                  const SizedBox(width: AppDimensions.paddingM),
+                  Expanded(
+                    child: CustomButton(
+                      text: 'Itinéraire',
+                      icon: const Icon(Icons.directions, size: 20),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => MapViewScreen(targetMerchant: merchant),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              );
+            }
+          }
         ),
       ),
     );

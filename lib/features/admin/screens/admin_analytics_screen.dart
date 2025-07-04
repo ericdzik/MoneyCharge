@@ -70,13 +70,28 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   }
 
   Widget _buildMainStats() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    int crossAxisCount;
+    double childAspectRatio;
+
+    if (screenWidth < 600) { // Small screens
+      crossAxisCount = 1;
+      childAspectRatio = 2.8; // Adjust for taller items
+    } else if (screenWidth < 900) { // Medium screens
+      crossAxisCount = 2;
+      childAspectRatio = 1.5; // Original aspect ratio
+    } else { // Large screens
+      crossAxisCount = 3; // Or 4 if cards are made more compact
+      childAspectRatio = 1.6;
+    }
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
+      crossAxisCount: crossAxisCount,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
+      childAspectRatio: childAspectRatio,
       children: [
         _buildStatCard(
           title: 'Utilisateurs',
@@ -188,10 +203,24 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       children: [
         Text('Évolution des locations', style: AppTextStyles.h3),
         const SizedBox(height: 16),
-        Container(
-          height: 200,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+        LayoutBuilder( // Use LayoutBuilder to get available width
+          builder: (context, constraints) {
+            final screenWidth = MediaQuery.of(context).size.width;
+            double chartHeight;
+
+            if (screenWidth < 600) {
+              chartHeight = 180; // Slightly smaller on very narrow screens
+            } else if (screenWidth < 900) {
+              chartHeight = 200;
+            } else {
+              chartHeight = 220; // Slightly taller on wider screens
+            }
+
+            return Container(
+              height: chartHeight,
+              width: constraints.maxWidth, // Take full available width
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
@@ -271,9 +300,13 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     ),
                   ),
                 ),
-                title: Text(
-                  merchant['name'] as String,
-                  style: AppTextStyles.body1,
+                title: Expanded( // Allow merchant name to take available space and wrap
+                  child: Text(
+                    merchant['name'] as String,
+                    style: AppTextStyles.body1,
+                    overflow: TextOverflow.ellipsis, // Add ellipsis for very long names
+                    maxLines: 2, // Allow up to 2 lines for name
+                  ),
                 ),
                 subtitle: Text(
                   '${merchant['locations']} locations',
@@ -281,11 +314,16 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                trailing: Text(
-                  '${merchant['revenue']} FCFA',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.success,
-                    fontWeight: FontWeight.w600,
+                trailing: SizedBox( // Constrain width of trailing text
+                  width: 100, // Adjust as needed
+                  child: Text(
+                    '${merchant['revenue']} FCFA',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.success,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.end,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               );
@@ -366,9 +404,13 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     size: 20,
                   ),
                 ),
-                title: Text(
-                  activity['message'] as String,
-                  style: AppTextStyles.body2,
+                title: Expanded( // Allow activity message to take available space and wrap
+                  child: Text(
+                    activity['message'] as String,
+                    style: AppTextStyles.body2,
+                    overflow: TextOverflow.ellipsis, // Add ellipsis for very long messages
+                    maxLines: 2, // Allow up to 2 lines
+                  ),
                 ),
                 subtitle: Text(
                   activity['time'] as String,

@@ -300,14 +300,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildQuickActions() {
     final pendingVerifications = _platformStats['pendingVerifications']?.toInt() ?? 0;
+    final screenWidth = MediaQuery.of(context).size.width;
+    int crossAxisCount;
+    double childAspectRatio;
+
+    if (screenWidth < 600) { // Small screens
+      crossAxisCount = 1;
+      childAspectRatio = 2.5; // Taller cards for single column
+    } else if (screenWidth < 900) { // Medium screens
+      crossAxisCount = 2;
+      childAspectRatio = 1.2; // Original aspect ratio
+    } else { // Large screens
+      crossAxisCount = 3; // Show more cards in a row if space allows
+      childAspectRatio = 1.3;
+    }
 
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
+      crossAxisCount: crossAxisCount,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.2, // Adjust if necessary for content
+      childAspectRatio: childAspectRatio,
       children: [
         _buildActionCard(
           title: 'Vérifications',

@@ -43,10 +43,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           padding: const EdgeInsets.all(AppDimensions.paddingL),
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
+            child: SingleChildScrollView( // Wrap main content in SingleChildScrollView
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center, // Try to keep content centered
+                children: [
+                  // Adjust Spacers or use SizedBox for more predictable spacing if needed
+                  // const Spacer(), // Spacer might behave differently in SingleChildScrollView if content is short
+
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Example dynamic spacing
 
                 // Icône et titre
                 Column(
@@ -169,18 +174,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ],
 
-                const Spacer(),
+                // const Spacer(), // Spacer might behave differently in SingleChildScrollView if content is short
+                SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Example dynamic spacing
 
                 // Lien de retour
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Retour à la ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                    Flexible( // Make text flexible
+                      child: Text(
+                        'Retour à la ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.end, // Align if it wraps
                       ),
                     ),
+                    const SizedBox(width: AppDimensions.paddingXS), // Add minimal spacing
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacementNamed(
@@ -188,11 +198,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           AppRoutes.login,
                         );
                       },
-                      child: Text(
-                        'connexion',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                      child: Flexible( // Make tappable text flexible
+                        child: Text(
+                          'connexion',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),

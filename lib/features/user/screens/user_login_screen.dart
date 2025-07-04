@@ -235,53 +235,48 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(
+                Wrap( // Use Wrap for test buttons
+                  alignment: WrapAlignment.center,
+                  spacing: 8.0, // Horizontal spacing
+                  runSpacing: 8.0, // Vertical spacing if items wrap
                   children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _emailController.text = 'user@example.com';
-                          _passwordController.text = 'password123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: const Text(
-                          'Utilisateur',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                    OutlinedButton(
+                      onPressed: () {
+                        _emailController.text = 'user@example.com';
+                        _passwordController.text = 'password123';
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      ),
+                      child: const Text(
+                        'Utilisateur',
+                        style: TextStyle(fontSize: 12),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _emailController.text = 'boutique@example.com';
-                          _passwordController.text = 'password123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: const Text(
-                          'Marchand',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                    OutlinedButton(
+                      onPressed: () {
+                        _emailController.text = 'boutique@example.com';
+                        _passwordController.text = 'password123';
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      ),
+                      child: const Text(
+                        'Marchand',
+                        style: TextStyle(fontSize: 12),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _emailController.text = 'admin@locacharge.com';
-                          _passwordController.text = 'password123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: const Text(
-                          'Admin',
-                          style: TextStyle(fontSize: 12),
-                        ),
+                    OutlinedButton(
+                      onPressed: () {
+                        _emailController.text = 'admin@locacharge.com';
+                        _passwordController.text = 'password123';
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      ),
+                      child: const Text(
+                        'Admin',
+                        style: TextStyle(fontSize: 12),
                       ),
                     ),
                   ],
@@ -291,21 +286,26 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Pas encore de compte ? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                    Flexible( // Make text flexible
+                      child: Text(
+                        'Pas encore de compte ? ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.end, // Align if it wraps to keep it neat
                       ),
                     ),
                     GestureDetector(
                       onTap: () {
                         Navigator.pushNamed(context, AppRoutes.register);
                       },
-                      child: Text(
-                        'S\'inscrire',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                      child: Flexible( // Make tappable text flexible
+                        child: Text(
+                          'S\'inscrire',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -316,11 +316,14 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Vous êtes un marchand ? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
+                    Flexible( // Make text flexible
+                      child: Text(
+                        'Vous êtes un marchand ? ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                        textAlign: TextAlign.end, // Align if it wraps
                       ),
                     ),
                     GestureDetector(
@@ -330,12 +333,13 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                           AppRoutes.merchantRegister,
                         );
                       },
-                      child: Text(
-                        'Devenir partenaire',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.secondary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
+                      child: Flexible( // Make tappable text flexible
+                        child: Text(
+                          'Devenir partenaire',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.secondary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
                         ),
                       ),
                     ),
@@ -384,34 +388,70 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                 ),
                 const SizedBox(height: AppDimensions.paddingL),
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Connexion avec Google
-                        },
-                        icon: const Icon(Icons.g_mobiledata, size: 24),
-                        label: const Text('Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Connexion avec Facebook
-                        },
-                        icon: const Icon(Icons.facebook, size: 24),
-                        label: const Text('Facebook'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool useColumnLayout = constraints.maxWidth < 320; // Threshold for social buttons
+
+                    if (useColumnLayout) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              // TODO: Connexion avec Google
+                            },
+                            icon: const Icon(Icons.g_mobiledata, size: 24),
+                            label: const Text('Google'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                          const SizedBox(height: AppDimensions.paddingS),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              // TODO: Connexion avec Facebook
+                            },
+                            icon: const Icon(Icons.facebook, size: 24),
+                            label: const Text('Facebook'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // TODO: Connexion avec Google
+                              },
+                              icon: const Icon(Icons.g_mobiledata, size: 24),
+                              label: const Text('Google'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // TODO: Connexion avec Facebook
+                              },
+                              icon: const Icon(Icons.facebook, size: 24),
+                              label: const Text('Facebook'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  }
                 ),
                 const SizedBox(height: AppDimensions.paddingXL),
 

@@ -54,8 +54,11 @@ class MerchantCard extends StatelessWidget {
                 '${merchant.hours} • ${merchant.isOpen ? "Ouvert" : "Fermé"}',
               ),
               const SizedBox(height: AppDimensions.paddingM),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap( // Use Wrap for better responsiveness of this row
+                alignment: WrapAlignment.spaceBetween, // Try to keep elements spaced out
+                crossAxisAlignment: WrapCrossAlignment.center, // Align items nicely if they wrap
+                spacing: AppDimensions.paddingM, // Horizontal spacing between items
+                runSpacing: AppDimensions.paddingS, // Vertical spacing if items wrap to next line
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -63,20 +66,21 @@ class MerchantCard extends StatelessWidget {
                       vertical: AppDimensions.paddingS,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
+                      color: const Color(0xFFEFF6FF), // Consider using AppColors if available
                       borderRadius: BorderRadius.circular(
                         AppDimensions.radiusS,
                       ),
                     ),
                     child: Text(
                       '🚶 ${merchant.walkingTime}',
-                      style: const TextStyle(
+                      style: const TextStyle( // Consider using AppTextStyles if a similar style exists
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF1D4ED8),
+                        color: Color(0xFF1D4ED8), // Consider using AppColors
                       ),
                     ),
                   ),
+                  // Ensure CustomButton is also responsive or has a reasonable minimum size
                   CustomButton(
                     text: 'Itinéraire',
                     type: ButtonType.primary,

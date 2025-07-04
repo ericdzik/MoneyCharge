@@ -246,49 +246,89 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                       ),
 
                     const SizedBox(height: AppDimensions.paddingL),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setDialogState(() {
-                                for (var key in dialogSelectedServices.keys) {
-                                  dialogSelectedServices[key] = false;
-                                }
-                                // dialogStockServiceFilter reste null car showStockFilterOptionForDialog deviendra false
-                                // dialogOnlyShowAvailableStock reste false
-                              });
-                              // Appliquer la réinitialisation des filtres de service/stock au provider
-                              merchantProvider.applyFilters(clearServiceAndStockFilters: true);
-                              Navigator.pop(dialogContext);
-                            },
-                            child: const Text('Réinitialiser'),
-                          ),
-                        ),
-                        const SizedBox(width: AppDimensions.paddingM),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              List<String> finalSelectedServices = dialogSelectedServices.entries
-                                  .where((e) => e.value)
-                                  .map((e) => e.key)
-                                  .toList();
+                    LayoutBuilder(builder: (context, constraints) {
+                      bool useColumnForButtons = constraints.maxWidth < 300; // Threshold for switching to Column
 
-                              merchantProvider.applyFilters(
-                                services: finalSelectedServices,
-                                servicesIsSet: true, // Corrigé
-                                stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
-                                stockServiceIsSet: true, // Corrigé
-                                onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
-                                onlyAvailableStockIsSet: true // Corrigé
-                              );
-                              Navigator.pop(dialogContext);
-                            },
-                            child: const Text('Appliquer'),
-                          ),
-                        ),
-                      ],
-                    ),
+                      if (useColumnForButtons) {
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OutlinedButton(
+                              onPressed: () {
+                                setDialogState(() {
+                                  for (var key in dialogSelectedServices.keys) {
+                                    dialogSelectedServices[key] = false;
+                                  }
+                                });
+                                merchantProvider.applyFilters(clearServiceAndStockFilters: true);
+                                Navigator.pop(dialogContext);
+                              },
+                              child: const Text('Réinitialiser'),
+                            ),
+                            const SizedBox(height: AppDimensions.paddingS),
+                            ElevatedButton(
+                              onPressed: () {
+                                List<String> finalSelectedServices = dialogSelectedServices.entries
+                                    .where((e) => e.value)
+                                    .map((e) => e.key)
+                                    .toList();
+                                merchantProvider.applyFilters(
+                                  services: finalSelectedServices,
+                                  servicesIsSet: true,
+                                  stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
+                                  stockServiceIsSet: true,
+                                  onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
+                                  onlyAvailableStockIsSet: true
+                                );
+                                Navigator.pop(dialogContext);
+                              },
+                              child: const Text('Appliquer'),
+                            ),
+                          ],
+                        );
+                      } else {
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () {
+                                  setDialogState(() {
+                                    for (var key in dialogSelectedServices.keys) {
+                                      dialogSelectedServices[key] = false;
+                                    }
+                                  });
+                                  merchantProvider.applyFilters(clearServiceAndStockFilters: true);
+                                  Navigator.pop(dialogContext);
+                                },
+                                child: const Text('Réinitialiser'),
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.paddingM),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  List<String> finalSelectedServices = dialogSelectedServices.entries
+                                      .where((e) => e.value)
+                                      .map((e) => e.key)
+                                      .toList();
+                                  merchantProvider.applyFilters(
+                                    services: finalSelectedServices,
+                                    servicesIsSet: true,
+                                    stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
+                                    stockServiceIsSet: true,
+                                    onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
+                                    onlyAvailableStockIsSet: true
+                                  );
+                                  Navigator.pop(dialogContext);
+                                },
+                                child: const Text('Appliquer'),
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    }),
                     const SizedBox(height: AppDimensions.paddingS),
                   ],
                 ),

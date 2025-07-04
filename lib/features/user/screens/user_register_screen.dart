@@ -269,12 +269,16 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Déjà un compte ? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                    Flexible( // Make text flexible
+                      child: Text(
+                        'Déjà un compte ? ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.end, // Align if it wraps
                       ),
                     ),
+                    const SizedBox(width: AppDimensions.paddingXS), // Add minimal spacing
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacementNamed(
@@ -282,11 +286,13 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                           AppRoutes.login,
                         );
                       },
-                      child: Text(
-                        'Se connecter',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                      child: Flexible( // Make tappable text flexible
+                        child: Text(
+                          'Se connecter',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -313,34 +319,70 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                 const SizedBox(height: 32),
 
                 // Boutons d'inscription alternative
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Inscription avec Google
-                        },
-                        icon: const Icon(Icons.g_mobiledata, size: 24),
-                        label: const Text('Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Inscription avec Facebook
-                        },
-                        icon: const Icon(Icons.facebook, size: 24),
-                        label: const Text('Facebook'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    bool useColumnLayout = constraints.maxWidth < 320; // Threshold for social buttons
+
+                    if (useColumnLayout) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              // Inscription avec Google
+                            },
+                            icon: const Icon(Icons.g_mobiledata, size: 24),
+                            label: const Text('Google'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                          const SizedBox(height: AppDimensions.paddingS),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              // Inscription avec Facebook
+                            },
+                            icon: const Icon(Icons.facebook, size: 24),
+                            label: const Text('Facebook'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // Inscription avec Google
+                              },
+                              icon: const Icon(Icons.g_mobiledata, size: 24),
+                              label: const Text('Google'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                // Inscription avec Facebook
+                              },
+                              icon: const Icon(Icons.facebook, size: 24),
+                              label: const Text('Facebook'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  }
                 ),
                 const SizedBox(height: 32),
 

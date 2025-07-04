@@ -149,10 +149,13 @@ class _MapViewContentState extends State<MapViewContent> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              '${merchantProvider.merchants.length} points de service trouvés',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            Flexible( // Allow text to take available space and wrap if needed
+                              child: Text(
+                                '${merchantProvider.merchants.length} points de service trouvés',
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                              ),
                             ),
+                            const SizedBox(width: AppDimensions.paddingM), // Add some spacing
                             ElevatedButton(
                               onPressed: () {
                                 Navigator.push(

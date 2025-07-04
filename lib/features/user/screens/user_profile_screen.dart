@@ -337,9 +337,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         title,
         style: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
       ),
-      subtitle: Text(
-        value,
-        style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w500),
+      subtitle: Flexible( // Allow value text to wrap
+        child: Text(
+          value,
+          style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w500),
+        ),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS),
     );
@@ -362,7 +364,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         child: Icon(icon, color: color, size: 22),
       ),
       title: Text(title, style: AppTextStyles.body2),
-      subtitle: Text(value, style: AppTextStyles.h3.copyWith(color: color, fontWeight: FontWeight.w600)),
+      subtitle: Flexible( // Allow value text to wrap
+        child: Text(value, style: AppTextStyles.h3.copyWith(color: color, fontWeight: FontWeight.w600))
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS),
     );
   }
