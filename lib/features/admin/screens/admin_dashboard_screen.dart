@@ -186,14 +186,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 32),
           Text('Gestion des marchands', style: AppTextStyles.h2.copyWith(fontSize: 20)),
           const SizedBox(height: 16),
-          // Temporarily commented out to isolate the issue
-          // MerchantTableWidget(
-          //   merchants: _merchants,
-          //   onVerify: _verifyMerchant,
-          //   onSuspend: _suspendMerchant,
-          //   onViewDetails: _viewMerchantDetails,
-          // ),
-          const Text("MerchantTableWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)),
+          // Décommentons MerchantTableWidget
+          MerchantTableWidget(
+            merchants: _merchants,
+            onVerify: _verifyMerchant,
+            onSuspend: _suspendMerchant,
+            onViewDetails: _viewMerchantDetails,
+          ),
+          // const Text("MerchantTableWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)), // On enlève le message temporaire
         ],
       ),
     );
