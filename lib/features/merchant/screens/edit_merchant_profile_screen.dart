@@ -62,24 +62,30 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     }
 
 
-    // Initialiser _serviceStockStatus avec validation et normalisation de la casse
+    // Initialiser _serviceStockStatus avec validation et normalisation de la casse améliorée
     final initialStockStatus = widget.merchant.serviceStockStatus ?? {};
     initialStockStatus.forEach((service, statusFromFirestore) {
-      String normalizedStatus = _stockStatusOptions.firstWhere(
-        (option) => option.toLowerCase() == statusFromFirestore.toLowerCase(),
-        orElse: () {
-          // Si aucune correspondance insensible à la casse n'est trouvée, utiliser la valeur par défaut
-          // et logger une alerte plus spécifique si le statut n'était pas vide.
-          if (statusFromFirestore.isNotEmpty) {
-            print("Alerte: Statut de stock inconnu '$statusFromFirestore' pour le service '$service' depuis Firestore. Remplacé par défaut '${_stockStatusOptions.first}'.");
-          }
-          return _stockStatusOptions.first;
+      final String statusTrimmedLower = statusFromFirestore.trim().toLowerCase();
+      print("[EditProfile] DEBUG - Service: '$service', Status Firestore brut: '$statusFromFirestore', TrimmedLower: '$statusTrimmedLower'");
+
+      String? foundOption;
+      for (var option in _stockStatusOptions) {
+        if (option.toLowerCase() == statusTrimmedLower) {
+          foundOption = option;
+          break;
         }
-      );
-      _serviceStockStatus[service] = normalizedStatus;
-      // Optionnel: logger si une normalisation de casse a eu lieu mais que la valeur était "logiquement" la même
-      if (normalizedStatus.toLowerCase() == statusFromFirestore.toLowerCase() && normalizedStatus != statusFromFirestore && statusFromFirestore.isNotEmpty) {
-         print("Info: Statut de stock '$statusFromFirestore' pour le service '$service' normalisé en '$normalizedStatus' (casse).");
+      }
+
+      if (foundOption != null) {
+        _serviceStockStatus[service] = foundOption;
+        if (foundOption != statusFromFirestore) { // Log si une normalisation (casse ou trim) a eu lieu
+           print("[EditProfile] INFO - Service: '$service', Statut Firestore: '$statusFromFirestore' -> Normalisé en: '$foundOption'.");
+        }
+      } else {
+        _serviceStockStatus[service] = _stockStatusOptions.first; // Valeur par défaut
+        if (statusFromFirestore.isNotEmpty) { // Ne pas logger pour les chaînes vides initiales
+            print("[EditProfile] ALERTE - Service: '$service', Statut Firestore INCONNU: '$statusFromFirestore'. Remplacé par défaut: '${_stockStatusOptions.first}'.");
+        }
       }
     });
     // S'assurer que tous les services sélectionnés ont une entrée de stock

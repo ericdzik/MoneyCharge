@@ -10,6 +10,7 @@ import '../../../providers/auth_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // Import pour kIsWeb
 
 class MerchantRegisterScreen extends StatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -77,54 +78,86 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       _isFetchingInitialLocation = true;
     });
 
-    try {
-      print("[MerchantRegisterScreen] Requesting location permission...");
-      PermissionStatus status = await Permission.locationWhenInUse.request();
-      print("[MerchantRegisterScreen] Permission status: $status");
+    if (kIsWeb) {
+      print("[MerchantRegisterScreen] Web platform detected. Skipping permission_handler. Geolocator will use browser API.");
+      // Pour le web, Geolocator.getCurrentPosition() déclenchera la demande de permission du navigateur.
+      // On peut supposer que la permission est accordée si getCurrentPosition réussit.
+      // Ou on peut vérifier le statut après, mais c'est moins direct qu'avec permission_handler sur mobile.
+      // Pour simplifier, on va tenter de récupérer la position et mettre _isLocationPermissionGranted à true si ça marche.
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 20),
+        ).timeout(const Duration(seconds: 25));
 
-      if (status.isGranted) {
-        _isLocationPermissionGranted = true;
-        print("[MerchantRegisterScreen] Location permission granted. Fetching current position...");
-        try {
-          Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high,
-            timeLimit: const Duration(seconds: 15), // Added timeout
-          ).timeout(const Duration(seconds: 20)); // Overall timeout for the operation including system dialogs
-
-          print("[MerchantRegisterScreen] Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}");
-          if (mounted) {
-            setState(() {
-              _cameraPosition = CameraPosition(
-                target: LatLng(position.latitude, position.longitude),
-                zoom: 15,
-              );
-            });
-          }
-        } catch (e) {
-          print("[MerchantRegisterScreen] Error fetching position: $e");
-          // Keep default _cameraPosition, _isLocationPermissionGranted remains true if permission was granted before timeout/error
+        print("[MerchantRegisterScreen] Web - Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}");
+        if (mounted) {
+          _isLocationPermissionGranted = true; // Supposer true si la position est obtenue
+          setState(() {
+            _cameraPosition = CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 15,
+            );
+          });
         }
-      } else {
-        _isLocationPermissionGranted = false;
-        print("[MerchantRegisterScreen] Location permission denied or restricted.");
-        // Optionally, show a message or guide user to settings
-        if (mounted && (status.isPermanentlyDenied || status.isRestricted)) {
-            // Consider showing a dialog to open app settings
-            print("[MerchantRegisterScreen] Consider guiding user to app settings for location permission.");
+      } catch (e) {
+        print("[MerchantRegisterScreen] Web - Error fetching position or permission denied by browser: $e");
+        _isLocationPermissionGranted = false; // Laisser à false en cas d'erreur/refus
+        // La carte utilisera la position par défaut
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isFetchingInitialLocation = false;
+          });
         }
       }
-    } catch (e) {
-        // Catch any other unexpected errors during permission request or general flow
-        print("[MerchantRegisterScreen] General error in _requestLocationPermissionAndFetch: $e");
-        _isLocationPermissionGranted = false; // Assume permission failed if error here
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isFetchingInitialLocation = false;
-          print("[MerchantRegisterScreen] Finished fetching initial location. _isFetchingInitialLocation: false");
-        });
+    } else {
+      // Logique existante pour mobile (Android/iOS)
+      try {
+        print("[MerchantRegisterScreen] Mobile - Requesting location permission...");
+        PermissionStatus status = await Permission.locationWhenInUse.request();
+        print("[MerchantRegisterScreen] Mobile - Permission status: $status");
+
+        if (status.isGranted) {
+          _isLocationPermissionGranted = true;
+          print("[MerchantRegisterScreen] Mobile - Location permission granted. Fetching current position...");
+          try {
+            Position position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+              timeLimit: const Duration(seconds: 15),
+            ).timeout(const Duration(seconds: 20));
+
+            print("[MerchantRegisterScreen] Mobile - Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}");
+            if (mounted) {
+              setState(() {
+                _cameraPosition = CameraPosition(
+                  target: LatLng(position.latitude, position.longitude),
+                  zoom: 15,
+                );
+              });
+            }
+          } catch (e) {
+            print("[MerchantRegisterScreen] Mobile - Error fetching position: $e");
+          }
+        } else {
+          _isLocationPermissionGranted = false;
+          print("[MerchantRegisterScreen] Mobile - Location permission denied or restricted.");
+          if (mounted && (status.isPermanentlyDenied || status.isRestricted)) {
+            print("[MerchantRegisterScreen] Mobile - Consider guiding user to app settings for location permission.");
+          }
+        }
+      } catch (e) {
+        print("[MerchantRegisterScreen] Mobile - General error in _requestLocationPermissionAndFetch: $e");
+        _isLocationPermissionGranted = false;
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isFetchingInitialLocation = false;
+          });
+        }
       }
     }
+     print("[MerchantRegisterScreen] Finished _requestLocationPermissionAndFetch. _isFetchingInitialLocation: $_isFetchingInitialLocation, _isLocationPermissionGranted: $_isLocationPermissionGranted");
   }
 
   @override
