@@ -23,26 +23,23 @@ class AdminStatsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 600;
     int crossAxisCount;
     double childAspectRatio;
 
-    if (screenWidth < 600) { // Small screens (most phones portrait)
+    if (isSmallScreen) { // Small screens (most phones portrait)
       crossAxisCount = 1;
-      childAspectRatio = 5.0; // Further increase to give maximum reasonable height
-    } else if (screenWidth < 900) { // Medium screens (large phones landscape, small tablets)
+      childAspectRatio = 5.0; // Keep it tall for now, can be adjusted if overflow is fixed
+    } else if (screenWidth < 900) { // Medium screens
       crossAxisCount = 2;
-      childAspectRatio = 1.3; // Original aspect ratio
-    } else if (screenWidth < 1200) { // Large screens (tablets landscape)
+      childAspectRatio = 1.3;
+    } else if (screenWidth < 1200) { // Large screens
       crossAxisCount = 3;
-      childAspectRatio = 1.4; // Adjust for potentially wider layout
-    } else { // Extra large screens (desktop-like)
+      childAspectRatio = 1.4;
+    } else { // Extra large screens
       crossAxisCount = 4;
       childAspectRatio = 1.5;
     }
-
-    // For single column layout, ensure cards can expand horizontally
-    // and text inside them wraps appropriately.
-    // The _buildStatCard might need adjustments if text overflows in single column.
 
     return GridView.count(
       shrinkWrap: true,
@@ -53,6 +50,7 @@ class AdminStatsWidget extends StatelessWidget {
       childAspectRatio: childAspectRatio,
       children: [
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Utilisateurs',
           value: '$totalUsers',
           subtitle: 'Total inscrits',
@@ -60,6 +58,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: AppColors.primary,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Marchands',
           value: '$totalMerchants',
           subtitle: '$activeMerchants actifs',
@@ -67,6 +66,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.green,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Revenus',
           value: '${(totalRevenue / 1000).toStringAsFixed(1)}K FCFA',
           subtitle: 'Total plateforme',
@@ -74,6 +74,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.orange,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Transactions',
           value: '$totalTransactions',
           subtitle: 'Aujourd\'hui',
@@ -81,6 +82,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.blue,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'En attente',
           value: '$pendingVerifications',
           subtitle: 'Vérifications',
@@ -88,6 +90,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.red,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Performance',
           value: '${_calculatePerformance()}%',
           subtitle: 'Taux de satisfaction',
@@ -99,19 +102,17 @@ class AdminStatsWidget extends StatelessWidget {
   }
 
   Widget _buildStatCard({
+    required bool isSmallScreen, // Receive isSmallScreen
     required String title,
     required String value,
     required String subtitle,
     required IconData icon,
     required Color color,
   }) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final bool isSmallScreen = screenWidth < 600;
-
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: isSmallScreen ? 8 : 16, // Conditional vertical padding
+        vertical: isSmallScreen ? 8 : 16,
       ),
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -127,46 +128,52 @@ class AdminStatsWidget extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Flexible( // Wrap the top Row in Flexible
-            child: Row(
+          Flexible(
+            child: Row( // Corrected Flexible usage
               children: [
                 Container(
-                  padding: EdgeInsets.all(isSmallScreen ? 4 : 8), // Conditional padding for icon container
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  padding: EdgeInsets.all(isSmallScreen ? 4 : 8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: isSmallScreen ? 16 : 20),
                 ),
-                  child: Icon(icon, color: color, size: isSmallScreen ? 16 : 20), // Conditional icon size
-              ),
-              const Spacer(),
-              Text(
-                title,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: isSmallScreen ? 10 : null, // Conditional title font size
+                const Spacer(),
+                Text(
+                  title,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: isSmallScreen ? 10 : null,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          // SizedBox(height: isSmallScreen ? 8 : 12), // Drastic: Remove one SizedBox for small screen
-          Flexible( // Allow value to shrink or wrap if necessary
+          if (!isSmallScreen) // Only add this SizedBox if not small screen
+             SizedBox(height: 12),
+          // If isSmallScreen, the SizedBox was conditionally removed in a previous step.
+          // If it should be present but smaller: SizedBox(height: isSmallScreen ? 6 : 12)
+          // For now, keeping the logic where it's absent for small screens to maximize space.
+
+          Flexible(
             child: Text(
               value,
               style: AppTextStyles.h2.copyWith(
-                fontSize: isSmallScreen ? 16 : 20, // Conditional font size for value
+                fontSize: isSmallScreen ? 16 : 20,
                 fontWeight: FontWeight.bold,
               ),
               overflow: TextOverflow.ellipsis,
-              maxLines: isSmallScreen ? 1 : 2, // Allow less lines for value on small screens
+              maxLines: isSmallScreen ? 1 : 2,
             ),
           ),
-          SizedBox(height: isSmallScreen ? 2 : 4), // Conditional spacing
-          Flexible( // Allow subtitle to shrink or wrap
+          SizedBox(height: isSmallScreen ? 2 : 4),
+          Flexible(
             child: Text(
               subtitle,
               style: AppTextStyles.caption.copyWith(
                 color: AppColors.textSecondary,
-                fontSize: isSmallScreen ? 10 : null, // Conditionally smaller subtitle font
+                fontSize: isSmallScreen ? 10 : null,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
@@ -179,6 +186,8 @@ class AdminStatsWidget extends StatelessWidget {
 
   int _calculatePerformance() {
     if (totalTransactions == 0) return 0;
+    // Ensure totalMerchants is not zero to avoid division by zero error
+    if (totalMerchants == 0) return 0;
     return ((activeMerchants / totalMerchants) * 100).round();
   }
 }

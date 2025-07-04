@@ -48,7 +48,7 @@ class MerchantDetailScreen extends StatelessWidget {
           children: [
             // Header avec image et statut
             LayoutBuilder( // Use LayoutBuilder to make height responsive
-              builder: (context, constraints) {
+              builder: (BuildContext context, BoxConstraints constraints) { // Added BuildContext type
                 double headerHeight = constraints.maxWidth * 0.5; // Example: 2:1 aspect ratio
                 if (headerHeight < 150) headerHeight = 150; // Min height
                 if (headerHeight > 300) headerHeight = 300; // Max height
@@ -59,27 +59,29 @@ class MerchantDetailScreen extends StatelessWidget {
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       colors: [AppColors.primary, Color(0xFFEF4444)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  const Center(
-                    child: Icon(
-                      Icons.store,
-                      size: 80,
-                      color: Colors.white54,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                   ),
-                  Positioned(
-                    top: AppDimensions.paddingM,
-                    right: AppDimensions.paddingM,
-                    child: StatusBadge(status: _getStatusType()),
+                  child: Stack(
+                    children: [
+                      const Center(
+                        child: Icon(
+                          Icons.store,
+                          size: 80,
+                          color: Colors.white54,
+                        ),
+                      ),
+                      Positioned(
+                        top: AppDimensions.paddingM,
+                        right: AppDimensions.paddingM,
+                        child: StatusBadge(status: _getStatusType()),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ); // Correctly closes Container
+              }, // Correctly closes builder
+            ), // Correctly closes LayoutBuilder
             
             // Informations principales
             Padding(
@@ -93,53 +95,46 @@ class MerchantDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
                   
-                  // Adresse
                   _buildInfoSection(
                     Icons.location_on,
                     'Adresse',
                     merchant.address,
                   ),
                   
-                  // Téléphone
                   _buildInfoSection(
                     Icons.phone,
                     'Téléphone',
                     merchant.phone,
                   ),
                   
-                  // Horaires
                   _buildInfoSection(
                     Icons.access_time,
                     'Horaires',
                     '${merchant.hours}\n${merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
                   ),
                   
-                  // Distance et temps
                   Row(
                     children: [
                       Expanded(
                         child: _buildTimeCard(
-  Icons.directions_walk,
-  'À pied',
-  merchant.walkingTime ?? 'Indisponible',
-),
-
+                          Icons.directions_walk,
+                          'À pied',
+                          merchant.walkingTime ?? 'Indisponible',
+                        ),
                       ),
                       const SizedBox(width: AppDimensions.paddingM),
                       Expanded(
                         child:_buildTimeCard(
-  Icons.directions_car,
-  'En voiture',
-  merchant.drivingTime ?? 'Indisponible',
-),
-
+                          Icons.directions_car,
+                          'En voiture',
+                          merchant.drivingTime ?? 'Indisponible',
+                        ),
                       ),
                     ],
                   ),
                   
                   const SizedBox(height: AppDimensions.paddingL),
                   
-                  // Services
                   Text(
                     'Services disponibles',
                     style: AppTextStyles.h3,
@@ -180,11 +175,11 @@ class MerchantDetailScreen extends StatelessWidget {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            bool useColumnLayout = constraints.maxWidth < 360; // Threshold for narrow screens
+            bool useColumnLayout = constraints.maxWidth < 360;
 
             if (useColumnLayout) {
               return Column(
-                mainAxisSize: MainAxisSize.min, // Important for Column in BottomAppBar
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   CustomButton(
