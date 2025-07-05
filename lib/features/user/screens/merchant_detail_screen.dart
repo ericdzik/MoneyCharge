@@ -6,10 +6,12 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
-import '../../../services/location_service.dart'; // Conservé pour le bouton "Appeler"
-import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
+import '../../../services/location_service.dart';
+import 'map_view_screen.dart'; // Peut-être plus nécessaire si on ne navigue plus vers elle
+import 'package:provider/provider.dart'; // Pour LocationProvider
+import '../../../providers/location_provider.dart'; // Pour obtenir la position utilisateur
 
-class MerchantDetailScreen extends StatelessWidget {
+class MerchantDetailScreen extends StatefulWidget { // Changé en StatefulWidget
   final Merchant merchant;
 
   const MerchantDetailScreen({
@@ -18,7 +20,58 @@ class MerchantDetailScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  _MerchantDetailScreenState createState() => _MerchantDetailScreenState(); // Changé
+}
+
+class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvelle classe State
+  String _walkingTime = 'Calcul...';
+  String _drivingTime = 'Calcul...';
+  final LocationService _locationService = LocationService(); // Instance de LocationService
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateTravelTimes();
+  }
+
+  Future<void> _calculateTravelTimes() async {
+    // Utiliser LocationProvider pour obtenir la position actuelle de manière cohérente avec le reste de l'app
+    final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+
+    // S'assurer que la localisation est initialisée et disponible
+    if (locationProvider.currentPosition == null) {
+      await locationProvider.initialize(); // S'assurer que la position est chargée
+    }
+
+    if (!mounted) return; // Vérifier si le widget est toujours monté
+
+    if (locationProvider.currentPosition != null) {
+      final distance = _locationService.calculateDistance(
+        locationProvider.currentPosition!.latitude,
+        locationProvider.currentPosition!.longitude,
+        widget.merchant.latitude,
+        widget.merchant.longitude,
+      );
+
+      if (mounted) {
+        setState(() {
+          _walkingTime = _locationService.calculateWalkingTime(distance);
+          _drivingTime = _locationService.calculateDrivingTime(distance);
+        });
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _walkingTime = 'Position?'; // Erreur si la position n'est pas trouvée
+          _drivingTime = 'Position?';
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // merchant est accessible via widget.merchant dans un StatefulWidget
     return Scaffold(
       appBar: CustomAppBar(
         title: merchant.name,
@@ -119,7 +172,7 @@ class MerchantDetailScreen extends StatelessWidget {
                         child: _buildTimeCard(
                           Icons.directions_walk,
                           'À pied',
-                          merchant.walkingTime ?? 'Indisponible',
+                          _walkingTime, // Utiliser la variable d'état
                         ),
                       ),
                       const SizedBox(width: AppDimensions.paddingM),
@@ -127,7 +180,7 @@ class MerchantDetailScreen extends StatelessWidget {
                         child:_buildTimeCard(
                           Icons.directions_car,
                           'En voiture',
-                          merchant.drivingTime ?? 'Indisponible',
+                          _drivingTime, // Utiliser la variable d'état
                         ),
                       ),
                     ],
@@ -194,13 +247,18 @@ class MerchantDetailScreen extends StatelessWidget {
                   CustomButton(
                     text: 'Itinéraire',
                     icon: const Icon(Icons.directions, size: 20),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => MapViewScreen(targetMerchant: merchant),
-                        ),
+                    onPressed: () async {
+                      final locationService = LocationService();
+                      final success = await locationService.openNavigation(
+                        merchant.latitude,
+                        merchant.longitude,
+                        merchant.name,
                       );
+                      if (!success && mounted) { // mounted check in case widget is disposed
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Impossible de lancer la navigation externe.')),
+                        );
+                      }
                     },
                   ),
                 ],
@@ -213,8 +271,9 @@ class MerchantDetailScreen extends StatelessWidget {
                       text: 'Appeler',
                       type: ButtonType.outline,
                       icon: const Icon(Icons.phone, size: 20),
-                      onPressed: () {
-                        // Lancer l'appel
+                      onPressed: () async { // Assuming makePhoneCall is in LocationService
+                        final locationService = LocationService();
+                        await locationService.makePhoneCall(merchant.phone);
                       },
                     ),
                   ),
@@ -223,13 +282,18 @@ class MerchantDetailScreen extends StatelessWidget {
                     child: CustomButton(
                       text: 'Itinéraire',
                       icon: const Icon(Icons.directions, size: 20),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => MapViewScreen(targetMerchant: merchant),
-                          ),
+                      onPressed: () async {
+                        final locationService = LocationService();
+                        final success = await locationService.openNavigation(
+                          merchant.latitude,
+                          merchant.longitude,
+                          merchant.name,
                         );
+                        if (!success && mounted) { // mounted check
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Impossible de lancer la navigation externe.')),
+                          );
+                        }
                       },
                     ),
                   ),
