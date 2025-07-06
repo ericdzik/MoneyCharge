@@ -7,11 +7,10 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
-import 'map_view_screen.dart'; // Peut-être plus nécessaire si on ne navigue plus vers elle
-import 'package:provider/provider.dart'; // Pour LocationProvider
-import '../../../providers/location_provider.dart'; // Pour obtenir la position utilisateur
+import 'package:provider/provider.dart';
+import '../../../providers/location_provider.dart';
 
-class MerchantDetailScreen extends StatefulWidget { // Changé en StatefulWidget
+class MerchantDetailScreen extends StatefulWidget {
   final Merchant merchant;
 
   const MerchantDetailScreen({
@@ -20,13 +19,13 @@ class MerchantDetailScreen extends StatefulWidget { // Changé en StatefulWidget
   }) : super(key: key);
 
   @override
-  _MerchantDetailScreenState createState() => _MerchantDetailScreenState(); // Changé
+  _MerchantDetailScreenState createState() => _MerchantDetailScreenState();
 }
 
-class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvelle classe State
+class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   String _walkingTime = 'Calcul...';
   String _drivingTime = 'Calcul...';
-  final LocationService _locationService = LocationService(); // Instance de LocationService
+  final LocationService _locationService = LocationService();
 
   @override
   void initState() {
@@ -35,15 +34,13 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
   }
 
   Future<void> _calculateTravelTimes() async {
-    // Utiliser LocationProvider pour obtenir la position actuelle de manière cohérente avec le reste de l'app
     final locationProvider = Provider.of<LocationProvider>(context, listen: false);
 
-    // S'assurer que la localisation est initialisée et disponible
     if (locationProvider.currentPosition == null) {
-      await locationProvider.initialize(); // S'assurer que la position est chargée
+      await locationProvider.initialize();
     }
 
-    if (!mounted) return; // Vérifier si le widget est toujours monté
+    if (!mounted) return;
 
     if (locationProvider.currentPosition != null) {
       final distance = _locationService.calculateDistance(
@@ -62,8 +59,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
     } else {
       if (mounted) {
         setState(() {
-          _walkingTime = 'Position?'; // Erreur si la position n'est pas trouvée
-          _drivingTime = 'Position?';
+          _walkingTime = 'Position ?';
+          _drivingTime = 'Position ?';
         });
       }
     }
@@ -71,10 +68,9 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
 
   @override
   Widget build(BuildContext context) {
-    // merchant est accessible via widget.merchant dans un StatefulWidget
     return Scaffold(
       appBar: CustomAppBar(
-        title: merchant.name,
+        title: widget.merchant.name,
         showLogo: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -99,12 +95,11 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header avec image et statut
-            LayoutBuilder( // Use LayoutBuilder to make height responsive
-              builder: (BuildContext context, BoxConstraints constraints) { // Added BuildContext type
-                double headerHeight = constraints.maxWidth * 0.5; // Example: 2:1 aspect ratio
-                if (headerHeight < 150) headerHeight = 150; // Min height
-                if (headerHeight > 300) headerHeight = 300; // Max height
+            LayoutBuilder(
+              builder: (BuildContext context, BoxConstraints constraints) {
+                double headerHeight = constraints.maxWidth * 0.5;
+                if (headerHeight < 150) headerHeight = 150;
+                if (headerHeight > 300) headerHeight = 300;
 
                 return Container(
                   width: double.infinity,
@@ -132,88 +127,83 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
                       ),
                     ],
                   ),
-                ); // Correctly closes Container
-              }, // Correctly closes builder
-            ), // Correctly closes LayoutBuilder
-            
-            // Informations principales
+                );
+              },
+            ),
             Padding(
               padding: const EdgeInsets.all(AppDimensions.paddingM),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    merchant.name,
+                    widget.merchant.name,
                     style: AppTextStyles.h2,
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
-                  
                   _buildInfoSection(
                     Icons.location_on,
                     'Adresse',
-                    merchant.address,
+                    widget.merchant.address,
                   ),
-                  
                   _buildInfoSection(
                     Icons.phone,
                     'Téléphone',
-                    merchant.phone,
+                    widget.merchant.phone,
                   ),
-                  
                   _buildInfoSection(
                     Icons.access_time,
                     'Horaires',
-                    '${merchant.hours}\n${merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
+                    '${widget.merchant.hours}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
                   ),
-                  
                   Row(
                     children: [
                       Expanded(
                         child: _buildTimeCard(
                           Icons.directions_walk,
                           'À pied',
-                          _walkingTime, // Utiliser la variable d'état
+                          _walkingTime,
                         ),
                       ),
                       const SizedBox(width: AppDimensions.paddingM),
                       Expanded(
-                        child:_buildTimeCard(
+                        child: _buildTimeCard(
                           Icons.directions_car,
                           'En voiture',
-                          _drivingTime, // Utiliser la variable d'état
+                          _drivingTime,
                         ),
                       ),
                     ],
                   ),
-                  
                   const SizedBox(height: AppDimensions.paddingL),
-                  
                   Text(
                     'Services disponibles',
                     style: AppTextStyles.h3,
                   ),
                   const SizedBox(height: AppDimensions.paddingM),
-                  Wrap(
-                    spacing: AppDimensions.paddingS,
-                    runSpacing: AppDimensions.paddingS,
-                    children: merchant.services.map((service) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.paddingM,
-                          vertical: AppDimensions.paddingS,
+                  widget.merchant.services.isEmpty
+                      ? const Text('Aucun service disponible.')
+                      : Wrap(
+                          spacing: AppDimensions.paddingS,
+                          runSpacing: AppDimensions.paddingS,
+                          children: widget.merchant.services.map((service) {
+                            return Container(
+                              key: ValueKey(service),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingM,
+                                vertical: AppDimensions.paddingS,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: Text(
+                                service,
+                                style: AppTextStyles.body2,
+                              ),
+                            );
+                          }).toList(),
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.background,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Text(
-                          service,
-                          style: AppTextStyles.body2,
-                        ),
-                      );
-                    }).toList(),
-                  ),
                 ],
               ),
             ),
@@ -229,7 +219,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
         child: LayoutBuilder(
           builder: (context, constraints) {
             bool useColumnLayout = constraints.maxWidth < 360;
-
             if (useColumnLayout) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -239,8 +228,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
                     text: 'Appeler',
                     type: ButtonType.outline,
                     icon: const Icon(Icons.phone, size: 20),
-                    onPressed: () {
-                      // Lancer l'appel
+                    onPressed: () async {
+                      await _locationService.makePhoneCall(widget.merchant.phone);
                     },
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
@@ -248,13 +237,12 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
                     text: 'Itinéraire',
                     icon: const Icon(Icons.directions, size: 20),
                     onPressed: () async {
-                      final locationService = LocationService();
-                      final success = await locationService.openNavigation(
-                        merchant.latitude,
-                        merchant.longitude,
-                        merchant.name,
+                      final success = await _locationService.openNavigation(
+                        widget.merchant.latitude,
+                        widget.merchant.longitude,
+                        widget.merchant.name,
                       );
-                      if (!success && mounted) { // mounted check in case widget is disposed
+                      if (!success && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Impossible de lancer la navigation externe.')),
                         );
@@ -271,9 +259,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
                       text: 'Appeler',
                       type: ButtonType.outline,
                       icon: const Icon(Icons.phone, size: 20),
-                      onPressed: () async { // Assuming makePhoneCall is in LocationService
-                        final locationService = LocationService();
-                        await locationService.makePhoneCall(merchant.phone);
+                      onPressed: () async {
+                        await _locationService.makePhoneCall(widget.merchant.phone);
                       },
                     ),
                   ),
@@ -283,13 +270,12 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
                       text: 'Itinéraire',
                       icon: const Icon(Icons.directions, size: 20),
                       onPressed: () async {
-                        final locationService = LocationService();
-                        final success = await locationService.openNavigation(
-                          merchant.latitude,
-                          merchant.longitude,
-                          merchant.name,
+                        final success = await _locationService.openNavigation(
+                          widget.merchant.latitude,
+                          widget.merchant.longitude,
+                          widget.merchant.name,
                         );
-                        if (!success && mounted) { // mounted check
+                        if (!success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Impossible de lancer la navigation externe.')),
                           );
@@ -300,7 +286,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
                 ],
               );
             }
-          }
+          },
         ),
       ),
     );
@@ -327,15 +313,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.body2.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  content,
-                  style: AppTextStyles.body1,
-                ),
+                Text(content, style: AppTextStyles.body1),
               ],
             ),
           ),
@@ -356,15 +337,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
         children: [
           Icon(icon, color: AppColors.primary),
           const SizedBox(height: AppDimensions.paddingS),
-          Text(
-            label,
-            style: AppTextStyles.caption,
-          ),
+          Text(label, style: AppTextStyles.caption),
           Text(
             time,
-            style: AppTextStyles.body1.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -372,7 +348,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> { // Nouvel
   }
 
   StatusType _getStatusType() {
-    switch (merchant.status) {
+    switch (widget.merchant.status) {
       case MerchantStatus.available:
         return StatusType.available;
       case MerchantStatus.lowStock:

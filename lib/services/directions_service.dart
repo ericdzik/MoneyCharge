@@ -5,7 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLng
 
 // TODO: Remplacez CECI par votre véritable clé API Google Directions.
 // Idéalement, chargez-la depuis un fichier de configuration sécurisé ou des variables d'environnement.
-const String _googleApiKey = 'VOTRE_CLE_API_GOOGLE_DIRECTIONS_ICI';
+const String _googleApiKey = 'AIzaSyDAHK3ivuTDoxHj0hTp5rkTQxPojkj8FSU';
 
 class DirectionsService {
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api/directions/json';
@@ -15,7 +15,7 @@ class DirectionsService {
     LatLng destination, {
     String travelMode = 'driving', // driving, walking, bicycling, transit
   }) async {
-    if (_googleApiKey == 'VOTRE_CLE_API_GOOGLE_DIRECTIONS_ICI') {
+    if (_googleApiKey == 'AIzaSyDAHK3ivuTDoxHj0hTp5rkTQxPojkj8FSU') {
       print('ERREUR: Veuillez remplacer VOTRE_CLE_API_GOOGLE_DIRECTIONS_ICI dans directions_service.dart');
       // Vous pourriez retourner une erreur spécifique ou null pour indiquer le problème de clé API
       // throw Exception('Clé API Google Directions non configurée.');

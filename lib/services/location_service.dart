@@ -86,6 +86,14 @@ class LocationService {
     if (bearing >= 292.5 && bearing < 337.5) return 'Nord-Ouest';
     return 'Nord';
   }
+  String calculateWalkingTime(double distanceInMeters) {
+  return calculateTravelTime(distanceInMeters)['walking'] ?? 'N/A';
+}
+
+String calculateDrivingTime(double distanceInMeters) {
+  return calculateTravelTime(distanceInMeters)['driving'] ?? 'N/A';
+}
+
 
   Map<String, String> calculateTravelTime(double distanceInMeters) {
     const walkingSpeed = 1.39;
