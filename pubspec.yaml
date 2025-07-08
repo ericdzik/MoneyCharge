@@ -27,12 +27,14 @@ dependencies:
 
   # Pour décoder les polylignes de Google Directions API
   flutter_polyline_points: ^2.0.0 # Vérifiez la dernière version sur pub.dev
+  flutter_launcher_icons: ^0.14.4
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_native_splash: ^2.3.0
 
 flutter:
   uses-material-design: true
@@ -46,3 +48,13 @@ flutter:
   #       weight: 600
   #     - asset: assets/fonts/Inter-Bold.ttf
   #       weight: 700
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/icone.jpeg" 
+flutter_native_splash:
+  background_image: assets/splash/app_splash.jpeg
+  android: true
+  ios: true
+  fullscreen: true

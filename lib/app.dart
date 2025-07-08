@@ -44,7 +44,7 @@ class LocaChargeApp extends StatelessWidget {
         title: 'LocaCharge',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.splash,
+        initialRoute: AppRoutes.login,
         onGenerateRoute: (settings) {
           return _generateRoute(settings);
         },
@@ -55,8 +55,8 @@ class LocaChargeApp extends StatelessWidget {
   Route<dynamic> _generateRoute(RouteSettings settings) {
     switch (settings.name) {
       // Routes publiques
-      case AppRoutes.splash:
-        return MaterialPageRoute(builder: (_) => const SplashScreen());
+     // case AppRoutes.splash:
+      //  return MaterialPageRoute(builder: (_) => const SplashScreen());
 
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());
@@ -150,107 +150,6 @@ class LocaChargeApp extends StatelessWidget {
   }
 }
 
-// Écran de démarrage
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen> {
-  @override
-  void initState() {
-    super.initState();
-    _navigateToNextScreen();
-  }
-
-  Future<void> _navigateToNextScreen() async {
-    // Simule un délai de chargement pour le splash screen
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (!mounted) return;
-
-    // Utiliser addPostFrameCallback pour s'assurer que le widget est monté
-    // et que le contexte est valide pour Provider.of
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      print('-----------------------------------------------------');
-      print('[SplashScreen._navigateToNextScreen] Checking auth state...');
-      print('[SplashScreen] isAuthenticated: ${authProvider.isAuthenticated}');
-      print('[SplashScreen] userType from AuthProvider: ${authProvider.userType}');
-      print('[SplashScreen] isLoading: ${authProvider.isLoading}');
-      print('[SplashScreen] error: ${authProvider.error}');
-
-      if (authProvider.isAuthenticated) {
-        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
-          authProvider.userType,
-        );
-        print('[SplashScreen] User authenticated. Determined defaultRoute: $defaultRoute for userType: ${authProvider.userType}');
-        Navigator.pushReplacementNamed(context, defaultRoute);
-      } else {
-        print('[SplashScreen] User NOT authenticated or userType is unknown (or error). Navigating to login.');
-        print('[SplashScreen] Reason for else: isAuthenticated=${authProvider.isAuthenticated}');
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
-      }
-      print('-----------------------------------------------------');
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.primary,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Logo
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: AppColors.onPrimary,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Icon(
-                Icons.phone_android,
-                color: AppColors.primary,
-                size: 60,
-              ),
-            ),
-            const SizedBox(height: 32),
-
-            // Titre
-            Text(
-              'LocaCharge',
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: AppColors.onPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Sous-titre
-            Text(
-              'Location de chargeurs de téléphone',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.onPrimary.withValues(alpha: 0.8),
-              ),
-            ),
-            const SizedBox(height: 64),
-
-            // Indicateur de chargement
-            const CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.onPrimary),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 // Écran 404
 class NotFoundScreen extends StatelessWidget {
