@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
-import '../constants/app_text_styles.dart'; // Assurer l'import si Text Styles sont utilisés directement ici
+// import '../constants/app_text_styles.dart'; // Pas nécessaire si le style est hérité du thème
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -19,9 +19,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Le style du titre sera hérité de AppBarTheme.titleTextStyle
+    // Le style du titre (AppTextStyles.h3 avec couleur onPrimary) est hérité de AppBarTheme.titleTextStyle
     return AppBar(
-      backgroundColor: AppColors.primary, // Utilisation directe de la couleur primaire
+      backgroundColor: AppColors.primary, // Vert
       elevation: 0,
       leading: leading,
       title: Row(

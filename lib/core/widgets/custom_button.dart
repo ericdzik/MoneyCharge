@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
-import '../constants/app_text_styles.dart'; // Assurer l'import
+import '../constants/app_text_styles.dart';
 
 enum ButtonType { primary, secondary, outline }
 
@@ -25,27 +25,23 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Le style du texte du bouton sera hérité des thèmes ElevatedButtonThemeData ou OutlinedButtonThemeData
-    // où AppTextStyles.button est déjà appliqué.
-
     Color progressIndicatorColor;
-    TextStyle buttonTextStyle;
+    TextStyle effectiveTextStyle;
 
     switch (type) {
       case ButtonType.primary:
         progressIndicatorColor = AppColors.onPrimary; // Blanc sur fond Vert
-        buttonTextStyle = Theme.of(context).elevatedButtonTheme.style?.textStyle?.resolve({}) ?? AppTextStyles.button.copyWith(color: AppColors.onPrimary);
+        // Le style de texte est hérité du ElevatedButtonTheme, qui utilise AppTextStyles.button (blanc)
+        effectiveTextStyle = Theme.of(context).elevatedButtonTheme.style?.textStyle?.resolve({}) ?? AppTextStyles.button.copyWith(color: AppColors.onPrimary);
         break;
       case ButtonType.secondary:
-        // Pour le bouton secondaire, on utilise une couleur de fond beige (AppColors.background)
-        // et une couleur de texte principale (AppColors.textPrimary).
-        // Le spinner devrait donc contraster avec le beige, par exemple AppColors.primary (Vert).
-        progressIndicatorColor = AppColors.primary;
-        buttonTextStyle = AppTextStyles.button.copyWith(color: AppColors.textPrimary);
+        progressIndicatorColor = AppColors.primary; // Vert sur fond Beige clair (AppColors.surface)
+        effectiveTextStyle = AppTextStyles.button.copyWith(color: AppColors.textPrimary); // Texte noir doux
         break;
       case ButtonType.outline:
         progressIndicatorColor = AppColors.primary; // Vert sur fond transparent avec bordure verte
-        buttonTextStyle = Theme.of(context).outlinedButtonTheme.style?.textStyle?.resolve({}) ?? AppTextStyles.button.copyWith(color: AppColors.primary);
+        // Le style de texte est hérité du OutlinedButtonTheme, qui utilise AppTextStyles.button.copyWith(color: AppColors.primary) (vert)
+        effectiveTextStyle = Theme.of(context).outlinedButtonTheme.style?.textStyle?.resolve({}) ?? AppTextStyles.button.copyWith(color: AppColors.primary);
         break;
     }
 
@@ -63,10 +59,13 @@ class CustomButton extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (icon != null) ...[
-                icon!,
+                // Cloner l'icône si elle n'a pas déjà la bonne couleur
+                (icon is Icon && (icon as Icon).color == null)
+                  ? Icon((icon as Icon).icon, color: effectiveTextStyle.color, size: (icon as Icon).size ?? effectiveTextStyle.fontSize)
+                  : icon!,
                 const SizedBox(width: AppDimensions.paddingS),
               ],
-              Text(text, style: buttonTextStyle), // Appliquer le style de texte ici si nécessaire ou s'assurer qu'il est hérité
+              Text(text, style: effectiveTextStyle),
             ],
           );
 
@@ -76,6 +75,7 @@ class CustomButton extends StatelessWidget {
           width: width,
           child: ElevatedButton(
             onPressed: isLoading ? null : onPressed,
+            // Le style du bouton (couleur de fond, etc.) est hérité du ElevatedButtonTheme
             child: buttonContent,
           ),
         );
@@ -85,11 +85,11 @@ class CustomButton extends StatelessWidget {
           child: ElevatedButton(
             onPressed: isLoading ? null : onPressed,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.surface, // Changé pour AppColors.surface (Beige clair) pour meilleur contraste
-              foregroundColor: AppColors.textPrimary, // Noir doux
-              textStyle: buttonTextStyle, // Assurer que le style de texte est appliqué
-            ).copyWith(
-              elevation: MaterialStateProperty.all(0), // Peut-être pas d'élévation pour ce type
+              backgroundColor: AppColors.surface, // Beige clair
+              foregroundColor: AppColors.textPrimary, // Texte noir doux pour l'effet ripple et focus
+              textStyle: effectiveTextStyle,
+              elevation: 0, // Moins d'élévation pour un look "secondaire"
+              side: BorderSide(color: AppColors.border, width: 1), // Légère bordure pour définition
             ),
             child: buttonContent,
           ),
@@ -99,6 +99,7 @@ class CustomButton extends StatelessWidget {
           width: width,
           child: OutlinedButton(
             onPressed: isLoading ? null : onPressed,
+            // Le style du bouton (couleur de bordure, etc.) est hérité du OutlinedButtonTheme
             child: buttonContent,
           ),
         );

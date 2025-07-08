@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_text_styles.dart';
-import 'status_badge.dart'; // Import StatusBadge
-import 'custom_button.dart'; // Import CustomButton
-import '../../features/user/models/merchant_model.dart'; // Assurer que cet import est correct
+import 'status_badge.dart';
+import 'custom_button.dart';
+import '../../features/user/models/merchant_model.dart';
 
 class MerchantCard extends StatelessWidget {
   final Merchant merchant;
   final VoidCallback? onTap;
   final VoidCallback? onDirectionsPressed;
 
-  // Remettre le const si Merchant et les callbacks sont immuables et que _getStatusColor/_getStatusType sont statiques ou déplacés
   const MerchantCard({
     super.key,
     required this.merchant,
@@ -21,21 +20,22 @@ class MerchantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(merchant.status);
-    final statusType = _getStatusType(merchant.status);
+    final statusColor = _getMerchantStatusColor(merchant.status);
+    final statusType = _getMerchantStatusType(merchant.status);
 
     return Card(
+      // La couleur de la carte (AppColors.surface) est gérée par CardTheme
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingM,
         vertical: AppDimensions.paddingS,
       ),
-      // La couleur de la carte est gérée par CardTheme (AppColors.surface)
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // Correspond au CardTheme
         child: Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
+            // Le borderRadius ici est pour la bordure, Card gère le clip du contenu
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             border: Border(
               left: BorderSide(color: statusColor, width: 4),
@@ -49,16 +49,15 @@ class MerchantCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: Text(merchant.name, style: AppTextStyles.h3)),
-                  StatusBadge(status: statusType),
+                  StatusBadge(status: statusType), // Utilise les couleurs de AppColors via StatusBadge
                 ],
               ),
               const SizedBox(height: AppDimensions.paddingS),
-              _buildInfoRow(Icons.location_on, merchant.address, context),
-              _buildInfoRow(Icons.phone, merchant.phone, context),
+              _buildInfoRow(Icons.location_on, merchant.address),
+              _buildInfoRow(Icons.phone, merchant.phone),
               _buildInfoRow(
                 Icons.access_time,
                 '${merchant.hours} • ${merchant.isOpen ? "Ouvert" : "Fermé"}',
-                context
               ),
               const SizedBox(height: AppDimensions.paddingM),
               Wrap(
@@ -74,9 +73,7 @@ class MerchantCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1), // Vert très clair
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusS,
-                      ),
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                     ),
                     child: Text(
                       '🚶 ${merchant.walkingTime}',
@@ -88,9 +85,12 @@ class MerchantCard extends StatelessWidget {
                   ),
                   CustomButton(
                     text: 'Itinéraire',
-                    type: ButtonType.primary, // Sera vert avec texte blanc
+                    type: ButtonType.primary, // Vert avec texte blanc
                     onPressed: onDirectionsPressed,
-                    icon: const Icon(Icons.directions, size: 16, color: AppColors.onPrimary), // Icône blanche
+                    // L'icône dans CustomButton prendra la couleur du texte du bouton si elle est null
+                    // ou on peut la spécifier explicitement ici si CustomButton ne le gère pas.
+                    // CustomButton a été mis à jour pour tenter de colorer l'icône.
+                    icon: const Icon(Icons.directions, size: 16 /*, color: AppColors.onPrimary */),
                   ),
                 ],
               ),
@@ -101,37 +101,34 @@ class MerchantCard extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoRow(IconData icon, String text, BuildContext context) {
+  Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.paddingXS),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Icon(icon, size: 16, color: AppColors.textSecondary), // Gris pour l'icône
           const SizedBox(width: AppDimensions.paddingS),
-          Expanded(child: Text(text, style: AppTextStyles.body2)), // AppColors.textSecondary est déjà dans body2
+          Expanded(child: Text(text, style: AppTextStyles.body2)), // Texte en gris (via AppTextStyles.body2)
         ],
       ),
     );
   }
 }
 
-// Fonctions utilitaires déplacées hors de la classe ou rendues statiques si possible
-// pour permettre au constructeur de MerchantCard d'être const.
-// Ici, on les passe en tant que fonctions au niveau du fichier ou statiques dans une classe utilitaire.
-// Pour cet exemple, je les laisse comme méthodes privées et retire le const du constructeur MerchantCard.
-// Si MerchantStatus est un enum défini ailleurs, c'est bien.
-Color _getStatusColor(MerchantStatus status) {
+// Fonctions helper pour mapper MerchantStatus à des couleurs/types pour ce widget.
+// Peuvent être statiques ou déplacées dans un fichier utilitaire si utilisées ailleurs.
+Color _getMerchantStatusColor(MerchantStatus status) {
   switch (status) {
     case MerchantStatus.available:
-      return AppColors.available; // Vert (via success)
+      return AppColors.available; // Vert
     case MerchantStatus.lowStock:
-      return AppColors.lowStock; // Orange/Jaune (via warning)
+      return AppColors.lowStock; // Orange/Jaune
     case MerchantStatus.outOfStock:
-      return AppColors.outOfStock; // Rouge (via error)
+      return AppColors.outOfStock; // Rouge
   }
 }
 
-StatusType _getStatusType(MerchantStatus status) {
+StatusType _getMerchantStatusType(MerchantStatus status) {
   switch (status) {
     case MerchantStatus.available:
       return StatusType.available;

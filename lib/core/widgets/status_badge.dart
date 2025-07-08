@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_dimensions.dart';
-import '../constants/app_colors.dart'; // Assurer l'import de AppColors
+import '../constants/app_colors.dart';
 
 enum StatusType { available, lowStock, outOfStock, pending }
 
@@ -15,36 +15,39 @@ class StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     Color backgroundColor;
     Color textColor;
-    String text;
+    String textValue; // Renommée pour éviter la confusion avec le widget Text
 
     switch (status) {
       case StatusType.available:
-        backgroundColor = AppColors.success.withOpacity(0.15); // Vert clair
-        textColor = AppColors.success; // Vert
-        text = customText ?? 'Disponible';
+        backgroundColor = AppColors.success.withOpacity(0.15);
+        textColor = AppColors.success;
+        textValue = customText ?? 'Disponible';
         break;
       case StatusType.lowStock:
-        backgroundColor = AppColors.warning.withOpacity(0.15); // Orange/Jaune clair
-        textColor = AppColors.warning; // Orange/Jaune (texte pourrait avoir besoin d'être plus foncé si warning est trop clair)
-                                     // Si AppColors.warning est FBC02D (jaune), un textPrimary ou un orange foncé serait mieux.
-                                     // Pour l'instant, on garde AppColors.warning.
+        backgroundColor = AppColors.warning.withOpacity(0.15);
+        textColor = AppColors.warning;
+        // Correction: s'assurer que textValue est assigné ici aussi.
+        // Si AppColors.warning est un jaune clair, un texte plus foncé pourrait être nécessaire pour le contraste.
+        // Par exemple: textColor = AppColors.textPrimary; ou une nuance d'orange foncé.
+        // Pour l'instant, on garde AppColors.warning et on s'assure de l'assignation de textValue.
+        textValue = customText ?? 'Stock faible';
         break;
       case StatusType.outOfStock:
-        backgroundColor = AppColors.error.withOpacity(0.15); // Rouge clair
-        textColor = AppColors.error; // Rouge
-        text = customText ?? 'Épuisé';
+        backgroundColor = AppColors.error.withOpacity(0.15);
+        textColor = AppColors.error;
+        textValue = customText ?? 'Épuisé';
         break;
       case StatusType.pending:
-        // Si une couleur "info" ou "pending" n'est pas dans AppColors, utilisons AppColors.secondary.
-        // Idéalement, ajouter une couleur dédiée comme AppColors.info ou AppColors.pending.
-        backgroundColor = AppColors.secondary.withOpacity(0.15); // Orange clair
-        textColor = AppColors.secondary; // Orange
-        text = customText ?? 'En attente';
+        backgroundColor = AppColors.secondary.withOpacity(0.15);
+        textColor = AppColors.secondary;
+        textValue = customText ?? 'En attente';
         break;
+      // default: // Au cas où, bien que StatusType soit un enum
+      //   backgroundColor = Colors.grey.withOpacity(0.15);
+      //   textColor = Colors.grey;
+      //   textValue = customText ?? status.toString().split('.').last; // Nom de l'enum par défaut
+      //   break;
     }
-     // Fallback pour le texte si non assigné dans le switch (ex: lowStock)
-    text = text ?? (status == StatusType.lowStock ? (customText ?? 'Stock faible') : '');
-
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -56,10 +59,10 @@ class StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
       ),
       child: Text(
-        text,
+        textValue,
         style: AppTextStyles.caption.copyWith(
           color: textColor,
-          fontWeight: FontWeight.w500, // Conserver le poids si différent du style de base de caption
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
