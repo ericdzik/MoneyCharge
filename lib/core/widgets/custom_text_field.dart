@@ -29,6 +29,9 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // La plupart des styles (bordures, fillColor, labelStyle, hintStyle)
+    // sont maintenant hérités de InputDecorationTheme dans AppTheme.
+    // Nous pouvons surcharger ici si un comportement spécifique est nécessaire pour ce widget.
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -36,38 +39,24 @@ class CustomTextField extends StatelessWidget {
       maxLines: maxLines,
       enabled: enabled,
       validator: validator,
-      style: AppTextStyles.body1,
+      style: AppTextStyles.body1.copyWith(color: enabled ? AppColors.textPrimary : AppColors.textDisabled), // Style du texte entré
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
         suffixIcon: suffixIcon,
-        labelStyle: AppTextStyles.body2.copyWith(
-          color: AppColors.textSecondary,
-        ),
-        hintStyle: AppTextStyles.body2.copyWith(
-          color: AppColors.textSecondary.withValues(alpha: 0.5),
-        ),
-        filled: true,
-        fillColor: enabled
-            ? AppColors.surface
-            : AppColors.surface.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
+        // fillColor est géré par le thème, mais peut être ajusté ici si nécessaire pour l'état désactivé
+        fillColor: enabled ? AppColors.surface : AppColors.surface.withOpacity(0.5),
+        // Les styles de bordure, label et hint sont principalement pris du thème
+        // mais on peut les surcharger si besoin.
+        // Par exemple, si le thème ne couvre pas l'état 'disabled' pour fillColor comme souhaité:
+        // enabledBorder: Theme.of(context).inputDecorationTheme.enabledBorder?.copyWith(
+        //   borderSide: BorderSide(color: AppColors.border, width: 2),
+        // ),
+        errorBorder: OutlineInputBorder( // Assurez-vous que AppColors.error est utilisé
           borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.border, width: 2),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.border, width: 2),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.error, width: 2), // Utiliser AppColors.error
-        ),
-        contentPadding: const EdgeInsets.symmetric(
+        contentPadding: const EdgeInsets.symmetric( // Peut être conservé ou hérité
           horizontal: AppDimensions.paddingM,
           vertical: AppDimensions.paddingM,
         ),

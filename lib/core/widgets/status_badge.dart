@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_dimensions.dart';
+import '../constants/app_colors.dart'; // Assurer l'import de AppColors
 
 enum StatusType { available, lowStock, outOfStock, pending }
 
@@ -16,11 +17,6 @@ class StatusBadge extends StatelessWidget {
     Color textColor;
     String text;
 
-    // Utiliser les couleurs de AppColors pour la cohérence
-    // Il faudra peut-être ajouter des couleurs spécifiques pour les fonds de badge dans AppColors
-    // ou utiliser .withOpacity() sur les couleurs existantes.
-    // Pour l'instant, on adapte avec les couleurs existantes.
-
     switch (status) {
       case StatusType.available:
         backgroundColor = AppColors.success.withOpacity(0.15); // Vert clair
@@ -29,8 +25,9 @@ class StatusBadge extends StatelessWidget {
         break;
       case StatusType.lowStock:
         backgroundColor = AppColors.warning.withOpacity(0.15); // Orange/Jaune clair
-        textColor = AppColors.warning; // Orange/Jaune (plus foncé si besoin pour contraste)
-        text = customText ?? 'Stock faible';
+        textColor = AppColors.warning; // Orange/Jaune (texte pourrait avoir besoin d'être plus foncé si warning est trop clair)
+                                     // Si AppColors.warning est FBC02D (jaune), un textPrimary ou un orange foncé serait mieux.
+                                     // Pour l'instant, on garde AppColors.warning.
         break;
       case StatusType.outOfStock:
         backgroundColor = AppColors.error.withOpacity(0.15); // Rouge clair
@@ -38,14 +35,16 @@ class StatusBadge extends StatelessWidget {
         text = customText ?? 'Épuisé';
         break;
       case StatusType.pending:
-        // Si pas de couleur "info" ou "pending" dans AppColors, on peut utiliser secondary ou une nuance de gris.
-        // Pour l'exemple, utilisons AppColors.secondary (Orange) avec opacité.
-        // Idéalement, définir une couleur "info" dans AppColors.
-        backgroundColor = AppColors.secondary.withOpacity(0.15);
-        textColor = AppColors.secondary;
+        // Si une couleur "info" ou "pending" n'est pas dans AppColors, utilisons AppColors.secondary.
+        // Idéalement, ajouter une couleur dédiée comme AppColors.info ou AppColors.pending.
+        backgroundColor = AppColors.secondary.withOpacity(0.15); // Orange clair
+        textColor = AppColors.secondary; // Orange
         text = customText ?? 'En attente';
         break;
     }
+     // Fallback pour le texte si non assigné dans le switch (ex: lowStock)
+    text = text ?? (status == StatusType.lowStock ? (customText ?? 'Stock faible') : '');
+
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -58,10 +57,10 @@ class StatusBadge extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTextStyles.caption.copyWith( // Utiliser un style de texte défini
+        style: AppTextStyles.caption.copyWith(
           color: textColor,
-          fontWeight: FontWeight.w500, // Conserver le poids si différent du style de base
-        )
+          fontWeight: FontWeight.w500, // Conserver le poids si différent du style de base de caption
+        ),
       ),
     );
   }

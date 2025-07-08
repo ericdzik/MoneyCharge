@@ -17,28 +17,30 @@ class AppTheme {
         onError: AppColors.onError,
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
-        background: AppColors.background, // Ajouté pour complétude, bien que scaffoldBackgroundColor soit souvent utilisé
-        onBackground: AppColors.textPrimary, // Texte sur la couleur de fond
+        background: AppColors.background,
+        onBackground: AppColors.textPrimary,
       ),
       scaffoldBackgroundColor: AppColors.background,
       appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.primary, // Vert
-        foregroundColor: AppColors.onPrimary, // Blanc
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.onPrimary,
         elevation: 0,
         centerTitle: true,
+        titleTextStyle: AppTextStyles.h3, // Utiliser un style de texte défini pour le titre de l'AppBar
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary, // Vert
-          foregroundColor: AppColors.onPrimary, // Blanc
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.onPrimary,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          textStyle: AppTextStyles.button,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primary, // Vert pour le texte/icône du bouton
-          side: const BorderSide(color: AppColors.primary, width: 2), // Bordure verte
+          foregroundColor: AppColors.primary,
+          side: const BorderSide(color: AppColors.primary, width: 2),
           minimumSize: const Size(
             AppDimensions.buttonMinWidth,
             AppDimensions.buttonHeight,
@@ -52,65 +54,76 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border), // Gris
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.border), // Gris
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2), // Vert
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: AppColors.error, width: 2), // Rouge
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 12,
         ),
-        labelStyle: const TextStyle(color: AppColors.textSecondary),
-        hintStyle: const TextStyle(color: AppColors.textDisabled),
+        labelStyle: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
+        hintStyle: AppTextStyles.caption.copyWith(color: AppColors.textDisabled),
+        fillColor: AppColors.surface, // Ajout de fillColor pour CustomTextField
+        filled: true, // Ajout de filled pour CustomTextField
       ),
       cardTheme: CardThemeData(
-        color: AppColors.surface, // Beige clair
+        color: AppColors.surface,
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        surfaceTintColor: AppColors.surface, // Pour éviter le changement de couleur avec Material 3
+        surfaceTintColor: AppColors.surface,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-        backgroundColor: AppColors.surface, // Beige clair
-        selectedItemColor: AppColors.primary, // Vert
-        unselectedItemColor: AppColors.textSecondary, // Gris
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 8,
+        selectedLabelStyle: AppTextStyles.caption, // Utiliser un style de texte défini
+        unselectedLabelStyle: AppTextStyles.caption, // Utiliser un style de texte défini
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surface,
         selectedColor: AppColors.primary,
         secondarySelectedColor: AppColors.primary,
-        labelStyle: TextStyle(color: AppColors.textPrimary), // Couleur du texte pour les chips non sélectionnés
-        secondaryLabelStyle: TextStyle(color: AppColors.onPrimary), // Couleur du texte pour les chips sélectionnés
+        labelStyle: AppTextStyles.caption.copyWith(color: AppColors.textPrimary),
+        secondaryLabelStyle: AppTextStyles.caption.copyWith(color: AppColors.onPrimary),
         shape: StadiumBorder(side: BorderSide(color: AppColors.border)),
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.secondary, // Orange
-        foregroundColor: AppColors.onSecondary, // Noir
+        backgroundColor: AppColors.secondary,
+        foregroundColor: AppColors.onSecondary,
       ),
-      // Vous pouvez ajouter d'autres thèmes de widgets ici si nécessaire
-      // par exemple : textTheme, dialogTheme, etc.
       textTheme: TextTheme(
-        displayLarge: AppTextStyles.headline1.copyWith(color: AppColors.textPrimary),
-        displayMedium: AppTextStyles.headline2.copyWith(color: AppColors.textPrimary),
-        displaySmall: AppTextStyles.headline3.copyWith(color: AppColors.textPrimary),
-        headlineMedium: AppTextStyles.headline4.copyWith(color: AppColors.textPrimary),
-        headlineSmall: AppTextStyles.headline5.copyWith(color: AppColors.textPrimary),
-        titleLarge: AppTextStyles.headline6.copyWith(color: AppColors.textPrimary),
-        bodyLarge: AppTextStyles.body.copyWith(color: AppColors.textPrimary),
-        bodyMedium: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-        labelLarge: AppTextStyles.button.copyWith(color: AppColors.onPrimary), // Pour les textes sur les boutons Elevates
+        // Utilisation des noms de style corrigés de AppTextStyles
+        displayLarge: AppTextStyles.h1.copyWith(color: AppColors.textPrimary),
+        displayMedium: AppTextStyles.h2.copyWith(color: AppColors.textPrimary),
+        displaySmall: AppTextStyles.h3.copyWith(color: AppColors.textPrimary), // h3 comme displaySmall
+        headlineMedium: AppTextStyles.h3.copyWith(color: AppColors.textPrimary), // h3 comme headlineMedium (ou choisir h2 si plus approprié)
+        headlineSmall: AppTextStyles.h3.copyWith(color: AppColors.textPrimary), // h3 comme headlineSmall (ou choisir un autre)
+        titleLarge: AppTextStyles.h3.copyWith(color: AppColors.textPrimary), // h3 comme titleLarge
+
+        bodyLarge: AppTextStyles.body1.copyWith(color: AppColors.textPrimary),
+        bodyMedium: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
+
+        titleMedium: AppTextStyles.body1.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500), // Exemple pour titleMedium
+        titleSmall: AppTextStyles.body2.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500), // Exemple pour titleSmall
+
+        labelLarge: AppTextStyles.button.copyWith(color: AppColors.onPrimary),
+        bodySmall: AppTextStyles.caption.copyWith(color: AppColors.textSecondary), // caption comme bodySmall
+        labelSmall: AppTextStyles.caption.copyWith(color: AppColors.textPrimary, fontWeight: FontWeight.w500), // Exemple pour labelSmall
+
       ).apply(
         bodyColor: AppColors.textPrimary,
         displayColor: AppColors.textPrimary,

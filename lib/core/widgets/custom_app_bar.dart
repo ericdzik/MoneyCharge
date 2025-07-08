@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
+import '../constants/app_text_styles.dart'; // Assurer l'import si Text Styles sont utilisés directement ici
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -18,28 +19,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // Utiliser AppColors.primary directement ou un dégradé cohérent
-      // Pour cet exemple, utilisons AppColors.primary directement pour simplifier
-      // Si un dégradé est souhaité, assurez-vous que les deux couleurs proviennent d'AppColors
-      // ou sont dérivées de manière thématique.
-      // Par exemple: [AppColors.primary, Color.lerp(AppColors.primary, Colors.black, 0.2)!]
-      color: AppColors.primary,
-      child: AppBar(
-        backgroundColor: AppColors.primary, // Assurez-vous que c'est la même couleur ou transparent si le Container gère la couleur
-        elevation: 0,
-        leading: leading,
-        title: Row(
-          children: [
-            if (showLogo) ...[
-              const SimIcon(),
-              const SizedBox(width: AppDimensions.paddingS),
-            ],
-            Text(title),
+    // Le style du titre sera hérité de AppBarTheme.titleTextStyle
+    return AppBar(
+      backgroundColor: AppColors.primary, // Utilisation directe de la couleur primaire
+      elevation: 0,
+      leading: leading,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showLogo) ...[
+            const SimIcon(),
+            const SizedBox(width: AppDimensions.paddingS),
           ],
-        ),
-        actions: actions,
+          Text(title), // Le style est appliqué par AppBarTheme
+        ],
       ),
+      actions: actions,
     );
   }
 
@@ -56,7 +51,7 @@ class SimIcon extends StatelessWidget {
       width: 24,
       height: 18,
       decoration: BoxDecoration(
-        color: AppColors.secondary,
+        color: AppColors.secondary, // Orange
         borderRadius: BorderRadius.circular(3),
       ),
       child: Stack(
@@ -68,7 +63,7 @@ class SimIcon extends StatelessWidget {
               width: 8,
               height: 6,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: AppColors.primary, // Vert
                 borderRadius: BorderRadius.circular(1),
               ),
             ),
