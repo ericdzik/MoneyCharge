@@ -19,15 +19,14 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, Color(0xFFEF4444)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
+      // Utiliser AppColors.primary directement ou un dégradé cohérent
+      // Pour cet exemple, utilisons AppColors.primary directement pour simplifier
+      // Si un dégradé est souhaité, assurez-vous que les deux couleurs proviennent d'AppColors
+      // ou sont dérivées de manière thématique.
+      // Par exemple: [AppColors.primary, Color.lerp(AppColors.primary, Colors.black, 0.2)!]
+      color: AppColors.primary,
       child: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.primary, // Assurez-vous que c'est la même couleur ou transparent si le Container gère la couleur
         elevation: 0,
         leading: leading,
         title: Row(

@@ -16,25 +16,33 @@ class StatusBadge extends StatelessWidget {
     Color textColor;
     String text;
 
+    // Utiliser les couleurs de AppColors pour la cohérence
+    // Il faudra peut-être ajouter des couleurs spécifiques pour les fonds de badge dans AppColors
+    // ou utiliser .withOpacity() sur les couleurs existantes.
+    // Pour l'instant, on adapte avec les couleurs existantes.
+
     switch (status) {
       case StatusType.available:
-        backgroundColor = const Color(0xFFDCFCE7);
-        textColor = const Color(0xFF166534);
+        backgroundColor = AppColors.success.withOpacity(0.15); // Vert clair
+        textColor = AppColors.success; // Vert
         text = customText ?? 'Disponible';
         break;
       case StatusType.lowStock:
-        backgroundColor = const Color(0xFFFEF3C7);
-        textColor = const Color(0xFF92400E);
+        backgroundColor = AppColors.warning.withOpacity(0.15); // Orange/Jaune clair
+        textColor = AppColors.warning; // Orange/Jaune (plus foncé si besoin pour contraste)
         text = customText ?? 'Stock faible';
         break;
       case StatusType.outOfStock:
-        backgroundColor = const Color(0xFFFEE2E2);
-        textColor = const Color(0xFF991B1B);
+        backgroundColor = AppColors.error.withOpacity(0.15); // Rouge clair
+        textColor = AppColors.error; // Rouge
         text = customText ?? 'Épuisé';
         break;
       case StatusType.pending:
-        backgroundColor = const Color(0xFFEFF6FF);
-        textColor = const Color(0xFF1E40AF);
+        // Si pas de couleur "info" ou "pending" dans AppColors, on peut utiliser secondary ou une nuance de gris.
+        // Pour l'exemple, utilisons AppColors.secondary (Orange) avec opacité.
+        // Idéalement, définir une couleur "info" dans AppColors.
+        backgroundColor = AppColors.secondary.withOpacity(0.15);
+        textColor = AppColors.secondary;
         text = customText ?? 'En attente';
         break;
     }
@@ -50,11 +58,10 @@ class StatusBadge extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+        style: AppTextStyles.caption.copyWith( // Utiliser un style de texte défini
           color: textColor,
-        ),
+          fontWeight: FontWeight.w500, // Conserver le poids si différent du style de base
+        )
       ),
     );
   }

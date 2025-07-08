@@ -66,17 +66,15 @@ class MerchantCard extends StatelessWidget {
                       vertical: AppDimensions.paddingS,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF), // Consider using AppColors if available
+                      color: AppColors.primary.withOpacity(0.1), // Un vert très clair
                       borderRadius: BorderRadius.circular(
                         AppDimensions.radiusS,
                       ),
                     ),
                     child: Text(
                       '🚶 ${merchant.walkingTime}',
-                      style: const TextStyle( // Consider using AppTextStyles if a similar style exists
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1D4ED8), // Consider using AppColors
+                      style: AppTextStyles.caption.copyWith( // Utiliser un style de texte défini
+                        color: AppColors.primary, // Texte en vert primaire
                       ),
                     ),
                   ),

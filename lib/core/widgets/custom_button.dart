@@ -30,7 +30,10 @@ class CustomButton extends StatelessWidget {
             height: 20,
             child: CircularProgressIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              // Utiliser une couleur qui contraste bien avec le fond du bouton
+              valueColor: AlwaysStoppedAnimation<Color>(
+                type == ButtonType.secondary ? AppColors.primary : AppColors.onPrimary,
+              ),
             ),
           )
         : Row(

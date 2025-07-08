@@ -137,13 +137,13 @@ class _MapViewContentState extends State<MapViewContent> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.surface, // Utiliser AppColors.surface
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: ColorUtils.blackWithAlpha(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                              color: Colors.black.withOpacity(0.08), // Ombre plus subtile
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
@@ -153,7 +153,7 @@ class _MapViewContentState extends State<MapViewContent> {
                             Flexible( // Allow text to take available space and wrap if needed
                               child: Text(
                                 '${merchantProvider.merchants.length} points de service trouvés',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                               ),
                             ),
                             const SizedBox(width: AppDimensions.paddingM), // Add some spacing
@@ -167,9 +167,10 @@ class _MapViewContentState extends State<MapViewContent> {
                                 );
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondary,
-                                foregroundColor: const Color(0xFF92400E),
+                                backgroundColor: AppColors.secondary, // Orange
+                                foregroundColor: AppColors.onSecondary, // Noir (défini dans AppColors)
                                 minimumSize: const Size(80, 32),
+                                textStyle: AppTextStyles.button.copyWith(fontSize: 12), // Ajuster la taille du texte si besoin
                               ),
                               child: const Text('Vue Liste'),
                             ),
