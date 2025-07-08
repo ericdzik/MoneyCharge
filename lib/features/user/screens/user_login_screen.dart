@@ -75,7 +75,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(authProvider.error ?? 'Email ou mot de passe incorrect.'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error, // Correction ici
           ),
         );
       }
@@ -85,7 +85,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.error ?? "Erreur inattendue: ${e.toString()}"),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error, // Correction ici
         ),
       );
     }
