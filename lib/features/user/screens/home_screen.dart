@@ -34,7 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomAppBar( // Peut être const si les actions sont const
-        title: 'LocaCharge',
+        title: 'Geo Money&Charge',
         actions: [
           Padding( // Ajout d'un Padding pour l'action de l'AppBar
             padding: const EdgeInsets.only(right: AppDimensions.paddingS), // Un peu d'espace à droite

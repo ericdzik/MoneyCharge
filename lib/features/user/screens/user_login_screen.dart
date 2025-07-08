@@ -20,7 +20,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController(text: 'user@example.com');
   final _passwordController = TextEditingController(text: 'password123');
-  bool _obscurePassword = true;
+  bool _obscurePassword = false;
 
   @override
   void dispose() {
@@ -134,13 +134,13 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'LocaCharge',
+                      'Geo Money&Charge',
                       style: AppTextStyles.h1.copyWith(fontSize: 28),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Connexion unifiée - Votre rôle sera détecté automatiquement',
+                      '----------------------------------------------',
                       style: AppTextStyles.body2.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -208,7 +208,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     child: Text(
                       'Mot de passe oublié ?',
                       style: AppTextStyles.body2.copyWith(
-                        color: AppColors.primary,
+                        color: const Color.fromARGB(255, 46, 125, 50),
                       ),
                     ),
                   ),
@@ -224,62 +224,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                       onPressed: authProvider.isLoading ? null : _handleLogin,
                     );
                   },
-                ),
-                const SizedBox(height: 16),
-
-                Text(
-                  'Test rapide :',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap( // Use Wrap for test buttons
-                  alignment: WrapAlignment.center,
-                  spacing: 8.0, // Horizontal spacing
-                  runSpacing: 8.0, // Vertical spacing if items wrap
-                  children: [
-                    OutlinedButton(
-                      onPressed: () {
-                        _emailController.text = 'user@example.com';
-                        _passwordController.text = 'password123';
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      ),
-                      child: const Text(
-                        'Utilisateur',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    OutlinedButton(
-                      onPressed: () {
-                        _emailController.text = 'boutique@example.com';
-                        _passwordController.text = 'password123';
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      ),
-                      child: const Text(
-                        'Marchand',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    OutlinedButton(
-                      onPressed: () {
-                        _emailController.text = 'admin@locacharge.com';
-                        _passwordController.text = 'password123';
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      ),
-                      child: const Text(
-                        'Admin',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                  ],
                 ),
                 const SizedBox(height: AppDimensions.paddingM),
 
@@ -337,7 +281,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                         child: Text(
                           'Devenir partenaire',
                           style: AppTextStyles.body2.copyWith(
-                            color: AppColors.secondary,
+                            color: const Color.fromARGB(255, 46, 125, 50),
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
                         ),
@@ -346,118 +290,11 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppDimensions.paddingL),
 
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Types de comptes :',
-                        style: AppTextStyles.h3.copyWith(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildRoleInfo('👤 Utilisateur', 'Location de chargeurs'),
-                      _buildRoleInfo(
-                        '🏪 Marchand',
-                        'Gestion de points de service',
-                      ),
-                      _buildRoleInfo(
-                        '⚙️ Administrateur',
-                        'Gestion de la plateforme',
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Exemples d\'emails :',
-                        style: AppTextStyles.h3.copyWith(fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      _buildEmailExample('user@example.com', 'Utilisateur'),
-                      _buildEmailExample('boutique@example.com', 'Marchand'),
-                      _buildEmailExample(
-                        'admin@locacharge.com',
-                        'Administrateur',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppDimensions.paddingL),
-
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    bool useColumnLayout = constraints.maxWidth < 320; // Threshold for social buttons
-
-                    if (useColumnLayout) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Connexion avec Google
-                            },
-                            icon: const Icon(Icons.g_mobiledata, size: 24),
-                            label: const Text('Google'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.paddingS),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              // TODO: Connexion avec Facebook
-                            },
-                            icon: const Icon(Icons.facebook, size: 24),
-                            label: const Text('Facebook'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ],
-                      );
-                    } else {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                // TODO: Connexion avec Google
-                              },
-                              icon: const Icon(Icons.g_mobiledata, size: 24),
-                              label: const Text('Google'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                // TODO: Connexion avec Facebook
-                              },
-                              icon: const Icon(Icons.facebook, size: 24),
-                              label: const Text('Facebook'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                  }
-                ),
                 const SizedBox(height: AppDimensions.paddingXL),
 
                 Text(
-                  '© 2024 LocaCharge - Tous droits réservés',
+                  '© 2025 Geo Money&Charge - Tous droits réservés',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),
