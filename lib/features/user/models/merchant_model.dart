@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // Ajout de l'import pour GeoPoint et DocumentSnapshot
+import '../../../core/utils/opening_hours_parser.dart'; // Nouvel import
 
 enum MerchantStatus { available, lowStock, outOfStock }
 
@@ -46,23 +47,25 @@ class Merchant {
     this.createdAt, // Nouveau
     this.lastLoginAt, // Nouveau
     // Ces champs sont maintenant calculés ou ont des valeurs par défaut
-    this.isOpen = false,
+    // this.isOpen = false, // Sera calculé
     this.status = MerchantStatus.available,
     this.distance = 0.0,
     this.walkingTime,
     this.drivingTime,
-  }) : clientCalculatedIsOpen = false, clientCalculatedStatus = MerchantStatus.available;
+  }) : clientCalculatedIsOpen = false, clientCalculatedStatus = MerchantStatus.available {
+     _updateOpenStatusBasedOnHours();
+  }
 
 
   // L'ancienne factory fromJson peut être conservée si elle sert encore pour des données de test ou une API REST
   factory Merchant.fromJson(Map<String, dynamic> json) {
-    return Merchant(
+    Merchant merchant = Merchant(
       id: json['id'] as String? ?? '',
       name: json['name'] as String? ?? 'Nom indisponible',
       address: json['address'] as String? ?? 'Adresse indisponible',
       phone: json['phone'] as String? ?? 'Téléphone indisponible',
       hours: json['hours'] as String? ?? 'Horaires indisponibles',
-      isOpen: json['isOpen'] as bool? ?? false,
+      // isOpen: json['isOpen'] as bool? ?? false, // Sera calculé
       status: json['status'] != null && json['status'] is int && json['status'] < MerchantStatus.values.length
           ? MerchantStatus.values[json['status'] as int]
           : MerchantStatus.available,
@@ -76,7 +79,18 @@ class Merchant {
       serviceStockStatus: json['serviceStockStatus'] != null
           ? Map<String, String>.from(json['serviceStockStatus'] as Map)
           : null,
+      // Les champs comme email, isVerified, createdAt, lastLoginAt devraient aussi être lus ici si présents dans le JSON
+      email: json['email'] as String?,
+      isVerified: json['isVerified'] as bool?,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) : null,
+      lastLoginAt: json['lastLoginAt'] != null ? DateTime.tryParse(json['lastLoginAt'] as String) : null,
     );
+    // Note: _updateOpenStatusBasedOnHours() est déjà appelé par le constructeur principal de Merchant
+    // donc pas besoin de le rappeler ici si Merchant() est bien le constructeur utilisé.
+    // Si le constructeur par défaut n'est pas appelé explicitement (ce qui est le cas ici car on a Merchant(...)),
+    // alors il faut appeler _updateOpenStatusBasedOnHours() manuellement ou s'assurer que le constructeur principal le fait.
+    // Le constructeur principal a été modifié pour appeler _updateOpenStatusBasedOnHours(), donc c'est bon.
+    return merchant;
   }
 
   factory Merchant.fromFirestoreUserDoc(DocumentSnapshot<Map<String, dynamic>> userDoc) {
@@ -88,12 +102,11 @@ class Merchant {
     // Extraction du GeoPoint et conversion
     double latitude = 0.0;
     double longitude = 0.0;
-    final geoPoint = data['location'] as GeoPoint?; // Supposons que le champ GeoPoint s'appelle 'location'
+    final geoPoint = data['location'] as GeoPoint?;
     if (geoPoint != null) {
       latitude = geoPoint.latitude;
       longitude = geoPoint.longitude;
     } else {
-      // Fallback si location n'est pas un GeoPoint ou est manquant
       latitude = (data['latitude'] as num?)?.toDouble() ?? 0.0;
       longitude = (data['longitude'] as num?)?.toDouble() ?? 0.0;
     }
@@ -105,10 +118,10 @@ class Merchant {
       );
     }
 
-    return Merchant(
+    Merchant merchant = Merchant(
       id: userDoc.id,
       name: data['name'] as String? ?? data['businessName'] as String? ?? 'Nom Indisponible',
-      email: data['email'] as String?, // Lecture de l'email
+      email: data['email'] as String?,
       address: data['address'] as String? ?? 'Adresse Indisponible',
       phone: data['phone'] as String? ?? 'Téléphone Indisponible',
       hours: data['openingHours'] as String? ?? 'Horaires Indisponibles',
@@ -117,13 +130,28 @@ class Merchant {
       services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
       merchantType: data['merchantType'] as String?,
       serviceStockStatus: serviceStockStatusMap,
-      isVerified: data['isVerified'] as bool?, // Lecture de isVerified
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate(), // Lecture de createdAt
-      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(), // Lecture de lastLoginAt
-      isOpen: false,
-      status: MerchantStatus.available,
+      isVerified: data['isVerified'] as bool?,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
+      // isOpen: false, // Sera calculé par _updateOpenStatusBasedOnHours via le constructeur
+      // status: MerchantStatus.available, // Déjà géré par le constructeur principal
     );
+    // _updateOpenStatusBasedOnHours() est appelé par le constructeur principal
+    return merchant;
   }
+
+  void _updateOpenStatusBasedOnHours() {
+    // Si hours est la valeur par défaut "Horaires indisponibles" ou vide, on considère fermé.
+    if (hours.toLowerCase() == 'horaires indisponibles' || hours.isEmpty) {
+      clientCalculatedIsOpen = false;
+      return;
+    }
+    clientCalculatedIsOpen = OpeningHoursParser.isStoreOpen(hours, DateTime.now());
+  }
+
+  // Assurer que le getter `isOpen` utilise la valeur calculée.
+  bool get isOpen => clientCalculatedIsOpen;
+  // La variable d'instance `isOpen` n'est plus directement utilisée pour stocker l'état.
 
   Map<String, dynamic> toJson() {
     // Note: This toJson might need updates if Merchant objects are ever written back to Firestore
