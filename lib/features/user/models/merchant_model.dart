@@ -9,7 +9,7 @@ class Merchant {
   final String address;
   final String phone;
   final String hours;
-  final bool isOpen;
+  // final bool isOpen; // Supprimé pour éviter conflit et erreur d'initialisation
   final MerchantStatus status;
   final double latitude;
   final double longitude;
