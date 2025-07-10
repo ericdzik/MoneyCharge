@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'core/constants/app_routes.dart';
 import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
@@ -41,13 +42,11 @@ class LocaChargeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
       ],
       child: MaterialApp(
-        title: 'LocaCharge',
+        title: 'Geo Money&Charge',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.login,
-        onGenerateRoute: (settings) {
-          return _generateRoute(settings);
-        },
+        initialRoute: AppRoutes.login, // Splash Flutter supprimé
+        onGenerateRoute: _generateRoute,
       ),
     );
   }
@@ -55,9 +54,6 @@ class LocaChargeApp extends StatelessWidget {
   Route<dynamic> _generateRoute(RouteSettings settings) {
     switch (settings.name) {
       // Routes publiques
-     // case AppRoutes.splash:
-      //  return MaterialPageRoute(builder: (_) => const SplashScreen());
-
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());
 
@@ -65,32 +61,25 @@ class LocaChargeApp extends StatelessWidget {
         return MaterialPageRoute(builder: (_) => const UserRegisterScreen());
 
       case AppRoutes.merchantRegister:
-        return MaterialPageRoute(
-          builder: (_) => const MerchantRegisterScreen(),
-        );
+        return MaterialPageRoute(builder: (_) => const MerchantRegisterScreen());
 
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
 
-      // Routes utilisateur (protégées)
+      // Routes utilisateur protégées
       case AppRoutes.home:
         return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const HomeScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(const HomeScreen(), UserType.user),
         );
 
       case AppRoutes.listView:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const ListViewScreen(),
-            UserType.user,
-          ),
+          builder: (_) => RouteGuards.requireUserType(const ListViewScreen(), UserType.user),
         );
 
       case AppRoutes.mapView:
         return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const MapViewScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(const MapViewScreen(), UserType.user),
         );
 
       case AppRoutes.merchantDetail:
@@ -104,44 +93,29 @@ class LocaChargeApp extends StatelessWidget {
 
       case AppRoutes.userProfile:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const UserProfileScreen(),
-            UserType.user,
-          ),
+          builder: (_) => RouteGuards.requireUserType(const UserProfileScreen(), UserType.user),
         );
 
       case AppRoutes.rentalHistory:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const RentalHistoryScreen(),
-            UserType.user,
-          ),
+          builder: (_) => RouteGuards.requireUserType(const RentalHistoryScreen(), UserType.user),
         );
 
-      // Routes marchand (protégées)
+      // Routes marchand
       case AppRoutes.merchantDashboard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const MerchantDashboardScreen(),
-            UserType.merchant,
-          ),
+          builder: (_) => RouteGuards.requireUserType(const MerchantDashboardScreen(), UserType.merchant),
         );
 
       case AppRoutes.balanceManagement:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const BalanceManagementScreen(),
-            UserType.merchant,
-          ),
+          builder: (_) => RouteGuards.requireUserType(const BalanceManagementScreen(), UserType.merchant),
         );
 
-      // Routes admin (protégées)
+      // Routes admin
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const AdminDashboardScreen(),
-            UserType.admin,
-          ),
+          builder: (_) => RouteGuards.requireUserType(const AdminDashboardScreen(), UserType.admin),
         );
 
       default:
@@ -149,7 +123,6 @@ class LocaChargeApp extends StatelessWidget {
     }
   }
 }
-
 
 // Écran 404
 class NotFoundScreen extends StatelessWidget {
@@ -172,9 +145,9 @@ class NotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'La page que vous recherchez n\'existe pas.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
