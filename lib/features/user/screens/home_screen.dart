@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const MapViewContent(),
     const ListViewScreen(),
-    const Center(child: Text('Favoris - TODO')),
+    const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
     const UserProfileScreen(),
   ];
 

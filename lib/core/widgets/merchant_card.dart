@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Ajout de Provider
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_text_styles.dart';
 import 'status_badge.dart';
 import 'custom_button.dart';
 import '../../features/user/models/merchant_model.dart';
+import '../../providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
 
 class MerchantCard extends StatelessWidget {
   final Merchant merchant;
@@ -22,6 +24,8 @@ class MerchantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _getMerchantStatusColor(merchant.status);
     final statusType = _getMerchantStatusType(merchant.status);
+    final favoriteProvider = Provider.of<FavoriteMerchantProvider>(context);
+    final isFavorite = favoriteProvider.isFavorite(merchant.id);
 
     return Card(
       // La couleur de la carte (AppColors.surface) est gérée par CardTheme
@@ -49,7 +53,25 @@ class MerchantCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: Text(merchant.name, style: AppTextStyles.h3)),
-                  StatusBadge(status: statusType), // Utilise les couleurs de AppColors via StatusBadge
+                  Row( // Row pour StatusBadge et IconButton
+                    children: [
+                      StatusBadge(status: statusType), // Utilise les couleurs de AppColors via StatusBadge
+                      const SizedBox(width: AppDimensions.paddingXS), // Petit espace
+                      IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? AppColors.error : AppColors.textSecondary, // Rouge si favori, gris sinon
+                        ),
+                        onPressed: () {
+                          if (isFavorite) {
+                            favoriteProvider.removeFavorite(merchant.id);
+                          } else {
+                            favoriteProvider.addFavorite(merchant.id);
+                          }
+                        },
+                      ),
+                    ],
+                  )
                 ],
               ),
               const SizedBox(height: AppDimensions.paddingS),

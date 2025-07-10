@@ -9,6 +9,7 @@ import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
 import '../../../providers/location_provider.dart';
+import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
 
 class MerchantDetailScreen extends StatefulWidget {
   final Merchant merchant;
@@ -77,10 +78,22 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border),
-            onPressed: () {
-              // Ajouter aux favoris
+          Consumer<FavoriteMerchantProvider>( // Utilisation de Consumer
+            builder: (context, favoriteProvider, child) {
+              final isFavorite = favoriteProvider.isFavorite(widget.merchant.id);
+              return IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.favorite : Icons.favorite_border,
+                  color: isFavorite ? AppColors.error : null, // Couleur rouge si favori
+                ),
+                onPressed: () {
+                  if (isFavorite) {
+                    favoriteProvider.removeFavorite(widget.merchant.id);
+                  } else {
+                    favoriteProvider.addFavorite(widget.merchant.id);
+                  }
+                },
+              );
             },
           ),
           IconButton(

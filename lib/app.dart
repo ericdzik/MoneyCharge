@@ -9,6 +9,7 @@ import 'providers/auth_provider.dart';
 import 'providers/location_provider.dart';
 import 'providers/merchant_provider.dart';
 import 'providers/transaction_provider.dart';
+import 'providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
 
 // Import des écrans utilisateur
 import 'features/user/screens/home_screen.dart';
@@ -40,6 +41,7 @@ class LocaChargeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => MerchantProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()), // Ajout ici
       ],
       child: MaterialApp(
         title: 'Geo Money&Charge',
