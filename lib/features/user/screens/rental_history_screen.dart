@@ -127,31 +127,28 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
           ),
         ],
       ),
-      child: Row(
+      child: Wrap( // Use Wrap for responsive stats layout
+        alignment: WrapAlignment.spaceAround, // Distribute items evenly
+        spacing: AppDimensions.paddingM,       // Horizontal space between items
+        runSpacing: AppDimensions.paddingM,    // Vertical space if items wrap
         children: [
-          Expanded(
-            child: _buildStatItem(
-              icon: Icons.history,
-              title: 'Total',
-              value: '$totalRentals',
-              color: AppColors.primary,
-            ),
+          _buildStatItem(
+            icon: Icons.history,
+            title: 'Total',
+            value: '$totalRentals',
+            color: AppColors.primary,
           ),
-          Expanded(
-            child: _buildStatItem(
-              icon: Icons.access_time,
-              title: 'Durée',
-              value: '${totalDuration.inHours}h',
-              color: AppColors.secondary,
-            ),
+          _buildStatItem(
+            icon: Icons.access_time,
+            title: 'Durée',
+            value: '${totalDuration.inHours}h',
+            color: AppColors.secondary,
           ),
-          Expanded(
-            child: _buildStatItem(
-              icon: Icons.monetization_on,
-              title: 'Coût',
-              value: '${totalCost} FCFA',
-              color: AppColors.success,
-            ),
+          _buildStatItem(
+            icon: Icons.monetization_on,
+            title: 'Coût',
+            value: '${totalCost} FCFA',
+            color: AppColors.success,
           ),
         ],
       ),
@@ -235,62 +232,95 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
             const SizedBox(height: 16),
 
             // Détails
-            Row(
+            Wrap( // Use Wrap for responsive detail items
+              alignment: WrapAlignment.spaceBetween, // Distribute items
+              spacing: AppDimensions.paddingS,       // Horizontal space
+              runSpacing: AppDimensions.paddingM,    // Vertical space if items wrap
               children: [
-                Expanded(
-                  child: _buildDetailItem(
-                    icon: Icons.access_time,
-                    title: 'Durée',
-                    value: '${rental.duration.inHours}h',
-                  ),
+                _buildDetailItem(
+                  icon: Icons.access_time,
+                  title: 'Durée',
+                  value: '${rental.duration.inHours}h',
                 ),
-                Expanded(
-                  child: _buildDetailItem(
-                    icon: Icons.monetization_on,
-                    title: 'Coût',
-                    value: '${rental.cost} FCFA',
-                  ),
+                _buildDetailItem(
+                  icon: Icons.monetization_on,
+                  title: 'Coût',
+                  value: '${rental.cost} FCFA',
                 ),
-                Expanded(
-                  child: _buildDetailItem(
-                    icon: Icons.calendar_today,
-                    title: 'Date',
-                    value: _formatDate(rental.startTime),
-                  ),
+                _buildDetailItem(
+                  icon: Icons.calendar_today,
+                  title: 'Date',
+                  value: _formatDate(rental.startTime),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
             // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Voir les détails
-                    },
-                    icon: const Icon(Icons.info_outline, size: 16),
-                    label: const Text('Détails'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      // Relouer
-                    },
-                    icon: const Icon(Icons.replay, size: 16),
-                    label: const Text('Relouer'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                  ),
-                ),
-              ],
+            LayoutBuilder(
+              builder: (context, constraints) {
+                bool useColumnLayout = constraints.maxWidth < 300; // Threshold for small screens
+
+                if (useColumnLayout) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // Voir les détails
+                        },
+                        icon: const Icon(Icons.info_outline, size: 16),
+                        label: const Text('Détails'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10), // Adjusted padding
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.paddingS),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          // Relouer
+                        },
+                        icon: const Icon(Icons.replay, size: 16),
+                        label: const Text('Relouer'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 10), // Adjusted padding
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            // Voir les détails
+                          },
+                          icon: const Icon(Icons.info_outline, size: 16),
+                          label: const Text('Détails'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            // Relouer
+                          },
+                          icon: const Icon(Icons.replay, size: 16),
+                          label: const Text('Relouer'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              }
             ),
           ],
         ),

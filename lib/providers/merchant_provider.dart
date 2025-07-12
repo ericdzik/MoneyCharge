@@ -1,83 +1,242 @@
 import 'package:flutter/foundation.dart';
-import '../features/user/models/merchant_model.dart';
-import '../services/api_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../features/user/models/merchant_model.dart'; // For user-facing merchant list
+import '../features/merchant/models/merchant_auth_model.dart'; // For admin-facing merchant list
 
 class MerchantProvider with ChangeNotifier {
-  final ApiService _apiService = ApiService();
-  
-  List<Merchant> _merchants = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  List<Merchant> _allLoadedMerchants = []; // For user view (verified merchants, type Merchant)
+  List<Merchant> _filteredMerchants = []; // For user view (filtered list of Merchant)
+
+  List<MerchantAuthModel> _adminMerchantList = []; // For admin view (all merchants, type MerchantAuthModel)
+
   bool _isLoading = false;
   String? _error;
 
-  List<Merchant> get merchants => _merchants;
+  // Variables d'état pour les filtres actifs (for user view)
+  String? _activeMerchantTypeFilter;
+  List<String> _activeServiceFilters = [];
+  String? _activeStockServiceFilter;
+  bool _onlyShowAvailableStockForService = false;
+  String _searchQuery = '';
+
+  // Getters publics
+  List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
+  List<MerchantAuthModel> get adminMerchants => List.unmodifiable(_adminMerchantList); // For admin view
+
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  Future<void> loadMerchants() async {
+  // Getters pour l'état actuel des filtres (for user view)
+  String? get activeMerchantTypeFilter => _activeMerchantTypeFilter;
+  List<String> get activeServiceFilters => List.unmodifiable(_activeServiceFilters);
+  String? get activeStockServiceFilter => _activeStockServiceFilter;
+  bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
+  String get searchQuery => _searchQuery;
+
+  Future<void> loadMerchants({bool forceRefresh = false}) async { // For user view
+    if (_isLoading && !forceRefresh) return;
+
+    if (_allLoadedMerchants.isNotEmpty && !forceRefresh) {
+        _applyInternalFilters();
+        notifyListeners();
+        return;
+    }
+
     _setLoading(true);
+    _error = null;
+
     try {
-      _merchants = await _apiService.getMerchants();
-      _error = null;
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'merchant')
+          .where('isVerified', isEqualTo: true) // Users see only verified merchants
+          .get();
+
+      _allLoadedMerchants = querySnapshot.docs.map((doc) {
+        try {
+          return Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>);
+        } catch (e) {
+          print('[MerchantProvider] Error parsing merchant ${doc.id}: $e');
+          return null;
+        }
+      }).whereType<Merchant>().toList();
+
+      _applyInternalFilters();
+
     } catch (e) {
-      _error = e.toString();
-      _merchants = _getDemoMerchants(); // Fallback avec données de demo
+      _error = "Erreur lors du chargement des marchands: ${e.toString()}";
+      _allLoadedMerchants = [];
+      _filteredMerchants = [];
+      print(_error);
     } finally {
       _setLoading(false);
     }
   }
 
+  Future<void> loadAllMerchantsForAdmin({bool forceRefresh = false}) async { // For admin view
+    // This method populates _adminMerchantList with MerchantAuthModel
+    if (_isLoading && !forceRefresh) return;
+
+    if (_adminMerchantList.isNotEmpty && !forceRefresh) {
+        notifyListeners();
+        return;
+    }
+
+    _setLoading(true);
+    _error = null;
+
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'merchant')
+          // No 'isVerified' filter for admin, they see all merchants
+          .get();
+
+      // Corrected: use the local querySnapshot variable
+      final querySnapshotData = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'merchant')
+          // No 'isVerified' filter for admin, they see all merchants
+          .get();
+
+      // Corrected: use the local querySnapshot variable from the .get() call above
+      _adminMerchantList = querySnapshot.docs.map((doc) {
+        try {
+          return MerchantAuthModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>);
+        } catch (e) {
+          print('[MerchantProvider] Error parsing merchant for admin (MerchantAuthModel) ${doc.id}: $e');
+          return null;
+        }
+      }).whereType<MerchantAuthModel>().toList();
+
+    } catch (e) {
+      _error = "Erreur lors du chargement des marchands pour admin: ${e.toString()}";
+      _adminMerchantList = [];
+      print(_error);
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+
   void _setLoading(bool loading) {
+    if (_isLoading == loading) return;
     _isLoading = loading;
     notifyListeners();
   }
 
-  List<Merchant> _getDemoMerchants() {
-    return [
-      Merchant(
-        id: '1',
-        name: 'Boutique Télécoms Lomé',
-        address: '123 Rue du Commerce, Lomé',
-        phone: '+228 22 61 23 45',
-        hours: '8h00 - 20h00',
-        isOpen: true,
-        status: MerchantStatus.available,
-        latitude: 6.1319,
-        longitude: 1.2228,
-        distance: 0.5,
-        walkingTime: '6 min',
-        drivingTime: '2 min',
-        services: ['Recharge crédit', 'Cartes SIM', 'Forfaits data'],
-      ),
-      Merchant(
-        id: '2',
-        name: 'Cyber Café Digital',
-        address: '45 Avenue de la Paix, Lomé',
-        phone: '+228 22 45 67 89',
-        hours: '7h00 - 22h00',
-        isOpen: true,
-        status: MerchantStatus.lowStock,
-        latitude: 6.1375,
-        longitude: 1.2123,
-        distance: 1.2,
-        walkingTime: '15 min',
-        drivingTime: '4 min',
-        services: ['Recharge crédit', 'Internet', 'Impression'],
-      ),
-      Merchant(
-        id: '3',
-        name: 'Shop Mobile Plus',
-        address: '78 Boulevard du 13 Janvier, Lomé',
-        phone: '+228 22 78 90 12',
-        hours: '9h00 - 19h00',
-        isOpen: false,
-        status: MerchantStatus.outOfStock,
-        latitude: 6.1284,
-        longitude: 1.2350,
-        distance: 2.1,
-        walkingTime: '25 min',
-        drivingTime: '7 min',
-        services: ['Recharge crédit', 'Réparation mobile', 'Accessoires'],
-      ),
-    ];
+  void _applyInternalFilters() { // This applies to _allLoadedMerchants (type Merchant) for user view
+    List<Merchant> tempList = List.from(_allLoadedMerchants);
+
+    if (_activeMerchantTypeFilter != null && _activeMerchantTypeFilter!.isNotEmpty) {
+      tempList.retainWhere((m) => m.merchantType == _activeMerchantTypeFilter);
+    }
+
+    if (_activeServiceFilters.isNotEmpty) {
+      tempList.retainWhere((m) {
+        if (m.services.isEmpty) return false;
+        return _activeServiceFilters.any((sf) => m.services.contains(sf));
+      });
+    }
+
+    if (_activeStockServiceFilter != null &&
+        _activeStockServiceFilter!.isNotEmpty &&
+        _onlyShowAvailableStockForService) {
+      tempList.retainWhere((m) =>
+          m.serviceStockStatus != null &&
+          m.serviceStockStatus![_activeStockServiceFilter!]?.toLowerCase() == 'disponible');
+    }
+
+    if (_searchQuery.isNotEmpty) {
+      tempList.retainWhere((m) =>
+          m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          (m.address.toLowerCase().contains(_searchQuery.toLowerCase())));
+    }
+    _filteredMerchants = tempList;
   }
+
+  void applyFilters({ // This applies to user-facing filters for the List<Merchant>
+    String? merchantType,
+    List<String>? services,
+    String? stockService,
+    bool? onlyAvailableStock,
+    String? searchQuery,
+    bool clearAll = false,
+    bool clearServiceAndStockFilters = false,
+    bool merchantTypeIsSet = false,
+    bool servicesIsSet = false,
+    bool stockServiceIsSet = false,
+    bool onlyAvailableStockIsSet = false,
+    bool searchQueryIsSet = false,
+  }) {
+    if (clearAll) {
+      _activeMerchantTypeFilter = null;
+      _activeServiceFilters = [];
+      _activeStockServiceFilter = null;
+      _onlyShowAvailableStockForService = false;
+      _searchQuery = '';
+    } else if (clearServiceAndStockFilters) {
+      _activeServiceFilters = [];
+      _activeStockServiceFilter = null;
+      _onlyShowAvailableStockForService = false;
+    } else {
+      if (merchantTypeIsSet) {
+        _activeMerchantTypeFilter = merchantType;
+      }
+      if (servicesIsSet && services != null) {
+        _activeServiceFilters = List.from(services);
+      } else if (servicesIsSet && services == null) {
+        _activeServiceFilters = [];
+      }
+
+      if (stockServiceIsSet) {
+         _activeStockServiceFilter = (stockService == null || stockService.isEmpty) ? null : stockService;
+         if (_activeStockServiceFilter == null && !onlyAvailableStockIsSet) {
+            _onlyShowAvailableStockForService = false;
+         }
+      }
+      if (onlyAvailableStockIsSet && onlyAvailableStock != null) {
+        _onlyShowAvailableStockForService = onlyAvailableStock;
+        if (_activeStockServiceFilter == null) {
+            _onlyShowAvailableStockForService = false;
+        }
+      }
+
+      if (searchQueryIsSet && searchQuery != null) {
+        _searchQuery = searchQuery;
+      } else if (searchQueryIsSet && searchQuery == null) {
+        _searchQuery = '';
+      }
+    }
+
+    _applyInternalFilters();
+    notifyListeners();
+  }
+
+  Future<void> refreshMerchants() async { // Refreshes user-facing merchants
+    await loadMerchants(forceRefresh: true);
+  }
+
+  Future<void> refreshAdminMerchants() async { // Refreshes admin-facing merchants
+    await loadAllMerchantsForAdmin(forceRefresh: true);
+  }
+
+  Merchant? getMerchantById(String id) { // Gets from user-facing list
+    try {
+      return _allLoadedMerchants.firstWhere((merchant) => merchant.id == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Optional: get admin merchant by ID if needed elsewhere
+  // MerchantAuthModel? getAdminMerchantById(String id) {
+  //   try {
+  //     return _adminMerchantList.firstWhere((merchant) => merchant.id == id);
+  //   } catch (e) {
+  //     return null;
+  //   }
+  // }
 }

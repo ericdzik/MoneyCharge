@@ -284,6 +284,7 @@ class _MapWidgetState extends State<MapWidget> {
               child: Column(
                 children: [
                   FloatingActionButton.small(
+                    heroTag: null, // Disable Hero animation for this FAB
                     onPressed: _goToCurrentLocation,
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primary,
@@ -291,6 +292,7 @@ class _MapWidgetState extends State<MapWidget> {
                   ),
                   const SizedBox(height: 8),
                   FloatingActionButton.small(
+                    heroTag: null, // Disable Hero animation for this FAB
                     onPressed: _showAllMerchants,
                     backgroundColor: Colors.white,
                     foregroundColor: AppColors.primary,

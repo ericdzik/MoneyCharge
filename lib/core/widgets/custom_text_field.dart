@@ -29,6 +29,8 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // La plupart des styles (bordures, fillColor, labelStyle, hintStyle)
+    // sont hérités de InputDecorationTheme dans AppTheme.
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -36,41 +38,17 @@ class CustomTextField extends StatelessWidget {
       maxLines: maxLines,
       enabled: enabled,
       validator: validator,
-      style: AppTextStyles.body1,
+      style: AppTextStyles.body1.copyWith(color: enabled ? AppColors.textPrimary : AppColors.textDisabled),
       decoration: InputDecoration(
         labelText: labelText,
         hintText: hintText,
         suffixIcon: suffixIcon,
-        labelStyle: AppTextStyles.body2.copyWith(
-          color: AppColors.textSecondary,
-        ),
-        hintStyle: AppTextStyles.body2.copyWith(
-          color: AppColors.textSecondary.withValues(alpha: 0.5),
-        ),
-        filled: true,
-        fillColor: enabled
-            ? AppColors.surface
-            : AppColors.surface.withValues(alpha: 0.5),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.border, width: 2),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.border, width: 2),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.paddingM,
-          vertical: AppDimensions.paddingM,
-        ),
+        // fillColor est géré par le thème (AppColors.surface).
+        // Ajustement pour l'état désactivé si le thème ne le fait pas spécifiquement.
+        fillColor: enabled ? null : AppColors.surface.withOpacity(0.5), // null pour hériter du thème si enabled
+        // errorBorder est défini dans le thème global avec AppColors.error
+        // contentPadding peut être hérité ou surchargé si besoin.
+        // Les styles de label et hint sont aussi hérités (AppTextStyles.body2 et AppTextStyles.caption).
       ),
     );
   }

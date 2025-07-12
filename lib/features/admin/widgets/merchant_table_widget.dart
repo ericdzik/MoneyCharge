@@ -19,6 +19,10 @@ class MerchantTableWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Déterminer si on utilise PopupMenuButton en fonction de la largeur de l'écran
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool usePopupMenu = screenWidth < 450; // Seuil pour petits écrans
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -72,6 +76,7 @@ class MerchantTableWidget extends StatelessWidget {
               columns: const [
                 DataColumn(label: Text('Nom')),
                 DataColumn(label: Text('Email')),
+                DataColumn(label: Text('Type')), // Nouvelle colonne
                 DataColumn(label: Text('Statut')),
                 DataColumn(label: Text('Date d\'inscription')),
                 DataColumn(label: Text('Actions')),
@@ -80,14 +85,19 @@ class MerchantTableWidget extends StatelessWidget {
                 return DataRow(
                   cells: [
                     DataCell(
-                      Text(
-                        merchant.businessName,
-                        style: AppTextStyles.body2.copyWith(
-                          fontWeight: FontWeight.w600,
+                      SizedBox(
+                        width: 150, // Donner une largeur pour éviter le débordement du nom
+                        child: Text(
+                          merchant.businessName,
+                          style: AppTextStyles.body2.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
-                    DataCell(Text(merchant.email)),
+                    DataCell(SizedBox(width: 180, child: Text(merchant.email, overflow: TextOverflow.ellipsis))),
+                    DataCell(SizedBox(width: 120, child: Text(merchant.merchantType, overflow: TextOverflow.ellipsis))), // Affichage du type
                     DataCell(
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -112,41 +122,73 @@ class MerchantTableWidget extends StatelessWidget {
                       ),
                     ),
                     DataCell(
-                      Text(
-                        _formatDate(merchant.createdAt),
-                        style: AppTextStyles.caption,
+                      SizedBox(
+                        width: 100,
+                        child: Text(
+                          _formatDate(merchant.createdAt),
+                          style: AppTextStyles.caption,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                     DataCell(
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.visibility,
-                              size: 18,
-                              color: AppColors.primary,
-                            ),
-                            onPressed: () => onViewDetails(merchant),
-                          ),
-                          if (!merchant.isVerified)
+                      Builder( // Utilisation de Builder pour obtenir un context frais si MediaQuery est utilisé intensivement
+                        builder: (context) { // Le context ici est celui de la cellule
+                          List<Widget> actionWidgets = [
                             IconButton(
-                              icon: const Icon(
-                                Icons.verified,
-                                size: 18,
-                                color: Colors.green,
-                              ),
-                              onPressed: () => onVerify(merchant),
+                              icon: const Icon(Icons.visibility, size: 18, color: AppColors.primary),
+                              tooltip: 'Voir détails',
+                              onPressed: () => onViewDetails(merchant),
                             ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.block,
-                              size: 18,
-                              color: Colors.red,
-                            ),
-                            onPressed: () => onSuspend(merchant),
-                          ),
-                        ],
+                          ];
+
+                          if (usePopupMenu) { // usePopupMenu est défini au début de la méthode build du widget parent
+                            List<PopupMenuEntry<String>> popupItems = [];
+                            if (!merchant.isVerified) {
+                              popupItems.add(
+                                const PopupMenuItem(value: 'verify', child: Text('Vérifier')),
+                              );
+                            }
+                            popupItems.add(
+                              const PopupMenuItem(value: 'suspend', child: Text('Suspendre')),
+                            );
+
+                            if (popupItems.isNotEmpty) {
+                              actionWidgets.add(
+                                PopupMenuButton<String>(
+                                  icon: const Icon(Icons.more_vert, size: 18),
+                                  tooltip: 'Plus d\'actions',
+                                  onSelected: (value) {
+                                    if (value == 'verify') {
+                                      onVerify(merchant);
+                                    } else if (value == 'suspend') {
+                                      onSuspend(merchant);
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) => popupItems,
+                                ),
+                              );
+                            }
+                          } else {
+                            if (!merchant.isVerified) {
+                              actionWidgets.add(IconButton(
+                                icon: const Icon(Icons.verified, size: 18, color: Colors.green),
+                                tooltip: 'Vérifier',
+                                onPressed: () => onVerify(merchant),
+                              ));
+                            }
+                            actionWidgets.add(IconButton(
+                              icon: const Icon(Icons.block, size: 18, color: Colors.red),
+                              tooltip: 'Suspendre',
+                              onPressed: () => onSuspend(merchant),
+                            ));
+                          }
+
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: actionWidgets,
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -160,6 +202,7 @@ class MerchantTableWidget extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day}/${date.month}/${date.year}';
+    // Format plus complet pour la date
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)}';
   }
 }

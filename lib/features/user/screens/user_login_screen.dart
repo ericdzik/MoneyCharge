@@ -18,9 +18,10 @@ class UnifiedLoginScreen extends StatefulWidget {
 
 class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'user@example.com');
-  final _passwordController = TextEditingController(text: 'password123');
-  bool _obscurePassword = true;
+  final _emailController = TextEditingController();
+final _passwordController = TextEditingController();
+
+  bool _obscurePassword = false;
 
   @override
   void dispose() {
@@ -29,422 +30,67 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
-                // Logo et titre
-                Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.phone_android,
-                        color: AppColors.onPrimary,
-                        size: 40,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'LocaCharge',
-                      style: AppTextStyles.h1.copyWith(fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Connexion unifiée - Votre rôle sera détecté automatiquement',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 48),
-
-                // Formulaire
-                CustomTextField(
-                  controller: _emailController,
-                  labelText: 'Email',
-                  hintText: 'votre@email.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre email';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Veuillez entrer un email valide';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _passwordController,
-                  labelText: 'Mot de passe',
-                  hintText: '••••••••',
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre mot de passe';
-                    }
-                    if (value.length < 6) {
-                      return 'Le mot de passe doit contenir au moins 6 caractères';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Lien mot de passe oublié
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.forgotPassword);
-                    },
-                    child: Text(
-                      'Mot de passe oublié ?',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Bouton de connexion
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    return CustomButton(
-                      text: authProvider.isLoading
-                          ? 'Connexion...'
-                          : 'Se connecter',
-                      onPressed: authProvider.isLoading ? null : _handleLogin,
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Boutons de test (à retirer en production)
-                Text(
-                  'Test rapide :',
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _emailController.text = 'user@example.com';
-                          _passwordController.text = 'password123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: const Text(
-                          'Utilisateur',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _emailController.text = 'boutique@example.com';
-                          _passwordController.text = 'password123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: const Text(
-                          'Marchand',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () {
-                          _emailController.text = 'admin@locacharge.com';
-                          _passwordController.text = 'password123';
-                        },
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                        ),
-                        child: const Text(
-                          'Admin',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Lien d'inscription
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Pas encore de compte ? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.register);
-                      },
-                      child: Text(
-                        'S\'inscrire',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-
-                // Lien d'inscription marchand
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Vous êtes un marchand ? ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 12,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.merchantRegister,
-                        );
-                      },
-                      child: Text(
-                        'Devenir partenaire',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.secondary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Informations sur les rôles
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Types de comptes :',
-                        style: AppTextStyles.h3.copyWith(fontSize: 14),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildRoleInfo('👤 Utilisateur', 'Location de chargeurs'),
-                      _buildRoleInfo(
-                        '🏪 Marchand',
-                        'Gestion de points de service',
-                      ),
-                      _buildRoleInfo(
-                        '⚙️ Administrateur',
-                        'Gestion de la plateforme',
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Exemples d\'emails :',
-                        style: AppTextStyles.h3.copyWith(fontSize: 12),
-                      ),
-                      const SizedBox(height: 4),
-                      _buildEmailExample('user@example.com', 'Utilisateur'),
-                      _buildEmailExample('boutique@example.com', 'Marchand'),
-                      _buildEmailExample(
-                        'admin@locacharge.com',
-                        'Administrateur',
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // Boutons de connexion alternative
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Connexion avec Google
-                        },
-                        icon: const Icon(Icons.g_mobiledata, size: 24),
-                        label: const Text('Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Connexion avec Facebook
-                        },
-                        icon: const Icon(Icons.facebook, size: 24),
-                        label: const Text('Facebook'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-
-                // Footer
-                Text(
-                  '© 2024 LocaCharge - Tous droits réservés',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoleInfo(String title, String description) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '- $description',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmailExample(String email, String role) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            email,
-            style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '- $role',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    print('-----------------------------------------------------');
+    print('[UnifiedLoginScreen._handleLogin] Attempting login for ${_emailController.text}');
 
-    // Utiliser la connexion unifiée qui détecte automatiquement le rôle
-    final success = await authProvider.loginUnified(
-      _emailController.text,
-      _passwordController.text,
-    );
-
-    if (success && mounted) {
-      // Rediriger vers la page appropriée selon le rôle détecté
-      final defaultRoute = RouteGuards.getDefaultRouteForUserType(
-        authProvider.userType,
+    try {
+      print('[UnifiedLoginScreen._handleLogin] Calling await authProvider.loginUnified...');
+      await authProvider.loginUnified(
+        _emailController.text,
+        _passwordController.text,
       );
-      Navigator.pushReplacementNamed(context, defaultRoute);
+      print('[UnifiedLoginScreen._handleLogin] After await authProvider.loginUnified completed.');
+      print('[UnifiedLoginScreen._handleLogin] Current authProvider state:');
+      print('[UnifiedLoginScreen._handleLogin]   isAuthenticated: ${authProvider.isAuthenticated}');
+      print('[UnifiedLoginScreen._handleLogin]   userType: ${authProvider.userType}');
+      print('[UnifiedLoginScreen._handleLogin]   error: ${authProvider.error}');
+      print('[UnifiedLoginScreen._handleLogin]   isLoading: ${authProvider.isLoading}');
 
-      // Afficher un message informatif
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
+
+      if (!mounted) return;
+
+      if (authProvider.isAuthenticated) {
+        print('[UnifiedLoginScreen._handleLogin] User IS Authenticated. UserType: ${authProvider.userType}');
+        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
+          authProvider.userType,
+        );
+        print('[UnifiedLoginScreen._handleLogin] Navigating to defaultRoute: $defaultRoute');
+        Navigator.pushReplacementNamed(context, defaultRoute);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
+            ),
+            backgroundColor: AppColors.success,
           ),
-          backgroundColor: AppColors.success,
-        ),
-      );
-    } else if (mounted) {
+        );
+      } else {
+        print('[UnifiedLoginScreen._handleLogin] User IS NOT Authenticated. Error: ${authProvider.error}');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Email ou mot de passe incorrect.'),
+            backgroundColor: AppColors.error, // Correction ici
+          ),
+        );
+      }
+    } catch (e) {
+      print('[UnifiedLoginScreen._handleLogin] Caught exception during _handleLogin: ${e.toString()}');
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur de connexion'),
-          backgroundColor: Colors.red,
+          content: Text(authProvider.error ?? "Erreur inattendue: ${e.toString()}"),
+          backgroundColor: AppColors.error, // Correction ici
         ),
       );
     }
+    print('-----------------------------------------------------');
   }
 
   String _getRoleDisplayName(UserType? userType) {
@@ -459,4 +105,216 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         return 'Utilisateur';
     }
   }
+
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Stack(
+      children: [
+        // 🔴 Image de fond
+        Positioned.fill(
+          child: Image.asset(
+            'assets/splash/32.png', // Vérifie le chemin
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        // 🔵 Contenu principal
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
+                children: [
+                  const SizedBox(height: AppDimensions.paddingXL),
+                  Column(
+                    children: [
+                      /**Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        //child: const Icon(
+                          //Icons.my_location,
+                          //color: AppColors.onPrimary,
+                         // size: 40,
+                        //),
+                      ),**/
+                      const SizedBox(height: 24),
+                      Text(
+                        'CONNEXION',
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 28,
+                          color: const Color.fromARGB(255, 35, 82, 37),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '',
+                        style: AppTextStyles.body2.copyWith(
+                          color: const Color.fromARGB(255, 11, 1, 1),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 48),
+
+                  // Champs Email
+                  CustomTextField(
+                    controller: _emailController,
+                    labelText: 'Email',
+                    hintText: 'votre@email.com',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez entrer votre email';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Veuillez entrer un email valide';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Champs Mot de passe
+                  CustomTextField(
+                    controller: _passwordController,
+                    labelText: 'Mot de passe',
+                    hintText: '••••••••',
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: const Color.fromARGB(255, 5, 3, 3),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez entrer votre mot de passe';
+                      }
+                      if (value.length < 6) {
+                        return 'Le mot de passe doit contenir au moins 6 caractères';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Lien mot de passe oublié
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                      },
+                      child: Text(
+                        'Mot de passe oublié ?',
+                        style: AppTextStyles.body2.copyWith(
+                          color: const Color.fromARGB(255, 35, 82, 37),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Bouton Connexion
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      return CustomButton(
+                        text: authProvider.isLoading ? 'Connexion...' : 'Se connecter',
+                        onPressed: authProvider.isLoading ? null : _handleLogin,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: AppDimensions.paddingM),
+
+                  // Lien inscription
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Pas encore de compte ? ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.register);
+                        },
+                        child: Text(
+                          'S\'inscrire',
+                          style: AppTextStyles.body2.copyWith(
+                            color: const Color.fromARGB(255, 35, 82, 37),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Lien marchand
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Vous êtes un marchand ? ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.merchantRegister);
+                        },
+                        child: Text(
+                          'Devenir partenaire',
+                          style: AppTextStyles.body2.copyWith(
+                            color: const Color.fromARGB(255, 35, 82, 37),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: AppDimensions.paddingXL),
+
+                  // Footer
+                  /**Text(
+                    '© 2025 Geo Money&Charge - Tous droits réservés',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),**/
+                  const SizedBox(height: AppDimensions.paddingM),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 }

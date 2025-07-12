@@ -1,12 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLng et LatLngBounds
+import 'package:flutter_polyline_points/flutter_polyline_points.dart'; // Pour décoder la polyligne
+
 import '../services/location_service.dart';
+import '../services/directions_service.dart'; // Ajout du service de directions
 
 class LocationProvider with ChangeNotifier {
   final LocationService _locationService = LocationService();
+  final DirectionsService _directionsService = DirectionsService(); // Instance du service de directions
 
-  // État de la localisation
-  bool _isLoading = false;
+  // État de la localisation utilisateur
+  bool _isLoadingLocation = false; // Renommé pour clarté
   String? _error;
   bool _hasPermission = false;
 
@@ -19,9 +24,17 @@ class LocationProvider with ChangeNotifier {
   static const double _defaultLatitude = 6.1319;
   static const double _defaultLongitude = 1.2228;
 
-  // Getters
-  bool get isLoading => _isLoading;
-  String? get error => _error;
+  // État de l'itinéraire
+  List<LatLng> _polylineCoordinates = [];
+  bool _isLoadingRoute = false;
+  String? _routeDistance;
+  String? _routeDuration;
+  LatLngBounds? _routeBounds;
+  String? _routeError;
+
+  // Getters pour la localisation utilisateur
+  bool get isLoadingLocation => _isLoadingLocation; // Renommé
+  String? get error => _error; // Erreur générale du provider (localisation, permission)
   bool get hasPermission => _hasPermission;
   Position? get currentPosition => _currentPosition;
   double? get latitude => _latitude;
@@ -31,9 +44,18 @@ class LocationProvider with ChangeNotifier {
   double get effectiveLatitude => _latitude ?? _defaultLatitude;
   double get effectiveLongitude => _longitude ?? _defaultLongitude;
 
+  // Getters pour l'itinéraire
+  List<LatLng> get polylineCoordinates => _polylineCoordinates;
+  bool get isLoadingRoute => _isLoadingRoute;
+  String? get routeDistance => _routeDistance;
+  String? get routeDuration => _routeDuration;
+  LatLngBounds? get routeBounds => _routeBounds;
+  String? get routeError => _routeError;
+
+
   // Initialisation
   Future<void> initialize() async {
-    _setLoading(true);
+    _setLoadingLocation(true); // Utilise le setter renommé
     try {
       await _checkPermission();
       if (_hasPermission) {
@@ -42,7 +64,7 @@ class LocationProvider with ChangeNotifier {
     } catch (e) {
       _error = e.toString();
     } finally {
-      _setLoading(false);
+      _setLoadingLocation(false); // Utilise le setter renommé
     }
   }
 
@@ -91,11 +113,63 @@ class LocationProvider with ChangeNotifier {
     }
 
     if (_hasPermission) {
-      _setLoading(true);
+      _setLoadingLocation(true); // Utilise le setter renommé
       await _getCurrentLocation();
-      _setLoading(false);
+      _setLoadingLocation(false); // Utilise le setter renommé
     }
   }
+
+  // --- Méthodes pour la gestion de l'itinéraire ---
+
+  Future<void> fetchAndSetRoute(LatLng destination) async {
+    if (_currentPosition == null) {
+      _routeError = "Localisation actuelle de l'utilisateur inconnue.";
+      notifyListeners();
+      return;
+    }
+
+    _isLoadingRoute = true;
+    _routeError = null;
+    _polylineCoordinates = []; // Effacer l'ancien itinéraire
+    notifyListeners();
+
+    try {
+      final origin = LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+      final directionsInfo = await _directionsService.getDirections(origin, destination);
+
+      if (directionsInfo != null) {
+        List<PointLatLng> result = PolylinePoints().decodePolyline(directionsInfo['polyline_encoded']);
+        if (result.isNotEmpty) {
+          _polylineCoordinates = result.map((point) => LatLng(point.latitude, point.longitude)).toList();
+        }
+        _routeDistance = directionsInfo['distance_text'];
+        _routeDuration = directionsInfo['duration_text'];
+        _routeBounds = LatLngBounds(
+          southwest: directionsInfo['bounds_sw'],
+          northeast: directionsInfo['bounds_ne'],
+        );
+      } else {
+        _routeError = "Impossible d'obtenir l'itinéraire.";
+      }
+    } catch (e) {
+      _routeError = "Erreur lors de la récupération de l'itinéraire: ${e.toString()}";
+    } finally {
+      _isLoadingRoute = false;
+      notifyListeners();
+    }
+  }
+
+  void clearRoute() {
+    _polylineCoordinates = [];
+    _routeDistance = null;
+    _routeDuration = null;
+    _routeBounds = null;
+    _routeError = null;
+    notifyListeners();
+  }
+
+  // --- Fin des méthodes pour la gestion de l'itinéraire ---
+
 
   // Calculer la distance entre deux points
   double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
@@ -178,8 +252,8 @@ class LocationProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void _setLoading(bool loading) {
-    _isLoading = loading;
+  void _setLoadingLocation(bool loading) { // Renommé
+    _isLoadingLocation = loading;
     notifyListeners();
   }
 }

@@ -22,15 +22,35 @@ class AdminStatsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 600;
+    int crossAxisCount;
+    double childAspectRatio;
+
+    if (isSmallScreen) { // Small screens (most phones portrait)
+      crossAxisCount = 1;
+      childAspectRatio = 5.0; // Keep it tall for now, can be adjusted if overflow is fixed
+    } else if (screenWidth < 900) { // Medium screens
+      crossAxisCount = 2;
+      childAspectRatio = 1.3;
+    } else if (screenWidth < 1200) { // Large screens
+      crossAxisCount = 3;
+      childAspectRatio = 1.4;
+    } else { // Extra large screens
+      crossAxisCount = 4;
+      childAspectRatio = 1.5;
+    }
+
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
+      crossAxisCount: crossAxisCount,
       crossAxisSpacing: 16,
       mainAxisSpacing: 16,
-      childAspectRatio: 1.3,
+      childAspectRatio: childAspectRatio,
       children: [
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Utilisateurs',
           value: '$totalUsers',
           subtitle: 'Total inscrits',
@@ -38,6 +58,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: AppColors.primary,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Marchands',
           value: '$totalMerchants',
           subtitle: '$activeMerchants actifs',
@@ -45,6 +66,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.green,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Revenus',
           value: '${(totalRevenue / 1000).toStringAsFixed(1)}K FCFA',
           subtitle: 'Total plateforme',
@@ -52,6 +74,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.orange,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Transactions',
           value: '$totalTransactions',
           subtitle: 'Aujourd\'hui',
@@ -59,6 +82,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.blue,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'En attente',
           value: '$pendingVerifications',
           subtitle: 'Vérifications',
@@ -66,6 +90,7 @@ class AdminStatsWidget extends StatelessWidget {
           color: Colors.red,
         ),
         _buildStatCard(
+          isSmallScreen: isSmallScreen, // Pass isSmallScreen
           title: 'Performance',
           value: '${_calculatePerformance()}%',
           subtitle: 'Taux de satisfaction',
@@ -77,6 +102,7 @@ class AdminStatsWidget extends StatelessWidget {
   }
 
   Widget _buildStatCard({
+    required bool isSmallScreen, // Receive isSmallScreen
     required String title,
     required String value,
     required String subtitle,
@@ -84,53 +110,72 @@ class AdminStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12), // Réduction du padding général
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10), // Léger ajustement
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08), // Ombre plus subtile
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Pour mieux répartir l'espace vertical
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isSmallScreen ? 5 : 7), // Ajustement
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18), // Icônes plus petites
               ),
-              const Spacer(),
-              Text(
-                title,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+              // Flexible pour permettre au titre de prendre l'espace et de s'ajuster
+              Flexible(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.right, // Alignement à droite pour le titre près de l'icône
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: isSmallScreen ? 9 : 11, // Police plus petite
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          // Utilisation de Flexible et FittedBox pour les valeurs et sous-titres
+          // afin qu'ils s'adaptent à l'espace disponible.
+          Flexible(
+            child: FittedBox( // FittedBox pour que le texte 'value' se réduise si besoin
+              fit: BoxFit.scaleDown, // Assure que le texte ne dépasse pas
+              child: Text(
+                value,
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: isSmallScreen ? 14 : 18, // Police plus petite
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1, // Forcer sur une ligne, FittedBox gère la taille
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
+          Flexible(
+            child: Text(
+              subtitle,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: isSmallScreen ? 9 : 10, // Police plus petite
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: isSmallScreen ? 2 : 1, // Permettre 2 lignes sur très petit écran si besoin
             ),
           ),
         ],
@@ -140,6 +185,8 @@ class AdminStatsWidget extends StatelessWidget {
 
   int _calculatePerformance() {
     if (totalTransactions == 0) return 0;
+    // Ensure totalMerchants is not zero to avoid division by zero error
+    if (totalMerchants == 0) return 0;
     return ((activeMerchants / totalMerchants) * 100).round();
   }
 }

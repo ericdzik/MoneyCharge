@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-import '../utils/color_utils.dart';
 
 /// Widget d'erreur réutilisable
 class AppErrorWidget extends StatelessWidget {
@@ -34,7 +33,7 @@ class AppErrorWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.outOfStock.withValues(alpha: 0.1),
+                color: AppColors.outOfStock.withAlpha(25), // Alpha 10% environ
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -100,106 +99,6 @@ class AppErrorWidget extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// Widget d'erreur de réseau
-class NetworkErrorWidget extends StatelessWidget {
-  final VoidCallback? onRetry;
-
-  const NetworkErrorWidget({super.key, this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppErrorWidget(
-      title: 'Erreur de connexion',
-      message: 'Vérifiez votre connexion internet et réessayez.',
-      onAction: onRetry,
-      icon: Icons.wifi_off,
-    );
-  }
-}
-
-/// Widget d'erreur de chargement
-class LoadingErrorWidget extends StatelessWidget {
-  final String message;
-  final VoidCallback? onRetry;
-
-  const LoadingErrorWidget({
-    super.key,
-    this.message = 'Impossible de charger les données.',
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppErrorWidget(
-      title: 'Erreur de chargement',
-      message: message,
-      onAction: onRetry,
-      icon: Icons.cloud_off,
-    );
-  }
-}
-
-/// Widget d'erreur d'authentification
-class AuthErrorWidget extends StatelessWidget {
-  final VoidCallback? onLogin;
-
-  const AuthErrorWidget({super.key, this.onLogin});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppErrorWidget(
-      title: 'Session expirée',
-      message: 'Votre session a expiré. Veuillez vous reconnecter.',
-      actionText: 'Se connecter',
-      onAction: onLogin,
-      icon: Icons.lock_outline,
-      showRetry: false,
-    );
-  }
-}
-
-/// Widget d'erreur de permission
-class PermissionErrorWidget extends StatelessWidget {
-  final String permission;
-  final VoidCallback? onGrant;
-
-  const PermissionErrorWidget({
-    super.key,
-    required this.permission,
-    this.onGrant,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppErrorWidget(
-      title: 'Permission requise',
-      message: 'Cette fonctionnalité nécessite l\'accès à $permission.',
-      actionText: 'Accorder la permission',
-      onAction: onGrant,
-      icon: Icons.security,
-      showRetry: false,
-    );
-  }
-}
-
-/// Widget d'erreur générique
-class GenericErrorWidget extends StatelessWidget {
-  final String error;
-  final VoidCallback? onRetry;
-
-  const GenericErrorWidget({super.key, required this.error, this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppErrorWidget(
-      title: 'Une erreur s\'est produite',
-      message: error,
-      onAction: onRetry,
-      icon: Icons.error_outline,
     );
   }
 }

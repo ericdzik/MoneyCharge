@@ -43,10 +43,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           padding: const EdgeInsets.all(AppDimensions.paddingL),
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Spacer(),
+            child: SingleChildScrollView( // Wrap main content in SingleChildScrollView
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisAlignment: MainAxisAlignment.center, // Try to keep content centered
+                children: [
+                  // Adjust Spacers or use SizedBox for more predictable spacing if needed
+                  // const Spacer(), // Spacer might behave differently in SingleChildScrollView if content is short
+
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Example dynamic spacing
 
                 // Icône et titre
                 Column(
@@ -169,18 +174,23 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                 ],
 
-                const Spacer(),
+                // const Spacer(), // Spacer might behave differently in SingleChildScrollView if content is short
+                SizedBox(height: MediaQuery.of(context).size.height * 0.1), // Example dynamic spacing
 
                 // Lien de retour
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      'Retour à la ',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                    Flexible( // Make text flexible
+                      child: Text(
+                        'Retour à la ',
+                        style: AppTextStyles.body2.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        textAlign: TextAlign.end, // Align if it wraps
                       ),
                     ),
+                    const SizedBox(width: AppDimensions.paddingXS), // Add minimal spacing
                     GestureDetector(
                       onTap: () {
                         Navigator.pushReplacementNamed(
@@ -188,11 +198,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           AppRoutes.login,
                         );
                       },
-                      child: Text(
-                        'connexion',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                      child: Flexible( // Make tappable text flexible
+                        child: Text(
+                          'connexion',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -213,6 +225,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           ),
         ),
       ),
+      ),
     );
   }
 
@@ -222,24 +235,35 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     }
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.clearError(); // Utiliser la méthode pour clearer l'erreur
 
-    final success = await authProvider.resetPassword(_emailController.text);
+    try {
+      await authProvider.resetPassword(_emailController.text);
+      if (!mounted) return;
 
-    if (success && mounted) {
-      setState(() {
-        _isEmailSent = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email de réinitialisation envoyé avec succès'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (mounted) {
+      if (authProvider.error == null) {
+        setState(() {
+          _isEmailSent = true;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email de réinitialisation envoyé avec succès.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur lors de l\'envoi de l\'email.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur lors de l\'envoi'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );
@@ -248,20 +272,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _handleResendEmail() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    authProvider.clearError(); // Utiliser la méthode pour clearer l'erreur
 
-    final success = await authProvider.resetPassword(_emailController.text);
+    try {
+      await authProvider.resetPassword(_emailController.text);
+      if (!mounted) return;
 
-    if (success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Email renvoyé avec succès'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else if (mounted) {
+      if (authProvider.error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Email de réinitialisation renvoyé avec succès.'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur lors du renvoi de l\'email.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur lors de l\'envoi'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );

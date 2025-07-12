@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "170207846950",
+    "project_id": "moneycharge-ebf19",
+    "storage_bucket": "moneycharge-ebf19.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:170207846950:android:ced6ea4908aa34dae23ce7",
+        "android_client_info": {
+          "package_name": "com.example.locacharge"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCLUw-PfRmUmRrEnlp9RSaAzWuY5ZgdEps"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

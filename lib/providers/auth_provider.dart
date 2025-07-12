@@ -1,363 +1,341 @@
+import 'dart:async'; // Pour StreamSubscription
 import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Pour l'objet User de Firebase
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
 import '../services/auth_service.dart';
 
-enum UserType { user, merchant, admin }
+enum UserType { user, merchant, admin, unknown }
 
 class User {
   final String id;
   final String name;
   final String email;
   final String? phone;
-  final DateTime createdAt;
+  final DateTime? createdAt;
+  final DateTime? lastLoginAt;
 
   User({
     required this.id,
     required this.name,
     required this.email,
     this.phone,
-    required this.createdAt,
+    this.createdAt,
+    this.lastLoginAt,
   });
+
+  factory User.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data()!;
+    return User(
+      id: snapshot.id,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      phone: data['phone'] as String?,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
+    );
+  }
 }
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance;
+  StreamSubscription? _authStateSubscription;
 
-  // État d'authentification
-  bool _isAuthenticated = false;
+  fb_auth.User? _firebaseUser;
   bool _isLoading = false;
   String? _error;
-  UserType? _userType;
+  UserType _userType = UserType.unknown;
 
-  // Données utilisateur
-  User? _currentUser;
+  User? _appUserProfile;
+  MerchantAuthModel? _merchantProfile;
+  AdminModel? _adminProfile;
 
-  // Données marchand
-  MerchantAuthModel? _merchant;
-
-  // Données admin
-  AdminModel? _admin;
-
-  // Getters
-  bool get isAuthenticated => _isAuthenticated;
+  bool get isAuthenticated => _firebaseUser != null && _userType != UserType.unknown;
   bool get isLoading => _isLoading;
   String? get error => _error;
-  UserType? get userType => _userType;
-  User? get currentUser => _currentUser;
-  MerchantAuthModel? get merchant => _merchant;
-  AdminModel? get admin => _admin;
+  UserType get userType => _userType;
+  User? get appUserProfile => _appUserProfile;
+  MerchantAuthModel? get merchantProfile => _merchantProfile;
+  AdminModel? get adminProfile => _adminProfile;
+  String? get userId => _firebaseUser?.uid;
 
-  // Initialisation
-  Future<void> initialize() async {
-    _setLoading(true);
-    try {
-      final isLoggedIn = await _authService.isLoggedIn();
-      if (isLoggedIn) {
-        final userType = await _authService.getUserType();
-        final userId = await _authService.getUserId();
-
-        if (userType != null && userId != null) {
-          _isAuthenticated = true;
-          _userType = _parseUserType(userType);
-
-          // Créer un utilisateur temporaire pour la démo
-          if (_userType == UserType.user) {
-            _currentUser = User(
-              id: userId,
-              name: 'Utilisateur Demo',
-              email: 'demo@example.com',
-              phone: '+225 0123456789',
-              createdAt: DateTime.now().subtract(const Duration(days: 30)),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
+  AuthProvider() {
+    _listenToAuthChanges();
   }
 
-  // Connexion unifiée qui détecte automatiquement le type d'utilisateur
-  Future<bool> loginUnified(String email, String password) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      final success = await _authService.loginUnified(email, password);
-      if (success) {
-        final userType = await _authService.getUserType();
-        final userId = await _authService.getUserId();
-
-        if (userType != null && userId != null) {
-          _isAuthenticated = true;
-          _userType = _parseUserType(userType);
-
-          // Créer l'utilisateur approprié selon le type
-          switch (_userType) {
-            case UserType.admin:
-              _admin = AdminModel(
-                id: userId,
-                email: email,
-                name: email.split('@')[0],
-                role: AdminRole.admin,
-                permissions: ['all'],
-                createdAt: DateTime.now(),
-              );
-              break;
-            case UserType.merchant:
-              _merchant = MerchantAuthModel(
-                id: userId,
-                email: email,
-                businessName: email.split('@')[0],
-                phone: '+225 0123456789',
-                address: 'Adresse du marchand',
-                isVerified: true,
-                createdAt: DateTime.now(),
-              );
-              break;
-            case UserType.user:
-            default:
-              _currentUser = User(
-                id: userId,
-                name: email.split('@')[0],
-                email: email,
-                phone: '+225 0123456789',
-                createdAt: DateTime.now(),
-              );
-              break;
+  void _listenToAuthChanges() {
+    _authStateSubscription = _authService.authStateChanges.listen((fb_auth.User? user) async {
+      _setLoading(true);
+      _firebaseUser = user;
+      if (_firebaseUser != null) {
+        try {
+          await _fetchUserProfile(_firebaseUser!.uid);
+          if (_userType != UserType.unknown) {
+            await _updateLastLogin(_firebaseUser!.uid);
           }
-
-          notifyListeners();
-          return true;
+        } catch (e) {
+          _error = "Erreur lors de la récupération du profil: ${e.toString()}";
+          _userType = UserType.unknown;
+          _clearProfiles();
         }
-      }
-
-      _error = 'Email ou mot de passe incorrect';
-      return false;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Inscription utilisateur
-  Future<bool> registerUser(String name, String email, String password) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      final success = await _authService.registerUser(name, email, password);
-      if (success) {
-        _isAuthenticated = true;
-        _userType = UserType.user;
-
-        final userId = await _authService.getUserId();
-        _currentUser = User(
-          id: userId ?? 'user_${DateTime.now().millisecondsSinceEpoch}',
-          name: name,
-          email: email,
-          phone: '+225 0123456789',
-          createdAt: DateTime.now(),
-        );
-
-        notifyListeners();
-        return true;
       } else {
-        _error = 'Erreur lors de l\'inscription';
-        return false;
+        _userType = UserType.unknown;
+        _clearProfiles();
+      }
+      _setLoading(false);
+    });
+  }
+
+  Future<void> _fetchUserProfile(String uid) async {
+    try {
+      final docSnapshot = await _firestore.collection('users').doc(uid).get();
+      if (docSnapshot.exists) {
+        final data = docSnapshot.data()!;
+        final role = data['role'] as String?;
+        _userType = _parseUserType(role);
+
+        switch (_userType) {
+          case UserType.admin:
+            _adminProfile = AdminModel.fromFirestore(docSnapshot);
+            _appUserProfile = null; _merchantProfile = null;
+            break;
+          case UserType.merchant:
+            _merchantProfile = MerchantAuthModel.fromFirestore(docSnapshot);
+            _appUserProfile = null; _adminProfile = null;
+            break;
+          case UserType.user:
+            _appUserProfile = User.fromFirestore(docSnapshot);
+            _merchantProfile = null; _adminProfile = null;
+            break;
+          default:
+            _error = "Rôle utilisateur non reconnu: $role";
+            _clearProfiles();
+            _userType = UserType.unknown;
+        }
+      } else {
+        _error = "Profil utilisateur non trouvé dans Firestore.";
+        _userType = UserType.unknown;
+        _clearProfiles();
+      }
+    } catch (e) {
+      _error = "Erreur Firestore lors de la récupération du profil: ${e.toString()}";
+      _userType = UserType.unknown;
+      _clearProfiles();
+      rethrow;
+    }
+  }
+
+  Future<void> _updateLastLogin(String uid) async {
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print("Erreur lors de la mise à jour de lastLoginAt: $e");
+    }
+  }
+
+  void _clearProfiles() {
+    _appUserProfile = null;
+    _merchantProfile = null;
+    _adminProfile = null;
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> loginUnified(String email, String password) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final uid = await _authService.loginUnified(email, password);
+      if (uid != null) {
+        if (_firebaseAuth.currentUser != null && _firebaseAuth.currentUser!.uid == uid) {
+          _firebaseUser = _firebaseAuth.currentUser;
+          await _fetchUserProfile(uid);
+          if (_userType != UserType.unknown) {
+            await _updateLastLogin(uid);
+          }
+        } else {
+          await _fetchUserProfile(uid!); // uid is not null here
+           if (_userType != UserType.unknown) {
+            await _updateLastLogin(uid!); // uid is not null here
+          }
+        }
+      } else {
+        _error = "Erreur de connexion: UID non retourné par AuthService.";
+        _userType = UserType.unknown;
+        _clearProfiles();
       }
     } catch (e) {
       _error = e.toString();
-      return false;
+      _userType = UserType.unknown;
+      _clearProfiles();
     } finally {
       _setLoading(false);
     }
   }
 
-  // Déconnexion
+  Future<void> registerUser(String name, String email, String password) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      final uid = await _authService.registerUser(name, email, password);
+      if (uid == null) {
+         _error = "Erreur d'inscription: UID non retourné.";
+         _userType = UserType.unknown;
+        _clearProfiles();
+      }
+      // _listenToAuthChanges s'occupera de fetch le profil
+    } catch (e) {
+      _error = e.toString();
+      _userType = UserType.unknown;
+      _clearProfiles();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   Future<void> logout() async {
     _setLoading(true);
+    _error = null;
     try {
       await _authService.logout();
-      _isAuthenticated = false;
-      _userType = null;
-      _currentUser = null;
-      _merchant = null;
-      _admin = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  Future<void> resetPassword(String email) async {
+    _setLoading(true);
+    clearError();
+    try {
+      await _authService.resetPassword(email);
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void clearError() {
+    if (_error != null) {
       _error = null;
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
       notifyListeners();
     }
   }
 
-  // Réinitialiser le mot de passe
-  Future<bool> resetPassword(String email) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      final success = await _authService.resetPassword(email);
-      if (!success) {
-        _error = 'Erreur lors de l\'envoi de l\'email';
-      }
-      return success;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Méthode de debug pour forcer la connexion admin
-  Future<void> forceAdminLogin() async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      _isAuthenticated = true;
-      _userType = UserType.admin;
-
-      _admin = AdminModel(
-        id: 'debug_admin_${DateTime.now().millisecondsSinceEpoch}',
-        email: 'admin@locacharge.com',
-        name: 'Administrateur Debug',
-        role: AdminRole.superAdmin,
-        permissions: ['all'],
-        createdAt: DateTime.now(),
-      );
-
-      notifyListeners();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Méthode pour vérifier le statut d'authentification au démarrage
-  Future<void> checkAuthStatus() async {
-    _setLoading(true);
-    try {
-      final isLoggedIn = await _authService.isLoggedIn();
-      if (isLoggedIn) {
-        final userType = await _authService.getUserType();
-        final userId = await _authService.getUserId();
-
-        if (userType != null && userId != null) {
-          _isAuthenticated = true;
-          _userType = _parseUserType(userType);
-
-          // Créer un utilisateur temporaire pour la démo
-          if (_userType == UserType.user) {
-            _currentUser = User(
-              id: userId,
-              name: 'Utilisateur Demo',
-              email: 'demo@example.com',
-              phone: '+225 0123456789',
-              createdAt: DateTime.now().subtract(const Duration(days: 30)),
-            );
-          } else if (_userType == UserType.merchant) {
-            _merchant = MerchantAuthModel(
-              id: userId,
-              email: 'merchant@example.com',
-              businessName: 'Marchand Demo',
-              phone: '+225 0123456789',
-              address: 'Adresse du marchand',
-              isVerified: true,
-              createdAt: DateTime.now().subtract(const Duration(days: 30)),
-            );
-          } else if (_userType == UserType.admin) {
-            _admin = AdminModel(
-              id: userId,
-              email: 'admin@example.com',
-              name: 'Admin Demo',
-              role: AdminRole.admin,
-              permissions: ['all'],
-              createdAt: DateTime.now().subtract(const Duration(days: 30)),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // Inscription marchand avec informations complètes
-  Future<bool> registerMerchant({
+  Future<void> registerMerchant({
     required String businessName,
     required String email,
     required String phone,
     required String address,
     required String openingHours,
-    required String services,
+    required List<String> services, // CHANGED to List<String>
     required String password,
+    required double? latitude,
+    required double? longitude,
+    required String merchantType, // ADDED
   }) async {
     _setLoading(true);
     _error = null;
-
     try {
-      // En mode démo, on simule l'inscription
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Créer un profil marchand temporaire (en attente de validation)
-      final userId = 'merchant_${DateTime.now().millisecondsSinceEpoch}';
-
-      _merchant = MerchantAuthModel(
-        id: userId,
-        email: email,
-        businessName: businessName,
-        phone: phone,
-        address: address,
-        openingHours: openingHours,
-        services: services,
-        isVerified: false, // En attente de validation admin
-        createdAt: DateTime.now(),
-      );
-
-      // En mode production, on enverrait ces données au serveur
-      // await _authService.registerMerchant(merchantData);
-
-      // Pour la démo, on connecte directement
-      _isAuthenticated = true;
-      _userType = UserType.merchant;
-
-      notifyListeners();
-      return true;
+      final uid = await _authService.registerUser(businessName, email, password);
+      if (uid != null) {
+        await _firestore.collection('users').doc(uid).set({
+          'uid': uid,
+          'email': email,
+          'name': businessName,
+          'role': 'merchant',
+          'merchantType': merchantType, // ADDED
+          'createdAt': FieldValue.serverTimestamp(),
+          'phone': phone,
+          'address': address,
+          'openingHours': openingHours,
+          'services': services, // CHANGED to List<String>
+          'isVerified': false,
+          'isActive': true,
+          'lastLoginAt': FieldValue.serverTimestamp(),
+          'latitude': latitude,
+          'longitude': longitude,
+          // serviceStockStatus sera initialisé/géré par EditMerchantProfileScreen
+        }, SetOptions(merge: true));
+      } else {
+        _error = "Erreur lors de la création du compte marchand.";
+      }
     } catch (e) {
       _error = e.toString();
-      return false;
     } finally {
       _setLoading(false);
     }
   }
 
-  // Méthodes privées
+  Future<bool> updateMerchantProfile({
+    required String businessName,
+    required String phone,
+    required String address,
+    required String openingHours,
+    required List<String> services,
+    required Map<String, String> serviceStockStatus,
+  }) async {
+    _setLoading(true);
+    _error = null;
+
+    if (_firebaseUser == null || _userType != UserType.merchant) {
+      _error = "Aucun marchand connecté pour la mise à jour.";
+      _setLoading(false);
+      return false;
+    }
+    final uid = _firebaseUser!.uid;
+
+    Map<String, dynamic> dataToUpdate = {
+      'name': businessName,
+      'phone': phone,
+      'address': address,
+      'openingHours': openingHours,
+      'services': services,
+      'serviceStockStatus': serviceStockStatus,
+      'lastProfileUpdateAt': FieldValue.serverTimestamp(),
+    };
+
+    try {
+      await _firestore.collection('users').doc(uid).update(dataToUpdate);
+      await _fetchUserProfile(uid); // Recharger pour la cohérence
+
+      _setLoading(false);
+      // notifyListeners(); // _fetchUserProfile ou _setLoading le fait déjà
+      return true;
+    } catch (e) {
+      _error = "Erreur lors de la mise à jour du profil: ${e.toString()}";
+      _setLoading(false);
+      return false;
+    }
+  }
+
   void _setLoading(bool loading) {
+    if(_isLoading == loading) return;
     _isLoading = loading;
     notifyListeners();
   }
 
-  UserType _parseUserType(String userType) {
-    switch (userType.toLowerCase()) {
+  UserType _parseUserType(String? role) {
+    switch (role?.toLowerCase()) {
       case 'merchant':
         return UserType.merchant;
       case 'admin':
         return UserType.admin;
       case 'user':
-      default:
         return UserType.user;
+      default:
+        return UserType.unknown;
     }
   }
 }

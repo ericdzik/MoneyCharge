@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
+// import '../constants/app_text_styles.dart'; // Pas nécessaire si le style est hérité du thème
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -18,29 +19,22 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.primary, Color(0xFFEF4444)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-      ),
-      child: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: leading,
-        title: Row(
-          children: [
-            if (showLogo) ...[
-              const SimIcon(),
-              const SizedBox(width: AppDimensions.paddingS),
-            ],
-            Text(title),
+    // Le style du titre (AppTextStyles.h3 avec couleur onPrimary) est hérité de AppBarTheme.titleTextStyle
+    return AppBar(
+      backgroundColor: AppColors.primary, // Vert
+      elevation: 0,
+      leading: leading,
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showLogo) ...[
+            const SimIcon(),
+            const SizedBox(width: AppDimensions.paddingS),
           ],
-        ),
-        actions: actions,
+          Text(title), // Le style est appliqué par AppBarTheme
+        ],
       ),
+      actions: actions,
     );
   }
 
@@ -57,7 +51,7 @@ class SimIcon extends StatelessWidget {
       width: 24,
       height: 18,
       decoration: BoxDecoration(
-        color: AppColors.secondary,
+        color: AppColors.secondary, // Orange
         borderRadius: BorderRadius.circular(3),
       ),
       child: Stack(
@@ -69,7 +63,7 @@ class SimIcon extends StatelessWidget {
               width: 8,
               height: 6,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: AppColors.primary, // Vert
                 borderRadius: BorderRadius.circular(1),
               ),
             ),

@@ -5,6 +5,9 @@ import '../../../core/widgets/merchant_card.dart';
 import '../../../providers/merchant_provider.dart';
 import '../widgets/filter_bar_widget.dart';
 import 'merchant_detail_screen.dart';
+import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
+import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
+// import '../../../services/location_service.dart'; // Retiré car plus utilisé directement
 
 class ListViewScreen extends StatefulWidget {
   const ListViewScreen({Key? key}) : super(key: key);
@@ -75,8 +78,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                           );
                         },
                         onDirectionsPressed: () {
-                          // Ouvrir l'app de navigation
-                          _openDirections(merchant.latitude, merchant.longitude);
+                          _openDirections(merchant);
                         },
                       );
                     },
@@ -90,8 +92,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
     );
   }
 
-  void _openDirections(double lat, double lng) {
-    // Intégration avec les apps de navigation
-    // url_launcher: https://maps.google.com/?q=$lat,$lng
+  void _openDirections(Merchant merchant) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MapViewScreen(targetMerchant: merchant),
+      ),
+    );
   }
 }

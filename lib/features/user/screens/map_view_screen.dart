@@ -5,82 +5,63 @@ import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/merchant_provider.dart';
+import '../../../providers/location_provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLngBounds
+import '../../../core/constants/app_dimensions.dart';
 
 class MapViewScreen extends StatefulWidget {
-  const MapViewScreen({Key? key}) : super(key: key);
+  final Merchant? targetMerchant; // Marchand optionnel à cibler
+
+  const MapViewScreen({Key? key, this.targetMerchant}) : super(key: key);
 
   @override
   State<MapViewScreen> createState() => _MapViewScreenState();
 }
 
 class _MapViewScreenState extends State<MapViewScreen> {
-  List<Merchant> _merchants = [];
   Merchant? _selectedMerchant;
-  bool _isLoading = true;
-  final LocationService _locationService = LocationService();
+  // _locationService n'est plus nécessaire ici si toute la logique de navigation passe par LocationProvider
+  // final LocationService _locationService = LocationService();
+  GoogleMapController? _mapController;
+
 
   @override
   void initState() {
     super.initState();
-    _loadMerchants();
-  }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+        final locationProvider = Provider.of<LocationProvider>(context, listen: false);
 
-  Future<void> _loadMerchants() async {
-    // Simuler le chargement des données
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Données de test
-    final merchants = [
-      Merchant(
-        id: '1',
-        name: 'Station Total Lomé',
-        address: 'Avenue de la Paix, Lomé',
-        phone: '+228 22 21 21 21',
-        hours: '24h/24',
-        isOpen: true,
-        status: MerchantStatus.available,
-        latitude: 6.1319,
-        longitude: 1.2228,
-        distance: 0.5,
-        walkingTime: '6 min',
-        drivingTime: '2 min',
-        services: ['Recharge', 'Paiement', 'Transfert'],
-      ),
-      Merchant(
-        id: '2',
-        name: 'Boutique Mobile Money',
-        address: 'Rue du Commerce, Lomé',
-        phone: '+228 22 22 22 22',
-        hours: '7h-22h',
-        isOpen: true,
-        status: MerchantStatus.lowStock,
-        latitude: 6.1350,
-        longitude: 1.2250,
-        distance: 1.2,
-        walkingTime: '15 min',
-        drivingTime: '4 min',
-        services: ['Recharge', 'Paiement'],
-      ),
-      Merchant(
-        id: '3',
-        name: 'Kiosque Central',
-        address: 'Place de l\'Indépendance, Lomé',
-        phone: '+228 22 23 23 23',
-        hours: '6h-23h',
-        isOpen: false,
-        status: MerchantStatus.outOfStock,
-        latitude: 6.1280,
-        longitude: 1.2200,
-        distance: 2.1,
-        walkingTime: '25 min',
-        drivingTime: '6 min',
-        services: ['Recharge'],
-      ),
-    ];
-
-    setState(() {
-      _merchants = merchants;
-      _isLoading = false;
+        merchantProvider.loadMerchants();
+        locationProvider.initialize().then((_) {
+          // Après l'initialisation de la localisation, vérifier si un marchand cible est fourni
+          if (widget.targetMerchant != null && locationProvider.currentPosition != null) {
+            final destination = LatLng(widget.targetMerchant!.latitude, widget.targetMerchant!.longitude);
+            locationProvider.fetchAndSetRoute(destination).then((_) {
+              if (locationProvider.routeBounds != null && _mapController != null) {
+                _mapController!.animateCamera(
+                  CameraUpdate.newLatLngBounds(locationProvider.routeBounds!, 60.0), // Increased padding
+                );
+              }
+              // Optionnel: sélectionner le marchand et afficher ses détails
+              // Cela peut être fait ici ou après que la carte soit construite
+              // Pour l'instant, on se concentre sur l'affichage de l'itinéraire
+              if (mounted) { // Vérifier si le widget est toujours monté avant setState
+                 setState(() {
+                    _selectedMerchant = widget.targetMerchant;
+                 });
+                 // On peut aussi appeler _showMerchantDetails si c'est souhaité
+                 // _showMerchantDetails(widget.targetMerchant!);
+              }
+            });
+          }
+        });
+        // Effacer tout itinéraire précédent lors de l'initialisation de l'écran (déjà fait ou à faire avant fetch)
+        locationProvider.clearRoute();
+      }
     });
   }
 
@@ -88,8 +69,8 @@ class _MapViewScreenState extends State<MapViewScreen> {
     setState(() {
       _selectedMerchant = merchant;
     });
-
-    // Afficher les détails du marchand
+    // Effacer l'itinéraire précédent lorsqu'un nouveau marchand est sélectionné
+    Provider.of<LocationProvider>(context, listen: false).clearRoute();
     _showMerchantDetails(merchant);
   }
 
@@ -106,7 +87,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
         ),
         child: Column(
           children: [
-            // Handle
             Container(
               margin: const EdgeInsets.only(top: 8),
               width: 40,
@@ -116,7 +96,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            // Content
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16),
@@ -151,80 +130,181 @@ class _MapViewScreenState extends State<MapViewScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-
-                    // Informations
-                    _buildInfoRow(
-                      Icons.access_time,
-                      'Horaires',
-                      merchant.hours,
-                    ),
+                    _buildInfoRow(Icons.access_time, 'Horaires', merchant.hours),
                     _buildInfoRow(Icons.phone, 'Téléphone', merchant.phone),
+                    _buildInfoRow(Icons.directions_walk, 'Distance', '${merchant.distance} km'),
                     _buildInfoRow(
-                      Icons.directions_walk,
-                      'Distance',
-                      '${merchant.distance} km',
-                    ),
-                    _buildInfoRow(
-                      Icons.directions_car,
-                      'Temps de trajet',
-                      merchant.drivingTime,
-                    ),
+  Icons.directions_car,
+  'Temps de trajet',
+  merchant.drivingTime ?? 'Non disponible',
+),
 
                     const SizedBox(height: 16),
-
-                    // Services
                     const Text(
                       'Services disponibles',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
-                      children: merchant.services
-                          .map(
-                            (service) => Chip(
-                              label: Text(service),
-                              backgroundColor: AppColors.primary.withOpacity(
-                                0.1,
-                              ),
-                              labelStyle: TextStyle(color: AppColors.primary),
-                            ),
-                          )
-                          .toList(),
+                      children: merchant.services.map(
+                        (service) => Chip(
+                          label: Text(service),
+                          backgroundColor: AppColors.primary.withOpacity(0.1),
+                          labelStyle: TextStyle(color: AppColors.primary),
+                        ),
+                      ).toList(),
                     ),
-
                     const Spacer(),
+                    LayoutBuilder(
+                      builder: (BuildContext context, BoxConstraints constraints) {
+                        bool useColumnLayout = constraints.maxWidth < 360; // Threshold for switching to Column
 
-                    // Boutons d'action
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _callMerchant(merchant.phone),
-                            icon: const Icon(Icons.phone),
-                            label: const Text('Appeler'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _navigateToMerchant(merchant),
-                            icon: const Icon(Icons.directions),
-                            label: const Text('Itinéraire'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
+                        if (useColumnLayout) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch, // Make buttons take full width
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () => _callMerchantPhoneNumber(merchant.phone),
+                                icon: const Icon(Icons.phone, size: 18),
+                                label: const Text('Appeler', style: TextStyle(fontSize: 13)),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 12), // Slightly more padding for column
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+                                  if (locationProvider.currentPosition != null) {
+                                    final LatLng destination = LatLng(merchant.latitude, merchant.longitude);
+                                    await locationProvider.fetchAndSetRoute(destination);
+                                    if (locationProvider.routeBounds != null && _mapController != null) {
+                                      _mapController!.animateCamera(
+                                        CameraUpdate.newLatLngBounds(locationProvider.routeBounds!, 50),
+                                      );
+                                    }
+                                    if (locationProvider.routeError != null && mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(locationProvider.routeError!), backgroundColor: Colors.red),
+                                      );
+                                    }
+                                  } else if (mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Localisation utilisateur inconnue.'), backgroundColor: Colors.orange),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.map_outlined, size: 18),
+                                label: const Text('Voir Carte', style: TextStyle(fontSize: 13)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary.withOpacity(0.8),
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                onPressed: () async {
+                                  Navigator.pop(context);
+                                  final locationService = LocationService();
+                                  final success = await locationService.openNavigation(
+                                    merchant.latitude, merchant.longitude, merchant.name,
+                                  );
+                                  if (!success && mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Impossible de lancer la navigation externe.'), backgroundColor: Colors.red),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(Icons.navigation_outlined, size: 18),
+                                label: const Text('Naviguer', style: TextStyle(fontSize: 13)),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          // Original Row layout for wider screens
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => _callMerchantPhoneNumber(merchant.phone),
+                                  icon: const Icon(Icons.phone, size: 18),
+                                  label: const Text('Appeler', style: TextStyle(fontSize: 13)),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+                                    if (locationProvider.currentPosition != null) {
+                                      final LatLng destination = LatLng(merchant.latitude, merchant.longitude);
+                                      await locationProvider.fetchAndSetRoute(destination);
+                                      if (locationProvider.routeBounds != null && _mapController != null) {
+                                        _mapController!.animateCamera(
+                                          CameraUpdate.newLatLngBounds(locationProvider.routeBounds!, 50),
+                                        );
+                                      }
+                                      if (locationProvider.routeError != null && mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(locationProvider.routeError!), backgroundColor: Colors.red),
+                                        );
+                                      }
+                                    } else if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Localisation utilisateur inconnue.'), backgroundColor: Colors.orange),
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.map_outlined, size: 18),
+                                  label: const Text('Voir Carte', style: TextStyle(fontSize: 13)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary.withOpacity(0.8),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    final locationService = LocationService();
+                                    final success = await locationService.openNavigation(
+                                      merchant.latitude, merchant.longitude, merchant.name,
+                                    );
+                                    if (!success && mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Impossible de lancer la navigation externe.'), backgroundColor: Colors.red),
+                                      );
+                                    }
+                                  },
+                                  icon: const Icon(Icons.navigation_outlined, size: 18),
+                                  label: const Text('Naviguer', style: TextStyle(fontSize: 13)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -284,136 +364,211 @@ class _MapViewScreenState extends State<MapViewScreen> {
             '$label: ',
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
           ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          Flexible( // Allow the value text to wrap
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _callMerchant(String phone) async {
-    final success = await _locationService.makePhoneCall(phone);
-    if (!success) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible d\'effectuer l\'appel'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _navigateToMerchant(Merchant merchant) async {
-    final success = await _locationService.openNavigation(
-      merchant.latitude,
-      merchant.longitude,
-      merchant.name,
-    );
-
+  Future<void> _callMerchantPhoneNumber(String phone) async {
+    // S'assurer que LocationService est importé en haut du fichier
+    // import '../../../services/location_service.dart';
+    final locationService = LocationService();
+    final success = await locationService.makePhoneCall(phone);
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Impossible d\'ouvrir la navigation'),
+          content: Text('Impossible d\'effectuer l\'appel.'),
           backgroundColor: Colors.red,
         ),
       );
     }
   }
 
+  // _navigateToMerchant (ancienne version) est supprimée car la logique est gérée par LocationProvider.
+
   @override
   Widget build(BuildContext context) {
+    final locationProvider = Provider.of<LocationProvider>(context); // Écoute les changements
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Carte',
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            // Effacer l'itinéraire en quittant l'écran
+            Provider.of<LocationProvider>(context, listen: false).clearRoute();
+            Navigator.pop(context);
+          },
         ),
         actions: [
+          // Bouton pour effacer l'itinéraire affiché
+          if (locationProvider.polylineCoordinates.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.clear_all_rounded), // Ou une autre icône appropriée
+              tooltip: 'Effacer l\'itinéraire',
+              onPressed: () {
+                locationProvider.clearRoute();
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.list),
-            onPressed: () => Navigator.pushNamed(context, '/list'),
+            onPressed: () {
+               Provider.of<LocationProvider>(context, listen: false).clearRoute();
+               Navigator.pushNamed(context, '/list');
+            }
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const FilterBarWidget(),
-          Expanded(
-            child: Stack(
-              children: [
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : MapWidget(
-                        merchants: _merchants,
-                        onMerchantSelected: _onMerchantSelected,
-                        showUserLocation: true,
-                        initialZoom: 13.0,
+      body: Consumer<MerchantProvider>(
+        builder: (context, merchantProvider, child) {
+          return Column(
+            children: [
+              const FilterBarWidget(),
+              // Afficher les informations sur l'itinéraire si disponibles
+              if (locationProvider.polylineCoordinates.isNotEmpty && !locationProvider.isLoadingRoute)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  color: Colors.blue.withOpacity(0.1),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Route: ${locationProvider.routeDistance ?? ""} (${locationProvider.routeDuration ?? ""})',
+                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                       ),
-                // Panneau d'informations en bas
-                if (!_isLoading)
-                  Positioned(
-                    bottom: 16,
-                    left: 16,
-                    right: 16,
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                    ],
+                  ),
+                ),
+              Expanded(
+                child: Stack(
+                  children: [
+                    if (merchantProvider.isLoading && merchantProvider.merchants.isEmpty)
+                      const Center(child: CircularProgressIndicator())
+                    else if (merchantProvider.error != null)
+                      Center(child: Text("Erreur: ${merchantProvider.error}"))
+                    else if (merchantProvider.merchants.isEmpty && !merchantProvider.isLoading)
+                      const Center(child: Text("Aucun point de service trouvé."))
+                    else
+                      GoogleMap( // Remplacement de MapWidget par GoogleMap direct pour plus de contrôle
+                        initialCameraPosition: CameraPosition(
+                          target: LatLng(
+                            widget.targetMerchant?.latitude ?? locationProvider.effectiveLatitude,
+                            widget.targetMerchant?.longitude ?? locationProvider.effectiveLongitude,
                           ),
-                        ],
+                          zoom: widget.targetMerchant != null ? 15.0 : 13.0, // Zoom plus proche si marchand cible
+                        ),
+                        onMapCreated: (GoogleMapController controller) {
+                          _mapController = controller;
+                        },
+                        markers: merchantProvider.merchants.map((merchant) {
+                          return Marker(
+                            markerId: MarkerId(merchant.id),
+                            position: LatLng(merchant.latitude, merchant.longitude),
+                            infoWindow: InfoWindow(
+                              title: merchant.name,
+                              snippet: merchant.address,
+                              onTap: () => _onMerchantSelected(merchant),
+                            ),
+                            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure), // Personnaliser
+                          );
+                        }).toSet(),
+                        polylines: {
+                          if (locationProvider.polylineCoordinates.isNotEmpty)
+                            Polyline(
+                              polylineId: const PolylineId('route'),
+                              points: locationProvider.polylineCoordinates,
+                              color: Colors.blue,
+                              width: 5,
+                            ),
+                        },
+                        myLocationEnabled: locationProvider.hasPermission,
+                        myLocationButtonEnabled: true,
+                        zoomControlsEnabled: false, // Peut être réactivé si besoin
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '${_merchants.length} points de service trouvés',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                    if (locationProvider.isLoadingRoute)
+                      const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 8),
+                            Text("Calcul de l'itinéraire..."),
+                          ],
+                        ),
+                      ),
+                    if (!merchantProvider.isLoading && merchantProvider.error == null && !locationProvider.isLoadingRoute)
+                      Positioned(
+                        bottom: 16,
+                        left: 16,
+                        right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
                               ),
-                              if (_selectedMerchant != null)
-                                Text(
-                                  'Sélectionné: ${_selectedMerchant!.name}',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
                             ],
                           ),
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, '/list');
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.secondary,
-                              foregroundColor: const Color(0xFF92400E),
-                              minimumSize: const Size(80, 32),
-                            ),
-                            child: const Text('Vue Liste'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center, // Align items vertically
+                            children: [
+                              Flexible( // Allow column of text to take available space
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min, // Important for Flexible in Row
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${merchantProvider.merchants.length} points de service trouvés',
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                      overflow: TextOverflow.ellipsis, // Handle long text
+                                    ),
+                                    if (_selectedMerchant != null)
+                                      Text(
+                                        'Sélectionné: ${_selectedMerchant!.name}',
+                                        style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12,
+                                        ),
+                                        overflow: TextOverflow.ellipsis, // Handle long merchant name
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: AppDimensions.paddingS), // Add some spacing
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/list');
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.secondary,
+                                  foregroundColor: const Color(0xFF92400E),
+                                  minimumSize: const Size(80, 32),
+                                ),
+                                child: const Text('Vue Liste'),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ],
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

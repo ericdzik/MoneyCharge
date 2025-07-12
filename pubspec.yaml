@@ -17,16 +17,32 @@ dependencies:
   shared_preferences: ^2.2.2
   google_maps_flutter: ^2.5.0
   cupertino_icons: ^1.0.2
-  flutter_local_notifications: ^16.3.2
-  timezone: ^0.9.2
+  flutter_local_notifications: ^19.3.0 # Updated to latest stable version
+  timezone: ^0.10.0 # Updated to be compatible with flutter_local_notifications 19.3.0
+
+  # Firebase
+  firebase_core: ^2.27.0 # Veuillez vérifier la dernière version sur pub.dev
+  firebase_auth: ^4.17.8 # Veuillez vérifier la dernière version sur pub.dev
+  cloud_firestore: ^4.15.8 # Veuillez vérifier la dernière version sur pub.dev
+
+  # Pour décoder les polylignes de Google Directions API
+  flutter_polyline_points: ^2.0.0 # Vérifiez la dernière version sur pub.dev
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  mockito: ^5.4.4 # Vérifiez la dernière version sur pub.dev
+  build_runner: ^2.4.11 # Vérifiez la dernière version sur pub.dev
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/splash/mone.png
+    - assets/splash/32.png
   # fonts:
   # - family: Inter
   #   fonts:
@@ -37,3 +53,17 @@ flutter:
   #       weight: 600
   #     - asset: assets/fonts/Inter-Bold.ttf
   #       weight: 700
+  
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/iconn.png" 
+flutter_native_splash:
+  color: "#000000" # couleur de fond (sera masquée si image couvre tout)
+  image: assets/splash/mone.png
+  android: true
+  ios: true
+  android_gravity: center
+  fullscreen: true
+  ios_content_mode: scaleToFill

@@ -1,329 +1,151 @@
 import 'package:flutter/foundation.dart';
-import '../features/merchant/models/balance_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../features/merchant/models/balance_model.dart'; // Devrait maintenant être OK
+import '../models/transaction_model.dart'; // Notre modèle centralisé
+import './auth_provider.dart';
 
 class TransactionProvider with ChangeNotifier {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   BalanceModel? _balance;
-  List<TransactionModel> _transactions = [];
-  bool _isLoading = false;
-  String? _error;
+  List<TransactionModel> _merchantTransactions = [];
+  bool _isLoadingTransactions = false;
+  String? _transactionsError;
 
   // Getters
   BalanceModel? get balance => _balance;
-  List<TransactionModel> get transactions => _transactions;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
+  List<TransactionModel> get merchantTransactions => _merchantTransactions;
+  bool get isLoadingTransactions => _isLoadingTransactions;
+  String? get transactionsError => _transactionsError;
 
-  // Statistiques
-  double get totalRevenue => _transactions
-      .where((t) => t.isSuccessful && t.balanceType == BalanceType.credit)
+  double get totalRevenue => _merchantTransactions
+      .where((t) => t.status == TransactionStatus.completed && t.type == TransactionType.sale)
       .fold(0.0, (sum, t) => sum + t.netAmount);
 
-  double get totalExpenses => _transactions
-      .where((t) => t.isSuccessful && t.balanceType == BalanceType.debit)
+  double get totalExpenses => _merchantTransactions
+      .where((t) => t.status == TransactionStatus.completed && t.type == TransactionType.stockPurchase)
       .fold(0.0, (sum, t) => sum + t.amount);
 
-  double get totalProfit => totalRevenue - totalExpenses;
+  int get totalSalesTransactionsCount => _merchantTransactions
+      .where((t) => t.status == TransactionStatus.completed && t.type == TransactionType.sale)
+      .length;
 
-  // Statistiques par période
-  List<TransactionModel> getTransactionsForPeriod(
-    DateTime start,
-    DateTime end,
-  ) {
-    return _transactions
-        .where((t) => t.createdAt.isAfter(start) && t.createdAt.isBefore(end))
-        .toList();
+  List<TransactionModel> get recentTransactions {
+    return _merchantTransactions.take(5).toList();
   }
 
-  double getRevenueForPeriod(DateTime start, DateTime end) {
-    return getTransactionsForPeriod(start, end)
-        .where((t) => t.isSuccessful && t.balanceType == BalanceType.credit)
-        .fold(0.0, (sum, t) => sum + t.netAmount);
-  }
+  Future<void> fetchMerchantTransactions(AuthProvider authProvider) async {
+    if (authProvider.userType != UserType.merchant || authProvider.merchantProfile == null) {
+      _transactionsError = "Utilisateur non marchand ou profil marchand non chargé.";
+      _isLoadingTransactions = false;
+      notifyListeners();
+      return;
+    }
+    final String? merchantId = authProvider.merchantProfile!.id;
+    if (merchantId == null || merchantId.isEmpty) {
+      _transactionsError = "ID du marchand non disponible.";
+      _isLoadingTransactions = false;
+      notifyListeners();
+      return;
+    }
 
-  double getExpensesForPeriod(DateTime start, DateTime end) {
-    return getTransactionsForPeriod(start, end)
-        .where((t) => t.isSuccessful && t.balanceType == BalanceType.debit)
-        .fold(0.0, (sum, t) => sum + t.amount);
-  }
+    _isLoadingTransactions = true;
+    _transactionsError = null;
+    notifyListeners();
 
-  double getProfitForPeriod(DateTime start, DateTime end) {
-    return getRevenueForPeriod(start, end) - getExpensesForPeriod(start, end);
-  }
-
-  // Statistiques du jour
-  List<TransactionModel> get todayTransactions {
-    final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
-    return getTransactionsForPeriod(startOfDay, endOfDay);
-  }
-
-  double get todayRevenue => getRevenueForPeriod(
-    DateTime.now().subtract(const Duration(days: 1)),
-    DateTime.now(),
-  );
-
-  double get todayExpenses => getExpensesForPeriod(
-    DateTime.now().subtract(const Duration(days: 1)),
-    DateTime.now(),
-  );
-
-  double get todayProfit => todayRevenue - todayExpenses;
-
-  // Statistiques de la semaine
-  List<TransactionModel> get weekTransactions {
-    final now = DateTime.now();
-    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
-    final endOfWeek = startOfWeek.add(const Duration(days: 7));
-    return getTransactionsForPeriod(startOfWeek, endOfWeek);
-  }
-
-  double get weekRevenue => getRevenueForPeriod(
-    DateTime.now().subtract(const Duration(days: 7)),
-    DateTime.now(),
-  );
-
-  double get weekExpenses => getExpensesForPeriod(
-    DateTime.now().subtract(const Duration(days: 7)),
-    DateTime.now(),
-  );
-
-  double get weekProfit => weekRevenue - weekExpenses;
-
-  // Statistiques du mois
-  List<TransactionModel> get monthTransactions {
-    final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
-    final endOfMonth = DateTime(now.year, now.month + 1, 1);
-    return getTransactionsForPeriod(startOfMonth, endOfMonth);
-  }
-
-  double get monthRevenue => getRevenueForPeriod(
-    DateTime.now().subtract(const Duration(days: 30)),
-    DateTime.now(),
-  );
-
-  double get monthExpenses => getExpensesForPeriod(
-    DateTime.now().subtract(const Duration(days: 30)),
-    DateTime.now(),
-  );
-
-  double get monthProfit => monthRevenue - monthExpenses;
-
-  // Charger les données
-  Future<void> loadData() async {
-    _setLoading(true);
     try {
-      await Future.delayed(const Duration(seconds: 1)); // Simulation API
-      _loadDemoData();
-      _error = null;
+      final transactionsSnapshot = await _firestore
+          .collection('transactions')
+          .where('merchantId', isEqualTo: merchantId)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      _merchantTransactions = transactionsSnapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .toList();
+
     } catch (e) {
-      _error = e.toString();
+      print("Error in fetchMerchantTransactions: $e");
+      _transactionsError = "Erreur lors de la récupération des transactions: ${e.toString()}";
+      _merchantTransactions = [];
     } finally {
-      _setLoading(false);
+      _isLoadingTransactions = false;
+      notifyListeners();
     }
   }
 
-  // Ajouter une transaction
   Future<bool> addTransaction({
     required String customerPhone,
     required TransactionType type,
     required BalanceType balanceType,
     required double amount,
     required double commission,
-    required String description,
+    required String serviceName,
+    String? details,
     String? operator,
     String? reference,
+    required AuthProvider authProvider,
   }) async {
-    _setLoading(true);
+    _isLoadingTransactions = true;
+    _transactionsError = null;
+    notifyListeners();
+
+    String? currentMerchantId = authProvider.merchantProfile?.id;
+    String? currentUserId = authProvider.userId;
+
+    if (currentMerchantId == null || currentMerchantId.isEmpty) {
+       _transactionsError = "Impossible d'ajouter la transaction: ID du marchand non disponible.";
+      _isLoadingTransactions = false;
+      notifyListeners();
+      return false;
+    }
+
+    double netAmountValue = (balanceType == BalanceType.credit)
+        ? amount - commission
+        : amount;
+
     try {
-      final transaction = TransactionModel(
-        id: 'txn_${DateTime.now().millisecondsSinceEpoch}',
-        merchantId:
-            'merchant_1', // En production, récupérer depuis AuthProvider
-        customerPhone: customerPhone,
-        type: type,
-        balanceType: balanceType,
+      final newTransaction = TransactionModel(
+        id: '',
+        merchantId: currentMerchantId,
+        userId: currentUserId,
+        serviceName: serviceName,
         amount: amount,
         commission: commission,
-        netAmount: balanceType == BalanceType.credit
-            ? amount - commission
-            : amount + commission,
-        description: description,
+        netAmount: netAmountValue,
+        type: type,
+        status: TransactionStatus.completed,
+        balanceType: balanceType,
+        timestamp: Timestamp.now(),
+        details: details,
+        customerPhone: customerPhone,
         operator: operator,
         reference: reference,
-        isSuccessful: true, // En production, vérifier avec l'API
-        createdAt: DateTime.now(),
       );
 
-      _transactions.insert(0, transaction);
-      _updateBalance(transaction);
+      final DocumentReference newTransactionRef = await _firestore.collection('transactions').add(
+        newTransaction.toFirestoreMap()
+          ..['timestamp'] = FieldValue.serverTimestamp(),
+      );
 
+      final newDocSnapshot = await newTransactionRef.get();
+      _merchantTransactions.insert(0, TransactionModel.fromFirestore(newDocSnapshot as DocumentSnapshot<Map<String, dynamic>>));
+
+      _isLoadingTransactions = false;
       notifyListeners();
       return true;
+
     } catch (e) {
-      _error = e.toString();
+      print("Error in addTransaction: $e");
+      _transactionsError = "Erreur lors de l'ajout de la transaction: ${e.toString()}";
+      _isLoadingTransactions = false;
+      notifyListeners();
       return false;
-    } finally {
-      _setLoading(false);
     }
-  }
-
-  // Mettre à jour le solde
-  void _updateBalance(TransactionModel transaction) {
-    if (_balance == null) {
-      _balance = BalanceModel(
-        id: 'balance_1',
-        merchantId: 'merchant_1',
-        currentBalance: 0.0,
-        totalCredits: 0.0,
-        totalDebits: 0.0,
-        lastUpdated: DateTime.now(),
-      );
-    }
-
-    if (transaction.balanceType == BalanceType.credit) {
-      _balance = _balance!.copyWith(
-        currentBalance: _balance!.currentBalance + transaction.netAmount,
-        totalCredits: _balance!.totalCredits + transaction.netAmount,
-        lastUpdated: DateTime.now(),
-      );
-    } else {
-      _balance = _balance!.copyWith(
-        currentBalance: _balance!.currentBalance - transaction.amount,
-        totalDebits: _balance!.totalDebits + transaction.amount,
-        lastUpdated: DateTime.now(),
-      );
-    }
-  }
-
-  // Charger des données de démonstration
-  void _loadDemoData() {
-    // Solde initial
-    _balance = BalanceModel(
-      id: 'balance_1',
-      merchantId: 'merchant_1',
-      currentBalance: 125000.0,
-      totalCredits: 250000.0,
-      totalDebits: 125000.0,
-      lastUpdated: DateTime.now(),
-    );
-
-    // Transactions de démonstration
-    _transactions = [
-      // Transactions d'aujourd'hui
-      TransactionModel(
-        id: 'txn_1',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456789',
-        type: TransactionType.rechargeCredit,
-        balanceType: BalanceType.credit,
-        amount: 1000.0,
-        commission: 50.0,
-        netAmount: 950.0,
-        description: 'Recharge crédit MTN',
-        operator: 'MTN',
-        reference: 'REF001',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      ),
-      TransactionModel(
-        id: 'txn_2',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456790',
-        type: TransactionType.dataPackage,
-        balanceType: BalanceType.credit,
-        amount: 2000.0,
-        commission: 100.0,
-        netAmount: 1900.0,
-        description: 'Forfait data Orange 1GB',
-        operator: 'Orange',
-        reference: 'REF002',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(hours: 1)),
-      ),
-      TransactionModel(
-        id: 'txn_3',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456791',
-        type: TransactionType.moneyTransfer,
-        balanceType: BalanceType.credit,
-        amount: 5000.0,
-        commission: 250.0,
-        netAmount: 4750.0,
-        description: 'Transfert d\'argent',
-        operator: 'Moov Money',
-        reference: 'REF003',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 30)),
-      ),
-      // Transactions de la semaine
-      TransactionModel(
-        id: 'txn_4',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456792',
-        type: TransactionType.simCard,
-        balanceType: BalanceType.credit,
-        amount: 1500.0,
-        commission: 75.0,
-        netAmount: 1425.0,
-        description: 'Vente carte SIM MTN',
-        operator: 'MTN',
-        reference: 'REF004',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-      TransactionModel(
-        id: 'txn_5',
-        merchantId: 'merchant_1',
-        customerPhone: '+225 0123456793',
-        type: TransactionType.billPayment,
-        balanceType: BalanceType.credit,
-        amount: 3000.0,
-        commission: 150.0,
-        netAmount: 2850.0,
-        description: 'Paiement facture électricité',
-        operator: 'CIE',
-        reference: 'REF005',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
-      ),
-      // Dépenses
-      TransactionModel(
-        id: 'txn_6',
-        merchantId: 'merchant_1',
-        customerPhone: 'N/A',
-        type: TransactionType.other,
-        balanceType: BalanceType.debit,
-        amount: 50000.0,
-        commission: 0.0,
-        netAmount: 50000.0,
-        description: 'Achat de crédit MTN',
-        operator: 'MTN',
-        reference: 'REF006',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-      TransactionModel(
-        id: 'txn_7',
-        merchantId: 'merchant_1',
-        customerPhone: 'N/A',
-        type: TransactionType.other,
-        balanceType: BalanceType.debit,
-        amount: 30000.0,
-        commission: 0.0,
-        netAmount: 30000.0,
-        description: 'Achat de crédit Orange',
-        operator: 'Orange',
-        reference: 'REF007',
-        isSuccessful: true,
-        createdAt: DateTime.now().subtract(const Duration(days: 2)),
-      ),
-    ];
   }
 
   void _setLoading(bool loading) {
-    _isLoading = loading;
+    _isLoadingTransactions = loading;
     notifyListeners();
   }
 }

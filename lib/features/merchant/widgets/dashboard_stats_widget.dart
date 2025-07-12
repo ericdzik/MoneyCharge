@@ -18,47 +18,76 @@ class DashboardStatsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
-      childAspectRatio: 1.5,
-      children: [
-        _buildStatCard(
-          title: 'Services',
-          value: '$totalServices',
-          subtitle: '$activeServices actifs',
-          icon: Icons.inventory,
-          color: AppColors.primary,
-        ),
-        _buildStatCard(
-          title: 'Revenus',
-          value: '${totalRevenue.toStringAsFixed(0)} FCFA',
-          subtitle: 'Total',
-          icon: Icons.monetization_on,
-          color: Colors.green,
-        ),
-        _buildStatCard(
-          title: 'Transactions',
-          value: '$totalTransactions',
-          subtitle: 'Aujourd\'hui',
-          icon: Icons.receipt_long,
-          color: Colors.orange,
-        ),
-        _buildStatCard(
-          title: 'Performance',
-          value: '${_calculatePerformance()}%',
-          subtitle: 'Taux de satisfaction',
-          icon: Icons.trending_up,
-          color: Colors.blue,
-        ),
-      ],
-    );
-  }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenWidth = constraints.maxWidth;
+        int crossAxisCount;
+        double childAspectRatio;
+        bool isSmallScreen = false;
+
+        if (screenWidth < 360) {
+          crossAxisCount = 1;
+          childAspectRatio = 3.5;
+          isSmallScreen = true;
+        } else if (screenWidth < 600) {
+          crossAxisCount = 2;
+          childAspectRatio = 1.6;
+        } else if (screenWidth < 900) {
+          crossAxisCount = 2;
+          childAspectRatio = 1.8;
+        } else {
+          crossAxisCount = 4;
+          childAspectRatio = 1.5;
+        }
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: childAspectRatio,
+          children: [
+            _buildStatCard(
+              isSmallScreen: isSmallScreen,
+              title: 'Services',
+              value: '$totalServices', // Assuré d'être un argument nommé correct
+              subtitle: '$activeServices actifs',
+              icon: Icons.inventory,
+              color: AppColors.primary,
+            ),
+            _buildStatCard(
+              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
+              title: 'Revenus',
+              value: '${totalRevenue.toStringAsFixed(0)} FCFA',
+              subtitle: 'Total',
+              icon: Icons.monetization_on,
+              color: Colors.green,
+            ),
+            _buildStatCard(
+              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
+              title: 'Transactions',
+              value: '$totalTransactions',
+              subtitle: 'Aujourd\'hui',
+              icon: Icons.receipt_long,
+              color: Colors.orange,
+            ),
+            _buildStatCard(
+              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
+              title: 'Performance',
+              value: '${_calculatePerformance()}%',
+              subtitle: 'Taux de satisfaction',
+              icon: Icons.trending_up,
+              color: Colors.blue,
+            ),
+          ],
+        );
+      }, // FIN DE LA FONCTION builder
+    ); // FIN DU WIDGET LayoutBuilder
+  } // FIN DE LA METHODE build
 
   Widget _buildStatCard({
+    required bool isSmallScreen,
     required String title,
     required String value,
     required String subtitle,
@@ -66,53 +95,69 @@ class DashboardStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: EdgeInsets.all(isSmallScreen ? 5 : 7),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18),
               ),
-              const Spacer(),
-              Text(
-                title,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+              Flexible(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.right,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: isSmallScreen ? 9 : 11,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: isSmallScreen ? 14 : 18,
+                  fontWeight: FontWeight.bold,
+                ),
+                maxLines: 1,
+              ),
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: AppTextStyles.caption.copyWith(
-              color: AppColors.textSecondary,
+          Flexible(
+            child: Text(
+              subtitle,
+              style: AppTextStyles.caption.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: isSmallScreen ? 9 : 10,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: isSmallScreen ? 2 : 1,
             ),
           ),
         ],
@@ -121,7 +166,9 @@ class DashboardStatsWidget extends StatelessWidget {
   }
 
   int _calculatePerformance() {
-    if (totalTransactions == 0) return 0;
+    if (totalServices == 0) { // CORRIGÉ: Vérification pour éviter la division par zéro
+      return 0;
+    }
     return ((activeServices / totalServices) * 100).round();
   }
 }

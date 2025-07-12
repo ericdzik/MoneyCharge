@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Ajout de Provider
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_text_styles.dart';
 import 'status_badge.dart';
 import 'custom_button.dart';
 import '../../features/user/models/merchant_model.dart';
+import '../../providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
 
 class MerchantCard extends StatelessWidget {
   final Merchant merchant;
@@ -20,20 +22,27 @@ class MerchantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = _getMerchantStatusColor(merchant.status);
+    final statusType = _getMerchantStatusType(merchant.status);
+    final favoriteProvider = Provider.of<FavoriteMerchantProvider>(context);
+    final isFavorite = favoriteProvider.isFavorite(merchant.id);
+
     return Card(
+      // La couleur de la carte (AppColors.surface) est gérée par CardTheme
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingM,
         vertical: AppDimensions.paddingS,
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // Correspond au CardTheme
         child: Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
+            // Le borderRadius ici est pour la bordure, Card gère le clip du contenu
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             border: Border(
-              left: BorderSide(color: _getStatusColor(), width: 4),
+              left: BorderSide(color: statusColor, width: 4),
             ),
           ),
           child: Column(
@@ -41,9 +50,28 @@ class MerchantCard extends StatelessWidget {
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(child: Text(merchant.name, style: AppTextStyles.h3)),
-                  StatusBadge(status: _getStatusType()),
+                  Row( // Row pour StatusBadge et IconButton
+                    children: [
+                      StatusBadge(status: statusType), // Utilise les couleurs de AppColors via StatusBadge
+                      const SizedBox(width: AppDimensions.paddingXS), // Petit espace
+                      IconButton(
+                        icon: Icon(
+                          isFavorite ? Icons.favorite : Icons.favorite_border,
+                          color: isFavorite ? AppColors.error : AppColors.textSecondary, // Rouge si favori, gris sinon
+                        ),
+                        onPressed: () {
+                          if (isFavorite) {
+                            favoriteProvider.removeFavorite(merchant.id);
+                          } else {
+                            favoriteProvider.addFavorite(merchant.id);
+                          }
+                        },
+                      ),
+                    ],
+                  )
                 ],
               ),
               const SizedBox(height: AppDimensions.paddingS),
@@ -54,8 +82,11 @@ class MerchantCard extends StatelessWidget {
                 '${merchant.hours} • ${merchant.isOpen ? "Ouvert" : "Fermé"}',
               ),
               const SizedBox(height: AppDimensions.paddingM),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: AppDimensions.paddingM,
+                runSpacing: AppDimensions.paddingS,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -63,25 +94,25 @@ class MerchantCard extends StatelessWidget {
                       vertical: AppDimensions.paddingS,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusS,
-                      ),
+                      color: AppColors.primary.withOpacity(0.1), // Vert très clair
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusS),
                     ),
                     child: Text(
                       '🚶 ${merchant.walkingTime}',
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.primary, // Texte en vert primaire
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF1D4ED8),
                       ),
                     ),
                   ),
                   CustomButton(
                     text: 'Itinéraire',
-                    type: ButtonType.primary,
+                    type: ButtonType.primary, // Vert avec texte blanc
                     onPressed: onDirectionsPressed,
-                    icon: const Icon(Icons.directions, size: 16),
+                    // L'icône dans CustomButton prendra la couleur du texte du bouton si elle est null
+                    // ou on peut la spécifier explicitement ici si CustomButton ne le gère pas.
+                    // CustomButton a été mis à jour pour tenter de colorer l'icône.
+                    icon: const Icon(Icons.directions, size: 16 /*, color: AppColors.onPrimary */),
                   ),
                 ],
               ),
@@ -97,33 +128,35 @@ class MerchantCard extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppDimensions.paddingXS),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Icon(icon, size: 16, color: AppColors.textSecondary), // Gris pour l'icône
           const SizedBox(width: AppDimensions.paddingS),
-          Expanded(child: Text(text, style: AppTextStyles.body2)),
+          Expanded(child: Text(text, style: AppTextStyles.body2)), // Texte en gris (via AppTextStyles.body2)
         ],
       ),
     );
   }
+}
 
-  Color _getStatusColor() {
-    switch (merchant.status) {
-      case MerchantStatus.available:
-        return AppColors.available;
-      case MerchantStatus.lowStock:
-        return AppColors.lowStock;
-      case MerchantStatus.outOfStock:
-        return AppColors.outOfStock;
-    }
+// Fonctions helper pour mapper MerchantStatus à des couleurs/types pour ce widget.
+// Peuvent être statiques ou déplacées dans un fichier utilitaire si utilisées ailleurs.
+Color _getMerchantStatusColor(MerchantStatus status) {
+  switch (status) {
+    case MerchantStatus.available:
+      return AppColors.available; // Vert
+    case MerchantStatus.lowStock:
+      return AppColors.lowStock; // Orange/Jaune
+    case MerchantStatus.outOfStock:
+      return AppColors.outOfStock; // Rouge
   }
+}
 
-  StatusType _getStatusType() {
-    switch (merchant.status) {
-      case MerchantStatus.available:
-        return StatusType.available;
-      case MerchantStatus.lowStock:
-        return StatusType.lowStock;
-      case MerchantStatus.outOfStock:
-        return StatusType.outOfStock;
-    }
+StatusType _getMerchantStatusType(MerchantStatus status) {
+  switch (status) {
+    case MerchantStatus.available:
+      return StatusType.available;
+    case MerchantStatus.lowStock:
+      return StatusType.lowStock;
+    case MerchantStatus.outOfStock:
+      return StatusType.outOfStock;
   }
 }

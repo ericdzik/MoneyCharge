@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/features/user/screens/favorites_screen.dart';
+import 'package:provider/provider.dart';
+import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/constants/app_colors.dart';
-import '../../../core/utils/color_utils.dart';
+import '../../../core/constants/app_routes.dart';
+import '../../../core/constants/app_text_styles.dart';
+// import '../../../core/utils/color_utils.dart'; // Retiré car non utilisé après suppression de blackWithAlpha
 import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
 import '../models/merchant_model.dart';
 import 'list_view_screen.dart';
+import 'user_profile_screen.dart';
+import '../../../providers/merchant_provider.dart';
+import '../../../providers/location_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,28 +27,31 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<Widget> _screens = [
     const MapViewContent(),
     const ListViewScreen(),
-    const Center(child: Text('Favoris')),
-    const Center(child: Text('Profil')),
+    const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
+    const UserProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'LocaCharge',
+      appBar: CustomAppBar( // Peut être const si les actions sont const
+        title: 'Geo Money&Charge',
         actions: [
-          CircleAvatar(
-            backgroundColor: Colors.white24,
-            child: Icon(Icons.person, color: Colors.white),
+          Padding( // Ajout d'un Padding pour l'action de l'AppBar
+            padding: const EdgeInsets.only(right: AppDimensions.paddingS), // Un peu d'espace à droite
+            child: CircleAvatar(
+              backgroundColor: AppColors.onPrimary, // Fond blanc (sur AppBar verte)
+              child: Icon(Icons.person, color: AppColors.primary), // Icône verte
+            ),
           ),
-          SizedBox(width: 16),
         ],
       ),
       body: _screens[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
-        type: BottomNavigationBarType.fixed,
+        // type, selectedItemColor, unselectedItemColor, selectedLabelStyle, unselectedLabelStyle
+        // sont pris du BottomNavigationBarThemeData dans AppTheme.
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Carte'),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Liste'),
@@ -60,123 +71,107 @@ class MapViewContent extends StatefulWidget {
 }
 
 class _MapViewContentState extends State<MapViewContent> {
-  List<Merchant> _merchants = [];
-
   @override
   void initState() {
     super.initState();
-    _loadMerchants();
-  }
-
-  Future<void> _loadMerchants() async {
-    // Données de test pour l'écran d'accueil
-    final merchants = [
-      Merchant(
-        id: '1',
-        name: 'Station Total Lomé',
-        address: 'Avenue de la Paix, Lomé',
-        phone: '+228 22 21 21 21',
-        hours: '24h/24',
-        isOpen: true,
-        status: MerchantStatus.available,
-        latitude: 6.1319,
-        longitude: 1.2228,
-        distance: 0.5,
-        walkingTime: '6 min',
-        drivingTime: '2 min',
-        services: ['Recharge', 'Paiement', 'Transfert'],
-      ),
-      Merchant(
-        id: '2',
-        name: 'Boutique Mobile Money',
-        address: 'Rue du Commerce, Lomé',
-        phone: '+228 22 22 22 22',
-        hours: '7h-22h',
-        isOpen: true,
-        status: MerchantStatus.lowStock,
-        latitude: 6.1350,
-        longitude: 1.2250,
-        distance: 1.2,
-        walkingTime: '15 min',
-        drivingTime: '4 min',
-        services: ['Recharge', 'Paiement'],
-      ),
-    ];
-
-    setState(() {
-      _merchants = merchants;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
+        Provider.of<LocationProvider>(context, listen: false).initialize();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const FilterBarWidget(),
-        Expanded(
-          child: Stack(
-            children: [
-              MapWidget(
-                merchants: _merchants,
-                onMerchantSelected: (merchant) {
-                  // Navigation vers les détails du marchand
-                  Navigator.pushNamed(
-                    context,
-                    '/merchant-details',
-                    arguments: merchant,
-                  );
-                },
-                showUserLocation: true,
-                initialZoom: 13.0,
-              ),
-              Positioned(
-                bottom: 16,
-                left: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ColorUtils.blackWithAlpha(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${_merchants.length} points de service trouvés',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ListViewScreen(),
+    return Consumer<MerchantProvider>(
+      builder: (context, merchantProvider, child) {
+        // final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+        // List<Merchant> processedMerchants = merchantProvider.merchants.map((m) {
+        //   return m;
+        // }).toList();
+        // Pour l'instant, on passe directement merchantProvider.merchants
+
+        return Column(
+          children: [
+            const FilterBarWidget(),
+            Expanded(
+              child: Stack(
+                children: [
+                  if (merchantProvider.isLoading && merchantProvider.merchants.isEmpty)
+                    const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  else if (merchantProvider.error != null)
+                    Center(child: Text("Erreur: ${merchantProvider.error}", style: AppTextStyles.body1.copyWith(color: AppColors.error)))
+                  else if (merchantProvider.merchants.isEmpty)
+                    Center(child: Text("Aucun point de service trouvé.", style: AppTextStyles.body1))
+                  else
+                    MapWidget(
+                      merchants: merchantProvider.merchants, // Utiliser directement la liste du provider
+                      onMerchantSelected: (merchant) {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.merchantDetail,
+                          arguments: {'merchant': merchant},
+                        );
+                      },
+                      showUserLocation: true,
+                      initialZoom: 13.0,
+                    ),
+                  if (!merchantProvider.isLoading && merchantProvider.error == null && merchantProvider.merchants.isNotEmpty)
+                    Positioned(
+                      bottom: AppDimensions.paddingL,
+                      left: AppDimensions.paddingM,
+                      right: AppDimensions.paddingM,
+                      child: Container(
+                        padding: const EdgeInsets.all(AppDimensions.paddingM),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface, // Beige clair
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
                             ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.secondary,
-                          foregroundColor: const Color(0xFF92400E),
-                          minimumSize: const Size(80, 32),
+                          ],
                         ),
-                        child: const Text('Vue Liste'),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '${merchantProvider.merchants.length} points de service trouvés',
+                                style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.paddingM),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const ListViewScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.secondary, // Orange
+                                foregroundColor: AppColors.onSecondary, // Noir
+                                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS),
+                                textStyle: AppTextStyles.button.copyWith(fontSize: 12, color: AppColors.onSecondary), // Assurer la couleur du texte
+                              ),
+                              child: const Text('Vue Liste'),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ],
+            ),
+          ],
+        );
+      },
     );
   }
 }

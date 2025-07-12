@@ -1,0 +1,357 @@
+import 'package:flutter/material.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/core/widgets/custom_button.dart';
+import 'package:locacharge/core/widgets/custom_text_field.dart';
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/providers/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+
+class EditMerchantProfileScreen extends StatefulWidget {
+  final MerchantAuthModel merchant;
+
+  const EditMerchantProfileScreen({Key? key, required this.merchant}) : super(key: key);
+
+  @override
+  State<EditMerchantProfileScreen> createState() => _EditMerchantProfileScreenState();
+}
+
+class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
+  final _formKey = GlobalKey<FormState>();
+
+  late TextEditingController _businessNameController;
+  late TextEditingController _phoneController;
+  late TextEditingController _addressController;
+  late TextEditingController _openingHoursController;
+  late TextEditingController _otherServiceController;
+
+  // Gestion des services
+  final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d\'argent', 'Carte SIM'];
+  Map<String, bool> _selectedServices = {};
+  // String _customService = ''; // Retiré, _otherServiceController.text est la source de vérité
+
+  // Gestion du stock des services
+  final List<String> _stockStatusOptions = ['Disponible', 'Faible', 'Épuisé'];
+  Map<String, String> _serviceStockStatus = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _businessNameController = TextEditingController(text: widget.merchant.businessName);
+    _phoneController = TextEditingController(text: widget.merchant.phone);
+    _addressController = TextEditingController(text: widget.merchant.address);
+    _openingHoursController = TextEditingController(text: widget.merchant.openingHours ?? '');
+    _otherServiceController = TextEditingController();
+
+    // Initialiser _selectedServices et _customService
+    for (var service in _predefinedServices) {
+      _selectedServices[service] = widget.merchant.services?.contains(service) ?? false;
+    }
+    // Vérifier si un service personnalisé existe
+    widget.merchant.services?.forEach((service) {
+      if (!_predefinedServices.contains(service)) {
+        _selectedServices['Autre'] = true; // Cocher "Autre"
+        _otherServiceController.text = service; // Remplir le champ "Autre"
+        // _customService = service; // Retiré
+      }
+    });
+    if (_selectedServices['Autre'] == null) { // S'assurer que "Autre" a une entrée
+        _selectedServices['Autre'] = false;
+    }
+
+
+    // Initialiser _serviceStockStatus avec validation et normalisation de la casse améliorée
+    final initialStockStatus = widget.merchant.serviceStockStatus ?? {};
+    initialStockStatus.forEach((service, statusFromFirestore) {
+      final String statusTrimmedLower = statusFromFirestore.trim().toLowerCase();
+      print("[EditProfile] DEBUG - Service: '$service', Status Firestore brut: '$statusFromFirestore', TrimmedLower: '$statusTrimmedLower'");
+
+      String? foundOption;
+      for (var option in _stockStatusOptions) {
+        if (option.toLowerCase() == statusTrimmedLower) {
+          foundOption = option;
+          break;
+        }
+      }
+
+      if (foundOption != null) {
+        _serviceStockStatus[service] = foundOption;
+        if (foundOption != statusFromFirestore) { // Log si une normalisation (casse ou trim) a eu lieu
+           print("[EditProfile] INFO - Service: '$service', Statut Firestore: '$statusFromFirestore' -> Normalisé en: '$foundOption'.");
+        }
+      } else {
+        _serviceStockStatus[service] = _stockStatusOptions.first; // Valeur par défaut
+        if (statusFromFirestore.isNotEmpty) { // Ne pas logger pour les chaînes vides initiales
+            print("[EditProfile] ALERTE - Service: '$service', Statut Firestore INCONNU: '$statusFromFirestore'. Remplacé par défaut: '${_stockStatusOptions.first}'.");
+        }
+      }
+    });
+    // S'assurer que tous les services sélectionnés ont une entrée de stock
+    _updateStockStatusMapWithSelectedServices();
+  }
+
+  void _updateStockStatusMapWithSelectedServices() {
+    List<String> currentSelectedServices = [];
+    _selectedServices.forEach((serviceName, isSelected) {
+      if (isSelected) {
+        if (serviceName == 'Autre' && _otherServiceController.text.isNotEmpty) {
+          currentSelectedServices.add(_otherServiceController.text);
+        } else if (serviceName != 'Autre') {
+          currentSelectedServices.add(serviceName);
+        }
+      }
+    });
+
+    // Conserver les statuts existants, ajouter les nouveaux services avec un statut par défaut
+    Map<String, String> newStockStatus = {};
+    for (var service in currentSelectedServices) {
+      newStockStatus[service] = _serviceStockStatus[service] ?? _stockStatusOptions.first; // 'Disponible' par défaut
+    }
+    // Retirer les services qui ne sont plus sélectionnés, sauf s'ils avaient un statut défini (facultatif, mais plus propre)
+    // _serviceStockStatus.removeWhere((key, value) => !currentSelectedServices.contains(key));
+    // Pour cette version, on fusionne simplement :
+    _serviceStockStatus = newStockStatus;
+
+  }
+
+  List<String> _getSelectedServiceNamesForStock() {
+    List<String> names = [];
+    _selectedServices.forEach((serviceName, isSelected) {
+      if (isSelected) {
+        if (serviceName == 'Autre') {
+          if (_otherServiceController.text.trim().isNotEmpty) {
+            names.add(_otherServiceController.text.trim());
+          }
+        } else {
+          names.add(serviceName);
+        }
+      }
+    });
+    return names;
+  }
+
+
+  @override
+  void dispose() {
+    _businessNameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _openingHoursController.dispose();
+    _otherServiceController.dispose();
+    super.dispose();
+  }
+
+  void _saveProfile() async { // Rendre async
+    if (_formKey.currentState!.validate()) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // Construire la liste finale des services
+      List<String> finalServices = [];
+      _selectedServices.forEach((serviceName, isSelected) {
+        if (isSelected) {
+          if (serviceName == 'Autre') {
+            if (_otherServiceController.text.trim().isNotEmpty) {
+              finalServices.add(_otherServiceController.text.trim());
+            }
+          } else {
+            finalServices.add(serviceName);
+          }
+        }
+      });
+
+      // S'assurer que la map de stock est à jour avec les services finaux
+      // (ceci est déjà fait par _updateStockStatusMapWithSelectedServices lors des changements,
+      // mais une dernière vérification/nettoyage peut être utile ici si la logique est complexe)
+      // Pour l'instant, on suppose que _serviceStockStatus est déjà correct.
+      // Il faut s'assurer que _serviceStockStatus ne contient que les services actuellement dans finalServices.
+      Map<String, String> finalServiceStockStatus = {};
+      for (var service in finalServices) {
+        finalServiceStockStatus[service] = _serviceStockStatus[service] ?? _stockStatusOptions.first;
+      }
+
+
+      bool success = await authProvider.updateMerchantProfile(
+        businessName: _businessNameController.text,
+        phone: _phoneController.text,
+        address: _addressController.text,
+        openingHours: _openingHoursController.text,
+        services: finalServices,
+        serviceStockStatus: finalServiceStockStatus,
+      );
+
+      if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profil mis à jour avec succès !'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(authProvider.error ?? 'Erreur lors de la mise à jour du profil.'),
+              backgroundColor: Colors.red, // Utilisation de Colors.red directement
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: CustomAppBar(
+        title: 'Modifier le Profil',
+        showLogo: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Text(
+                'Informations du Commerce',
+                style: AppTextStyles.h2.copyWith(fontSize: 20),
+              ),
+              const SizedBox(height: AppDimensions.paddingM),
+
+              // Email (non modifiable)
+              Text('Email: ${widget.merchant.email}', style: AppTextStyles.body1),
+              const SizedBox(height: AppDimensions.paddingL),
+
+              CustomTextField(
+                controller: _businessNameController,
+                labelText: 'Nom du commerce',
+                validator: (value) => value == null || value.isEmpty ? 'Champ requis' : null,
+              ),
+              const SizedBox(height: AppDimensions.paddingM),
+
+              CustomTextField(
+                controller: _phoneController,
+                labelText: 'Téléphone',
+                keyboardType: TextInputType.phone,
+                validator: (value) => value == null || value.isEmpty ? 'Champ requis' : null,
+              ),
+              const SizedBox(height: AppDimensions.paddingM),
+
+              CustomTextField(
+                controller: _addressController,
+                labelText: 'Adresse',
+                maxLines: 2,
+                validator: (value) => value == null || value.isEmpty ? 'Champ requis' : null,
+              ),
+              const SizedBox(height: AppDimensions.paddingM),
+
+              CustomTextField(
+                controller: _openingHoursController,
+                labelText: 'Horaires d\'ouverture',
+                hintText: 'Ex: 08:00-18:00, Lun-Ven',
+                validator: (value) => value == null || value.isEmpty ? 'Champ requis' : null,
+              ),
+              const SizedBox(height: AppDimensions.paddingXL),
+
+              // Section Services
+              Text('Services Proposés', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+              const SizedBox(height: AppDimensions.paddingS),
+              ..._predefinedServices.map((service) {
+                return CheckboxListTile(
+                  title: Text(service),
+                  value: _selectedServices[service],
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _selectedServices[service] = value ?? false;
+                      _updateStockStatusMapWithSelectedServices(); // Mettre à jour la map de stock
+                    });
+                  },
+                  activeColor: AppColors.primary,
+                );
+              }).toList(),
+              CheckboxListTile(
+                title: const Text('Autre'),
+                value: _selectedServices['Autre'],
+                onChanged: (bool? value) {
+                  setState(() {
+                    _selectedServices['Autre'] = value ?? false;
+                    if (!(_selectedServices['Autre']!)) { // Si "Autre" est décoché, effacer le texte
+                        _otherServiceController.clear();
+                        // _customService = ''; // Retiré
+                    }
+                    _updateStockStatusMapWithSelectedServices();
+                  });
+                },
+                activeColor: AppColors.primary,
+              ),
+              if (_selectedServices['Autre'] == true)
+                Padding(
+                  padding: const EdgeInsets.only(left: AppDimensions.paddingL, right: AppDimensions.paddingM, bottom: AppDimensions.paddingM),
+                  child: CustomTextField(
+                    controller: _otherServiceController,
+                    labelText: 'Précisez le service "Autre"',
+                    hintText: 'Ex: Réparation téléphone',
+                    // onChanged n'est pas supporté par CustomTextField, la valeur sera lue depuis le controller
+                    // La mise à jour de _customService se fera via le controller avant la sauvegarde si nécessaire
+                    // ou lors du changement de la checkbox "Autre"
+                  ),
+                ),
+              const SizedBox(height: AppDimensions.paddingL),
+
+              // Section Stock des Services
+              if (_selectedServices.containsValue(true)) // Afficher seulement si au moins un service est sélectionné
+                Text('Statut du Stock des Services', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+              const SizedBox(height: AppDimensions.paddingS),
+              ..._getSelectedServiceNamesForStock().map((serviceName) {
+                 if (serviceName.isEmpty) return const SizedBox.shrink(); // Ne pas afficher si le nom du service est vide (cas de "Autre" non rempli)
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+                  child: DropdownButtonFormField<String>(
+                    decoration: InputDecoration(
+                      labelText: 'Stock pour "$serviceName"',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusM)),
+                      filled: true,
+                      fillColor: AppColors.surface,
+                    ),
+                    value: _serviceStockStatus[serviceName] ?? _stockStatusOptions.first,
+                    items: _stockStatusOptions.map((String status) {
+                      return DropdownMenuItem<String>(
+                        value: status,
+                        child: Text(status),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      if (newValue != null) {
+                        setState(() {
+                          _serviceStockStatus[serviceName] = newValue;
+                        });
+                      }
+                    },
+                  ),
+                );
+              }).toList(),
+              const SizedBox(height: AppDimensions.paddingXL),
+
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  return CustomButton(
+                    text: authProvider.isLoading ? 'Sauvegarde...' : 'Sauvegarder les modifications',
+                    onPressed: authProvider.isLoading ? null : _saveProfile,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

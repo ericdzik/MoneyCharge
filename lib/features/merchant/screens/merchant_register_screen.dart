@@ -7,6 +7,10 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../providers/auth_provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; // Import pour kIsWeb
 
 class MerchantRegisterScreen extends StatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -24,12 +28,137 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _openingHoursController = TextEditingController();
-  final _servicesController = TextEditingController();
+  // final _servicesController = TextEditingController(); // Ancien champ texte pour les services, sera remplacé
+  late TextEditingController _otherServiceController; // Pour le service "Autre"
+
+  final List<String> _predefinedServices = ['Recharge de crédit', 'Transfert d\'argent', 'Achat de crédit'];
+  Map<String, bool> _selectedServices = {};
+
+  String? _selectedMerchantType;
+  final List<String> _merchantTypes = [
+    'Électronique',
+    'Alimentation',
+    'Services Généraux',
+    'Point de Recharge',
+    'Autre'
+  ];
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = false;
   bool _isBusinessOwner = false;
+
+  // Map related state variables
+  GoogleMapController? _mapController;
+  LatLng? _selectedLocation;
+  final Set<Marker> _markers = {};
+  // Default initial position, will be updated if location is fetched.
+  CameraPosition _cameraPosition = const CameraPosition(
+    target: LatLng(5.359952, -4.008256), // Abidjan, Côte d'Ivoire
+    zoom: 12,
+  );
+  bool _isLocationPermissionGranted = false;
+  bool _isFetchingInitialLocation = true; // To show loading indicator for map
+
+  @override
+  void initState() {
+    super.initState();
+    _requestLocationPermissionAndFetch();
+    _otherServiceController = TextEditingController();
+    // Initialiser _selectedServices avec tous les services prédéfinis à false
+    for (var service in _predefinedServices) {
+      _selectedServices[service] = false;
+    }
+    _selectedServices['Autre'] = false; // Ajouter l'option "Autre"
+  }
+
+  Future<void> _requestLocationPermissionAndFetch() async {
+    print("[MerchantRegisterScreen] Attempting to fetch initial location...");
+    setState(() {
+      _isFetchingInitialLocation = true;
+    });
+
+    if (kIsWeb) {
+      print("[MerchantRegisterScreen] Web platform detected. Skipping permission_handler. Geolocator will use browser API.");
+      // Pour le web, Geolocator.getCurrentPosition() déclenchera la demande de permission du navigateur.
+      // On peut supposer que la permission est accordée si getCurrentPosition réussit.
+      // Ou on peut vérifier le statut après, mais c'est moins direct qu'avec permission_handler sur mobile.
+      // Pour simplifier, on va tenter de récupérer la position et mettre _isLocationPermissionGranted à true si ça marche.
+      try {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+          timeLimit: const Duration(seconds: 20),
+        ).timeout(const Duration(seconds: 25));
+
+        print("[MerchantRegisterScreen] Web - Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}");
+        if (mounted) {
+          _isLocationPermissionGranted = true; // Supposer true si la position est obtenue
+          setState(() {
+            _cameraPosition = CameraPosition(
+              target: LatLng(position.latitude, position.longitude),
+              zoom: 15,
+            );
+          });
+        }
+      } catch (e) {
+        print("[MerchantRegisterScreen] Web - Error fetching position or permission denied by browser: $e");
+        _isLocationPermissionGranted = false; // Laisser à false en cas d'erreur/refus
+        // La carte utilisera la position par défaut
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isFetchingInitialLocation = false;
+          });
+        }
+      }
+    } else {
+      // Logique existante pour mobile (Android/iOS)
+      try {
+        print("[MerchantRegisterScreen] Mobile - Requesting location permission...");
+        PermissionStatus status = await Permission.locationWhenInUse.request();
+        print("[MerchantRegisterScreen] Mobile - Permission status: $status");
+
+        if (status.isGranted) {
+          _isLocationPermissionGranted = true;
+          print("[MerchantRegisterScreen] Mobile - Location permission granted. Fetching current position...");
+          try {
+            Position position = await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+              timeLimit: const Duration(seconds: 15),
+            ).timeout(const Duration(seconds: 20));
+
+            print("[MerchantRegisterScreen] Mobile - Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}");
+            if (mounted) {
+              setState(() {
+                _cameraPosition = CameraPosition(
+                  target: LatLng(position.latitude, position.longitude),
+                  zoom: 15,
+                );
+              });
+            }
+          } catch (e) {
+            print("[MerchantRegisterScreen] Mobile - Error fetching position: $e");
+          }
+        } else {
+          _isLocationPermissionGranted = false;
+          print("[MerchantRegisterScreen] Mobile - Location permission denied or restricted.");
+          if (mounted && (status.isPermanentlyDenied || status.isRestricted)) {
+            print("[MerchantRegisterScreen] Mobile - Consider guiding user to app settings for location permission.");
+          }
+        }
+      } catch (e) {
+        print("[MerchantRegisterScreen] Mobile - General error in _requestLocationPermissionAndFetch: $e");
+        _isLocationPermissionGranted = false;
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isFetchingInitialLocation = false;
+          });
+        }
+      }
+    }
+     print("[MerchantRegisterScreen] Finished _requestLocationPermissionAndFetch. _isFetchingInitialLocation: $_isFetchingInitialLocation, _isLocationPermissionGranted: $_isLocationPermissionGranted");
+  }
 
   @override
   void dispose() {
@@ -40,63 +169,98 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _openingHoursController.dispose();
-    _servicesController.dispose();
+    // _servicesController.dispose(); // Ancien contrôleur
+    _otherServiceController.dispose(); // Nouveau contrôleur pour "Autre"
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inscription Marchand'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+  void _onMapTapped(LatLng location) {
+    setState(() {
+      _selectedLocation = location;
+      _markers.clear();
+      _markers.add(
+        Marker(
+          markerId: const MarkerId('selectedLocation'),
+          position: location,
+          infoWindow: InfoWindow(
+            title: 'Emplacement sélectionné',
+            snippet:
+                'Lat: ${location.latitude.toStringAsFixed(4)}, Lng: ${location.longitude.toStringAsFixed(4)}',
+          ),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         ),
+      );
+    });
+  }
+
+  @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    extendBodyBehindAppBar: true, // Pour que l'image passe derrière l'appBar
+    appBar: AppBar(
+      title: const Text('Inscription Marchand'),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Logo et titre
-                Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
+    ),
+    body: Stack(
+      children: [
+        // 🔴 Image de fond
+        Positioned.fill(
+          child: Image.asset(
+            'assets/splash/32.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        // 🔵 Contenu principal
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo et titre
+                  Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.store,
+                          color: AppColors.onPrimary,
+                          size: 40,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.store,
-                        color: AppColors.onPrimary,
-                        size: 40,
+                      const SizedBox(height: 24),
+                      Text(
+                        'Devenez Partenaire',
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 28,
+                          color: Colors.white, // Changer couleur pour visibilité
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Devenez Partenaire',
-                      style: AppTextStyles.h1.copyWith(fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Rejoignez notre réseau de points de service',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Rejoignez notre réseau de points de service',
+                        style: AppTextStyles.body2.copyWith(
+                          color: Colors.white70, // texte secondaire en blanc pâle
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                    ],
+                  ),
+            const SizedBox(height: 32),
 
                 // Informations du business
                 Text(
@@ -163,7 +327,97 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 24),
+
+                // Map Section
+                Text(
+                  'Localisation sur la carte',
+                  style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppDimensions.paddingS),
+                Container(
+                  height: 250,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    child: _isFetchingInitialLocation
+                        ? const Center(
+                            child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: AppDimensions.paddingS),
+                              Text('Chargement de la carte...'),
+                            ],
+                          ))
+                        : GoogleMap(
+                            initialCameraPosition: _cameraPosition,
+                            onMapCreated: (GoogleMapController controller) {
+                              _mapController = controller;
+                              // Animate camera to the fetched position if it changed from default
+                              if (_cameraPosition.target != const LatLng(5.359952, -4.008256)) {
+                                controller.animateCamera(CameraUpdate.newCameraPosition(_cameraPosition));
+                              }
+                            },
+                            onTap: _onMapTapped,
+                            markers: _markers,
+                            myLocationButtonEnabled: true,
+                            myLocationEnabled: _isLocationPermissionGranted, // Enable blue dot if permission granted
+                            zoomControlsEnabled: true,
+                          ),
+                  ),
+                ),
+                if (!_isLocationPermissionGranted && !_isFetchingInitialLocation)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.paddingS),
+                    child: Text(
+                      'Permission de localisation refusée. La carte est centrée sur une position par défaut.',
+                      style: AppTextStyles.caption.copyWith(color: AppColors.outOfStock),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                if (_selectedLocation != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppDimensions.paddingS),
+                    child: Text(
+                      'Lieu sélectionné: Lat: ${_selectedLocation!.latitude.toStringAsFixed(4)}, Lng: ${_selectedLocation!.longitude.toStringAsFixed(4)}',
+                      style: AppTextStyles.caption.copyWith(color: AppColors.success),
+                    ),
+                  ),
+                const SizedBox(height: AppDimensions.paddingL),
+                // End of Map Section
+
+                // Merchant Type Dropdown
+                DropdownButtonFormField<String>(
+                  value: _selectedMerchantType,
+                  decoration: InputDecoration(
+                    labelText: 'Type de commerce',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.surface,
+                  ),
+                  hint: const Text('Sélectionnez un type'),
+                  items: _merchantTypes.map((String type) {
+                    return DropdownMenuItem<String>(
+                      value: type,
+                      child: Text(type),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedMerchantType = newValue;
+                    });
+                  },
+                  validator: (value) =>
+                      value == null ? 'Veuillez sélectionner un type de commerce' : null,
+                ),
                 const SizedBox(height: 16),
+                // End of Merchant Type Dropdown
 
                 CustomTextField(
                   controller: _openingHoursController,
@@ -178,18 +432,55 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                CustomTextField(
-                  controller: _servicesController,
-                  labelText: 'Services proposés',
-                  hintText: 'Ex: Recharge crédit, Cartes SIM, Forfaits data',
-                  maxLines: 2,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez décrire vos services';
-                    }
-                    return null;
-                  },
+                // Section Services Proposés
+                Text(
+                  'Services Proposés',
+                  style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
                 ),
+                const SizedBox(height: AppDimensions.paddingS),
+                ..._predefinedServices.map((service) {
+                  return CheckboxListTile(
+                    title: Text(service),
+                    value: _selectedServices[service],
+                    onChanged: (bool? value) {
+                      setState(() {
+                        _selectedServices[service] = value ?? false;
+                      });
+                    },
+                    activeColor: AppColors.primary,
+                    controlAffinity: ListTileControlAffinity.leading,
+                  );
+                }).toList(),
+                CheckboxListTile(
+                  title: const Text('Autre'),
+                  value: _selectedServices['Autre'],
+                  onChanged: (bool? value) {
+                    setState(() {
+                      _selectedServices['Autre'] = value ?? false;
+                      if (!(_selectedServices['Autre']!)) {
+                        _otherServiceController.clear();
+                      }
+                    });
+                  },
+                  activeColor: AppColors.primary,
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
+                if (_selectedServices['Autre'] == true)
+                  Padding(
+                    padding: const EdgeInsets.only(left: AppDimensions.paddingXL, right: AppDimensions.paddingM, bottom: AppDimensions.paddingM),
+                    child: CustomTextField(
+                      controller: _otherServiceController,
+                      labelText: 'Précisez le service "Autre"',
+                      hintText: 'Ex: Réparation téléphone',
+                      validator: (value) {
+                        if (_selectedServices['Autre'] == true && (value == null || value.isEmpty)) {
+                          return 'Veuillez préciser le service "Autre"';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                // Fin Section Services Proposés
                 const SizedBox(height: 24),
 
                 // Informations de connexion
@@ -423,6 +714,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
             ),
           ),
         ),
+        )
+      ]
       ),
     );
   }
@@ -490,31 +783,87 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    // Créer un profil marchand avec les informations complètes
-    final success = await authProvider.registerMerchant(
-      businessName: _businessNameController.text,
-      email: _emailController.text,
-      phone: _phoneController.text,
-      address: _addressController.text,
-      openingHours: _openingHoursController.text,
-      services: _servicesController.text,
-      password: _passwordController.text,
-    );
-
-    if (success && mounted) {
+    if (_selectedLocation == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text(
-            'Demande d\'inscription envoyée ! Vous recevrez un email de confirmation.',
-          ),
-          backgroundColor: AppColors.success,
+          content: Text('Veuillez sélectionner un emplacement sur la carte.'),
+          backgroundColor: Colors.orange,
         ),
       );
-      Navigator.pushReplacementNamed(context, AppRoutes.login);
-    } else if (mounted) {
+      return;
+    }
+
+    // Construire la liste finale des services
+    List<String> finalServices = [];
+    _selectedServices.forEach((serviceName, isSelected) {
+      if (isSelected) {
+        if (serviceName == 'Autre') {
+          if (_otherServiceController.text.trim().isNotEmpty) {
+            finalServices.add(_otherServiceController.text.trim());
+          }
+        } else {
+          finalServices.add(serviceName);
+        }
+      }
+    });
+
+    // Validation: s'assurer qu'au moins un service est sélectionné ou que "Autre" est rempli
+    if (finalServices.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez sélectionner au moins un service ou préciser le service "Autre".'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await authProvider.registerMerchant(
+        businessName: _businessNameController.text,
+        email: _emailController.text,
+        phone: _phoneController.text,
+        address: _addressController.text,
+        openingHours: _openingHoursController.text,
+        // services: _servicesController.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(), // Ancienne méthode
+        services: finalServices, // Nouvelle méthode
+        password: _passwordController.text,
+        latitude: _selectedLocation!.latitude,
+        longitude: _selectedLocation!.longitude,
+        merchantType: _selectedMerchantType!,
+      );
+
+      if (!mounted) return;
+
+      // Après l'appel, vérifier l'état.
+      // Pour l'inscription marchand, même si le compte Auth est créé,
+      // on pourrait vouloir attendre une validation admin.
+      // Pour l'instant, on considère que si pas d'erreur, c'est "envoyé".
+      // L'état isAuthenticated sera mis à jour par authStateChanges si l'utilisateur est connecté.
+      if (authProvider.error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
+            ),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        // Rediriger vers la page de connexion ou une page d'attente de validation.
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(authProvider.error ?? 'Erreur lors de l\'inscription.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(authProvider.error ?? 'Erreur lors de l\'inscription'),
+          content: Text(authProvider.error ?? e.toString()),
           backgroundColor: Colors.red,
         ),
       );
