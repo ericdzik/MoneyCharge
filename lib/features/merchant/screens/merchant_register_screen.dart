@@ -194,58 +194,73 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inscription Marchand'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    extendBodyBehindAppBar: true, // Pour que l'image passe derrière l'appBar
+    appBar: AppBar(
+      title: const Text('Inscription Marchand'),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Logo et titre
-                Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
+    ),
+    body: Stack(
+      children: [
+        // 🔴 Image de fond
+        Positioned.fill(
+          child: Image.asset(
+            'assets/splash/32.png',
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        // 🔵 Contenu principal
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo et titre
+                  Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.8),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.store,
+                          color: AppColors.onPrimary,
+                          size: 40,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.store,
-                        color: AppColors.onPrimary,
-                        size: 40,
+                      const SizedBox(height: 24),
+                      Text(
+                        'Devenez Partenaire',
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 28,
+                          color: Colors.white, // Changer couleur pour visibilité
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Devenez Partenaire',
-                      style: AppTextStyles.h1.copyWith(fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Rejoignez notre réseau de points de service',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Rejoignez notre réseau de points de service',
+                        style: AppTextStyles.body2.copyWith(
+                          color: Colors.white70, // texte secondaire en blanc pâle
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                    ],
+                  ),
+            const SizedBox(height: 32),
 
                 // Informations du business
                 Text(
@@ -699,6 +714,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
             ),
           ),
         ),
+        )
+      ]
       ),
     );
   }

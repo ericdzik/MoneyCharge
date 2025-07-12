@@ -18,8 +18,9 @@ class UnifiedLoginScreen extends StatefulWidget {
 
 class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'user@example.com');
-  final _passwordController = TextEditingController(text: 'password123');
+  final _emailController = TextEditingController();
+final _passwordController = TextEditingController();
+
   bool _obscurePassword = false;
 
   @override
@@ -105,253 +106,215 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
-          child: Form(
-            key: _formKey,
-            child: ListView(
-              padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
-              children: [
-                const SizedBox(height: AppDimensions.paddingXL),
-                Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Icon(
-                        Icons.phone_android,
-                        color: AppColors.onPrimary,
-                        size: 40,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Geo Money&Charge',
-                      style: AppTextStyles.h1.copyWith(fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '----------------------------------------------',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 48),
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Stack(
+      children: [
+        // 🔴 Image de fond
+        Positioned.fill(
+          child: Image.asset(
+            'assets/splash/32.png', // Vérifie le chemin
+            fit: BoxFit.cover,
+          ),
+        ),
 
-                CustomTextField(
-                  controller: _emailController,
-                  labelText: 'Email',
-                  hintText: 'votre@email.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre email';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Veuillez entrer un email valide';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+        // 🔵 Contenu principal
+        SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingL),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingL),
+                children: [
+                  const SizedBox(height: AppDimensions.paddingXL),
+                  Column(
+                    children: [
+                      /**Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        //child: const Icon(
+                          //Icons.my_location,
+                          //color: AppColors.onPrimary,
+                         // size: 40,
+                        //),
+                      ),**/
+                      const SizedBox(height: 24),
+                      Text(
+                        'CONNEXION',
+                        style: AppTextStyles.h1.copyWith(
+                          fontSize: 28,
+                          color: const Color.fromARGB(255, 35, 82, 37),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '',
+                        style: AppTextStyles.body2.copyWith(
+                          color: const Color.fromARGB(255, 11, 1, 1),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 48),
 
-                CustomTextField(
-                  controller: _passwordController,
-                  labelText: 'Mot de passe',
-                  hintText: '••••••••',
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
+                  // Champs Email
+                  CustomTextField(
+                    controller: _emailController,
+                    labelText: 'Email',
+                    hintText: 'votre@email.com',
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez entrer votre email';
+                      }
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        return 'Veuillez entrer un email valide';
+                      }
+                      return null;
                     },
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre mot de passe';
-                    }
-                    if (value.length < 6) {
-                      return 'Le mot de passe doit contenir au moins 6 caractères';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.forgotPassword);
-                    },
-                    child: Text(
-                      'Mot de passe oublié ?',
-                      style: AppTextStyles.body2.copyWith(
-                        color: const Color.fromARGB(255, 46, 125, 50),
+                  // Champs Mot de passe
+                  CustomTextField(
+                    controller: _passwordController,
+                    labelText: 'Mot de passe',
+                    hintText: '••••••••',
+                    obscureText: _obscurePassword,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        color: const Color.fromARGB(255, 5, 3, 3),
                       ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
                     ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez entrer votre mot de passe';
+                      }
+                      if (value.length < 6) {
+                        return 'Le mot de passe doit contenir au moins 6 caractères';
+                      }
+                      return null;
+                    },
                   ),
-                ),
-                const SizedBox(height: 24),
 
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    return CustomButton(
-                      text: authProvider.isLoading
-                          ? 'Connexion...'
-                          : 'Se connecter',
-                      onPressed: authProvider.isLoading ? null : _handleLogin,
-                    );
-                  },
-                ),
-                const SizedBox(height: AppDimensions.paddingM),
+                  const SizedBox(height: 16),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible( // Make text flexible
+                  // Lien mot de passe oublié
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                      },
                       child: Text(
+                        'Mot de passe oublié ?',
+                        style: AppTextStyles.body2.copyWith(
+                          color: const Color.fromARGB(255, 35, 82, 37),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Bouton Connexion
+                  Consumer<AuthProvider>(
+                    builder: (context, authProvider, child) {
+                      return CustomButton(
+                        text: authProvider.isLoading ? 'Connexion...' : 'Se connecter',
+                        onPressed: authProvider.isLoading ? null : _handleLogin,
+                      );
+                    },
+                  ),
+
+                  const SizedBox(height: AppDimensions.paddingM),
+
+                  // Lien inscription
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
                         'Pas encore de compte ? ',
                         style: AppTextStyles.body2.copyWith(
                           color: AppColors.textSecondary,
                         ),
-                        textAlign: TextAlign.end, // Align if it wraps to keep it neat
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.register);
-                      },
-                      child: Flexible( // Make tappable text flexible
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.register);
+                        },
                         child: Text(
                           'S\'inscrire',
                           style: AppTextStyles.body2.copyWith(
-                            color: AppColors.primary,
+                            color: const Color.fromARGB(255, 35, 82, 37),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
+                    ],
+                  ),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible( // Make text flexible
-                      child: Text(
+                  const SizedBox(height: 8),
+
+                  // Lien marchand
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
                         'Vous êtes un marchand ? ',
                         style: AppTextStyles.body2.copyWith(
                           color: AppColors.textSecondary,
                           fontSize: 12,
                         ),
-                        textAlign: TextAlign.end, // Align if it wraps
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.merchantRegister,
-                        );
-                      },
-                      child: Flexible( // Make tappable text flexible
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, AppRoutes.merchantRegister);
+                        },
                         child: Text(
                           'Devenir partenaire',
                           style: AppTextStyles.body2.copyWith(
-                            color: const Color.fromARGB(255, 46, 125, 50),
+                            color: const Color.fromARGB(255, 35, 82, 37),
                             fontWeight: FontWeight.w600,
                             fontSize: 12,
+                          ),
                         ),
                       ),
-                    ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: AppDimensions.paddingXL),
-
-                Text(
-                  '© 2025 Geo Money&Charge - Tous droits réservés',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
+                    ],
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppDimensions.paddingM),
-              ],
+
+                  const SizedBox(height: AppDimensions.paddingXL),
+
+                  // Footer
+                  /**Text(
+                    '© 2025 Geo Money&Charge - Tous droits réservés',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),**/
+                  const SizedBox(height: AppDimensions.paddingM),
+                ],
+              ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildRoleInfo(String title, String description) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            title,
-            style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '- $description',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmailExample(String email, String role) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            email,
-            style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w500),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '- $role',
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 }
