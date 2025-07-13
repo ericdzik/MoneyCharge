@@ -74,6 +74,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
       appBar: CustomAppBar(
         title: widget.merchant.name,
         showLogo: false,
+        backgroundColor: AppColors.primary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -129,14 +130,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       width: double.infinity,
                       height: headerHeight,
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 255, 255, 255),
-                            Color.fromARGB(255, 255, 255, 255),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Colors.transparent,
                       ),
                       child: Stack(
                         children: [
