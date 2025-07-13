@@ -151,7 +151,12 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     );
                   },
                 ),
-                Padding(
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  ),
+                  margin: const EdgeInsets.all(AppDimensions.paddingM),
                   padding: const EdgeInsets.all(AppDimensions.paddingM),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
