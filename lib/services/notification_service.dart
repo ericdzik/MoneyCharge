@@ -3,6 +3,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
+import '../core/constants/app_colors.dart';
 
 /// Service de notifications pour l'application
 class NotificationService {
@@ -302,7 +303,7 @@ extension NotificationTypeExtension on NotificationType {
       case NotificationType.info:
         return Colors.blue;
       case NotificationType.success:
-        return Colors.green;
+        return AppColors.primary;
       case NotificationType.error:
         return Colors.red;
       case NotificationType.warning:

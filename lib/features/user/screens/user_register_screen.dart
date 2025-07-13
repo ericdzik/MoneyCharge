@@ -7,6 +7,7 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class UserRegisterScreen extends StatefulWidget {
   const UserRegisterScreen({super.key});
@@ -37,386 +38,404 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   }
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    extendBodyBehindAppBar: true, // Pour que l'image passe aussi derrière l'app bar
-    appBar: AppBar(
-      title: const Text('Inscription'),
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () => Navigator.pop(context),
-      ),
-    ),
-    body: Stack(
-      children: [
-        // 🔴 Image de fond
-        Positioned.fill(
-          child: Image.asset(
-            'assets/splash/32.png', // Change ce chemin selon ton image
-            fit: BoxFit.cover,
-          ),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      extendBodyBehindAppBar:
+          true, // Pour que l'image passe aussi derrière l'app bar
+      appBar: CustomAppBar(
+        title: 'Inscription',
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
+        showLogo: false,
+      ),
+      body: Stack(
+        children: [
+          // 🔴 Image de fond
+          Positioned.fill(
+            child: Image.asset(
+              'assets/splash/32.png', // Change ce chemin selon ton image
+              fit: BoxFit.cover,
+            ),
+          ),
 
-        // 🔵 Contenu principal
-        SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo et titre
-                  Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 22, 52, 23).withOpacity(0.9),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.person_add,
-                          color: AppColors.onPrimary,
-                          size: 40,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Créer un compte',
-                        style: AppTextStyles.h1.copyWith(fontSize: 28,
-                         color: const Color(0xFF235225),),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Rejoignez GEO et accédez à tous nos services',
-                        style: AppTextStyles.body2.copyWith(
-                          color: const Color.fromARGB(255, 215, 226, 69),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-
-                const SizedBox(height: 32),
-
-                // Formulaire
-                CustomTextField(
-                  controller: _nameController,
-                  labelText: 'Nom complet',
-                  hintText: 'Votre nom complet',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre nom';
-                    }
-                    if (value.length < 2) {
-                      return 'Le nom doit contenir au moins 2 caractères';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _emailController,
-                  labelText: 'Email',
-                  hintText: 'votre@email.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre email';
-                    }
-                    if (!RegExp(
-                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                    ).hasMatch(value)) {
-                      return 'Veuillez entrer un email valide';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _phoneController,
-                  labelText: 'Téléphone',
-                  hintText: '+225 0123456789',
-                  keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer votre numéro de téléphone';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _passwordController,
-                  labelText: 'Mot de passe',
-                  hintText: '••••••••',
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez entrer un mot de passe';
-                    }
-                    if (value.length < 6) {
-                      return 'Le mot de passe doit contenir au moins 6 caractères';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                CustomTextField(
-                  controller: _confirmPasswordController,
-                  labelText: 'Confirmer le mot de passe',
-                  hintText: '••••••••',
-                  obscureText: _obscureConfirmPassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Veuillez confirmer votre mot de passe';
-                    }
-                    if (value != _passwordController.text) {
-                      return 'Les mots de passe ne correspondent pas';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // Conditions d'utilisation
-                Row(
+          // 🔵 Contenu principal
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Checkbox(
-                      value: _acceptTerms,
-                      onChanged: (value) {
-                        setState(() {
-                          _acceptTerms = value ?? false;
-                        });
-                      },
-                      activeColor: AppColors.primary,
+                    // Logo et titre
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: const Icon(
+                            Icons.person_add,
+                            color: AppColors.onPrimary,
+                            size: 40,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'Créer un compte',
+                          style: AppTextStyles.h1.copyWith(
+                            fontSize: 28,
+                            color: AppColors.secondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Rejoignez GEO et accédez à tous nos services',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.secondary,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () {
+
+                    const SizedBox(height: 32),
+
+                    // Formulaire
+                    CustomTextField(
+                      controller: _nameController,
+                      labelText: 'Nom complet',
+                      hintText: 'Votre nom complet',
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre nom';
+                        }
+                        if (value.length < 2) {
+                          return 'Le nom doit contenir au moins 2 caractères';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    CustomTextField(
+                      controller: _emailController,
+                      labelText: 'Email',
+                      hintText: 'votre@email.com',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre email';
+                        }
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
+                          return 'Veuillez entrer un email valide';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    CustomTextField(
+                      controller: _phoneController,
+                      labelText: 'Téléphone',
+                      hintText: '+225 0123456789',
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre numéro de téléphone';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    CustomTextField(
+                      controller: _passwordController,
+                      labelText: 'Mot de passe',
+                      hintText: '••••••••',
+                      obscureText: _obscurePassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () {
                           setState(() {
-                            _acceptTerms = !_acceptTerms;
+                            _obscurePassword = !_obscurePassword;
                           });
                         },
-                        child: RichText(
-                          text: TextSpan(
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer un mot de passe';
+                        }
+                        if (value.length < 6) {
+                          return 'Le mot de passe doit contenir au moins 6 caractères';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    CustomTextField(
+                      controller: _confirmPasswordController,
+                      labelText: 'Confirmer le mot de passe',
+                      hintText: '••••••••',
+                      obscureText: _obscureConfirmPassword,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscureConfirmPassword
+                              ? Icons.visibility
+                              : Icons.visibility_off,
+                          color: AppColors.textSecondary,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscureConfirmPassword = !_obscureConfirmPassword;
+                          });
+                        },
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez confirmer votre mot de passe';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'Les mots de passe ne correspondent pas';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Conditions d'utilisation
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _acceptTerms,
+                          onChanged: (value) {
+                            setState(() {
+                              _acceptTerms = value ?? false;
+                            });
+                          },
+                          activeColor: AppColors.secondary,
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _acceptTerms = !_acceptTerms;
+                              });
+                            },
+                            child: RichText(
+                              text: TextSpan(
+                                style: AppTextStyles.body2.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                children: [
+                                  const TextSpan(text: 'J\'accepte les '),
+                                  TextSpan(
+                                    text: 'conditions d\'utilisation',
+                                    style: TextStyle(
+                                      color: AppColors.secondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const TextSpan(text: ' et la '),
+                                  TextSpan(
+                                    text: 'politique de confidentialité',
+                                    style: TextStyle(
+                                      color: AppColors.secondary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Bouton d'inscription
+                    Consumer<AuthProvider>(
+                      builder: (context, authProvider, child) {
+                        return CustomButton(
+                          text: authProvider.isLoading
+                              ? 'Création...'
+                              : 'Créer mon compte',
+                          onPressed: (authProvider.isLoading || !_acceptTerms)
+                              ? null
+                              : _handleRegister,
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Lien de connexion
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          // Make text flexible
+                          child: Text(
+                            'Déjà un compte ? ',
                             style: AppTextStyles.body2.copyWith(
                               color: AppColors.textSecondary,
                             ),
+                            textAlign: TextAlign.end, // Align if it wraps
+                          ),
+                        ),
+                        const SizedBox(
+                          width: AppDimensions.paddingXS,
+                        ), // Add minimal spacing
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacementNamed(
+                              context,
+                              AppRoutes.login,
+                            );
+                          },
+                          child: Flexible(
+                            // Make tappable text flexible
+                            child: Text(
+                              'Se connecter',
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.secondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Séparateur
+                    Row(
+                      children: [
+                        const Expanded(child: Divider()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'ou',
+                            style: AppTextStyles.body2.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                        const Expanded(child: Divider()),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Boutons d'inscription alternative
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        bool useColumnLayout =
+                            constraints.maxWidth <
+                            320; // Threshold for social buttons
+
+                        if (useColumnLayout) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const TextSpan(text: 'J\'accepte les '),
-                              TextSpan(
-                                text: 'conditions d\'utilisation',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  // Inscription avec Google
+                                },
+                                icon: const Icon(Icons.g_mobiledata, size: 24),
+                                label: const Text('Google'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
-                              const TextSpan(text: ' et la '),
-                              TextSpan(
-                                text: 'politique de confidentialité',
-                                style: TextStyle(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
+                              const SizedBox(height: AppDimensions.paddingS),
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  // Inscription avec Facebook
+                                },
+                                icon: const Icon(Icons.facebook, size: 24),
+                                label: const Text('Facebook'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                // Bouton d'inscription
-                Consumer<AuthProvider>(
-                  builder: (context, authProvider, child) {
-                    return CustomButton(
-                      text: authProvider.isLoading
-                          ? 'Création...'
-                          : 'Créer mon compte',
-                      onPressed: (authProvider.isLoading || !_acceptTerms)
-                          ? null
-                          : _handleRegister,
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // Lien de connexion
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Flexible( // Make text flexible
-                      child: Text(
-                        'Déjà un compte ? ',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        textAlign: TextAlign.end, // Align if it wraps
-                      ),
-                    ),
-                    const SizedBox(width: AppDimensions.paddingXS), // Add minimal spacing
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pushReplacementNamed(
-                          context,
-                          AppRoutes.login,
-                        );
+                          );
+                        } else {
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    // Inscription avec Google
+                                  },
+                                  icon: const Icon(
+                                    Icons.g_mobiledata,
+                                    size: 24,
+                                  ),
+                                  label: const Text('Google'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    // Inscription avec Facebook
+                                  },
+                                  icon: const Icon(Icons.facebook, size: 24),
+                                  label: const Text('Facebook'),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
                       },
-                      child: Flexible( // Make tappable text flexible
-                        child: Text(
-                          'Se connecter',
-                          style: AppTextStyles.body2.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                // Séparateur
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'ou',
-                        style: AppTextStyles.body2.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
-                // Boutons d'inscription alternative
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    bool useColumnLayout = constraints.maxWidth < 320; // Threshold for social buttons
-
-                    if (useColumnLayout) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              // Inscription avec Google
-                            },
-                            icon: const Icon(Icons.g_mobiledata, size: 24),
-                            label: const Text('Google'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                          const SizedBox(height: AppDimensions.paddingS),
-                          OutlinedButton.icon(
-                            onPressed: () {
-                              // Inscription avec Facebook
-                            },
-                            icon: const Icon(Icons.facebook, size: 24),
-                            label: const Text('Facebook'),
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ],
-                      );
-                    } else {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                // Inscription avec Google
-                              },
-                              icon: const Icon(Icons.g_mobiledata, size: 24),
-                              label: const Text('Google'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                // Inscription avec Facebook
-                              },
-                              icon: const Icon(Icons.facebook, size: 24),
-                              label: const Text('Facebook'),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    }
-                  }
-                ),
-                const SizedBox(height: 32),
-
-                // Footer
-                /**Text(
+                    // Footer
+                    /**Text(
                   '© 2024 LocaCharge - Tous droits réservés',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),**/
-              ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
+        ],
       ),
-      ]
-    )
     );
-  
   }
 
   Future<void> _handleRegister() async {
@@ -450,7 +469,7 @@ Widget build(BuildContext context) {
       if (authProvider.isAuthenticated) {
         // Rediriger vers la page d'accueil ou une page de vérification d'email si nécessaire
         Navigator.pushReplacementNamed(context, AppRoutes.home);
-         ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Inscription réussie ! Vous êtes connecté.'),
             backgroundColor: AppColors.success,

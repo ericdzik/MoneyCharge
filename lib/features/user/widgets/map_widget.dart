@@ -121,7 +121,9 @@ class _MapWidgetState extends State<MapWidget> {
   BitmapDescriptor _getMarkerIcon(MerchantStatus status) {
     switch (status) {
       case MerchantStatus.available:
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen);
+        return BitmapDescriptor.defaultMarkerWithHue(
+          BitmapDescriptor.hueGreen,
+        ); // Google Maps constraint
       case MerchantStatus.lowStock:
         return BitmapDescriptor.defaultMarkerWithHue(
           BitmapDescriptor.hueOrange,
@@ -226,7 +228,7 @@ class _MapWidgetState extends State<MapWidget> {
       return Container(
         height: 300,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Center(child: CircularProgressIndicator()),
@@ -236,7 +238,7 @@ class _MapWidgetState extends State<MapWidget> {
     return Container(
       height: 300,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -321,7 +323,7 @@ class _MapWidgetState extends State<MapWidget> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildLegendItem('Disponible', Colors.green),
+                    _buildLegendItem('Disponible', AppColors.primary),
                     const SizedBox(width: 8),
                     _buildLegendItem('Stock faible', Colors.orange),
                     const SizedBox(width: 8),
@@ -348,6 +350,43 @@ class _MapWidgetState extends State<MapWidget> {
         const SizedBox(width: 4),
         Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10)),
       ],
+    );
+  }
+
+  Widget _buildStatusChip(MerchantStatus status) {
+    Color color;
+    String text;
+
+    switch (status) {
+      case MerchantStatus.available:
+        color = AppColors.primary;
+        text = 'Disponible';
+        break;
+      case MerchantStatus.lowStock:
+        color = Colors.orange;
+        text = 'Stock faible';
+        break;
+      case MerchantStatus.outOfStock:
+        color = Colors.red;
+        text = 'Rupture';
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

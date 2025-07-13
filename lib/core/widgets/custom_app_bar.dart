@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 // import '../constants/app_text_styles.dart'; // Pas nécessaire si le style est hérité du thème
+import 'dart:ui';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
   final bool showLogo;
+  final PreferredSizeWidget? bottom;
 
   const CustomAppBar({
     super.key,
@@ -15,26 +17,53 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.actions,
     this.leading,
     this.showLogo = true,
+    this.bottom,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Le style du titre (AppTextStyles.h3 avec couleur onPrimary) est hérité de AppBarTheme.titleTextStyle
-    return AppBar(
-      backgroundColor: AppColors.primary, // Vert
-      elevation: 0,
-      leading: leading,
-      title: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (showLogo) ...[
-            const SimIcon(),
-            const SizedBox(width: AppDimensions.paddingS),
-          ],
-          Text(title), // Le style est appliqué par AppBarTheme
-        ],
+    return ClipRRect(
+      // Pour arrondir le bas de l'AppBar si besoin
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(16),
+        bottomRight: Radius.circular(16),
       ),
-      actions: actions,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: AppBar(
+          backgroundColor: Colors.white.withOpacity(0.15), // Glassmorphisme
+          elevation: 0,
+          leading: leading,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showLogo) ...[
+                const SimIcon(),
+                const SizedBox(width: AppDimensions.paddingS),
+              ],
+              Text(
+                title,
+                style:
+                    Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ) ??
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+              ),
+            ],
+          ),
+          actions: actions,
+          // Optionnel : fine bordure blanche translucide en bas
+          shape: const Border(
+            bottom: BorderSide(color: Color(0x33FFFFFF), width: 1),
+          ),
+          bottom: bottom,
+        ),
+      ),
     );
   }
 

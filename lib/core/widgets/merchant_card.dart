@@ -28,7 +28,7 @@ class MerchantCard extends StatelessWidget {
     final isFavorite = favoriteProvider.isFavorite(merchant.id);
 
     return Card(
-      // La couleur de la carte (AppColors.surface) est gérée par CardTheme
+      color: Colors.white,
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingM,
         vertical: AppDimensions.paddingS,
@@ -111,9 +111,7 @@ class MerchantCard extends StatelessWidget {
                             vertical: AppDimensions.paddingS,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(
-                              alpha: 0.1,
-                            ), // Vert très clair
+                            color: AppColors.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(
                               AppDimensions.radiusS,
                             ),
@@ -148,9 +146,7 @@ class MerchantCard extends StatelessWidget {
                               vertical: AppDimensions.paddingS,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(
-                                alpha: 0.1,
-                              ), // Vert très clair
+                              color: AppColors.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(
                                 AppDimensions.radiusS,
                               ),

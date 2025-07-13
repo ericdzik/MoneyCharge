@@ -162,23 +162,30 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.9),
+                          color: AppColors.secondary.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(24),
                         ),
                         //child: const Icon(
                           //Icons.my_location,
-                          //color: AppColors.onPrimary,
+                          //color: AppColors.onSecondary,
                          // size: 40,
                         //),
                       ),**/
                         const SizedBox(height: 24),
-                        Text(
-                          'CONNEXION',
-                          style: AppTextStyles.h1.copyWith(
-                            fontSize: 28,
-                            color: const Color.fromARGB(255, 35, 82, 37),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
                           ),
-                          textAlign: TextAlign.center,
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Icon(
+                            Icons.login_rounded,
+                            size: 48,
+                            color: const Color.fromARGB(255, 250, 250, 248),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -257,7 +264,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                         child: Text(
                           'Mot de passe oublié ?',
                           style: AppTextStyles.body2.copyWith(
-                            color: const Color.fromARGB(255, 35, 82, 37),
+                            color: AppColors.secondary,
                           ),
                         ),
                       ),
@@ -302,7 +309,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                           child: Text(
                             'S\'inscrire',
                             style: AppTextStyles.body2.copyWith(
-                              color: const Color.fromARGB(255, 35, 82, 37),
+                              color: AppColors.secondary,
                               fontWeight: FontWeight.w600,
                             ),
                             maxLines: 1,
@@ -339,7 +346,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                           child: Text(
                             'Devenir partenaire',
                             style: AppTextStyles.body2.copyWith(
-                              color: const Color.fromARGB(255, 35, 82, 37),
+                              color: AppColors.secondary,
                               fontWeight: FontWeight.w600,
                               fontSize: 12,
                             ),

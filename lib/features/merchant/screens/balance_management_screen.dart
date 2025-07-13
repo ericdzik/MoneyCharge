@@ -11,6 +11,7 @@ import '../models/balance_model.dart';
 import '../../../models/transaction_model.dart';
 import '../widgets/transaction_card_widget.dart';
 import '../widgets/balance_summary_widget.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class BalanceManagementScreen extends StatefulWidget {
   const BalanceManagementScreen({super.key});
@@ -53,11 +54,8 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     final transactionProvider = context.watch<TransactionProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gestion du solde & Transactions'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'Gestion du solde & Transactions',
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -77,6 +75,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
           unselectedLabelColor: AppColors.onPrimary.withOpacity(0.7),
           tabs: const [Tab(text: 'Toutes les Transactions')],
         ),
+        showLogo: false,
       ),
       body: Stack(
         children: [

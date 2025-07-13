@@ -145,7 +145,7 @@ class _MapSearchWidgetState extends State<MapSearchWidget> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.grey[100],
+          color: isSelected ? AppColors.primary : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.grey[300]!,

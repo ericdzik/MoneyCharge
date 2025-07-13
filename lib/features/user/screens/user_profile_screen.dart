@@ -8,6 +8,7 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({super.key});
@@ -55,11 +56,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     print('-----------------------------------------------------');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mon Profil'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: AppColors.textPrimary,
+      appBar: CustomAppBar(
+        title: 'Mon Profil',
+        leading: null,
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_outlined),
@@ -121,7 +120,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 50,
-                            backgroundColor: AppColors.primary.withOpacity(0.1),
+                            backgroundColor: Colors.white,
                             child: Text(
                               user.name.isNotEmpty
                                   ? user.name[0].toUpperCase()
@@ -346,7 +345,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Container(
       padding: const EdgeInsets.only(bottom: AppDimensions.paddingS),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
         boxShadow: [
           BoxShadow(

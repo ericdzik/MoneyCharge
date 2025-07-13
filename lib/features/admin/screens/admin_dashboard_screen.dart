@@ -11,6 +11,7 @@ import '../../merchant/models/merchant_auth_model.dart';
 import '../services/admin_firestore_service.dart'; // Added
 import '../../../providers/auth_provider.dart'; // Added
 import '../../../providers/merchant_provider.dart'; // Added
+import '../../../core/widgets/custom_app_bar.dart';
 // Removed AdminMockDataService import as it's being replaced for primary data
 // import '../services/admin_mock_data_service.dart';
 
@@ -127,11 +128,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard Administrateur'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.onPrimary,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'Dashboard Administrateur',
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -147,6 +145,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             onPressed: () => _handleLogout(context),
           ),
         ],
+        showLogo: false,
       ),
       body: Stack(
         children: [

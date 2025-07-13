@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
 
 /// Utilitaires pour la gestion des couleurs avec alpha
 class ColorUtils {
@@ -21,7 +22,7 @@ class ColorUtils {
   }
 
   static Color greenWithAlpha(double alpha) {
-    return Colors.green.withValues(alpha: alpha);
+    return AppColors.primary.withOpacity(alpha);
   }
 
   static Color orangeWithAlpha(double alpha) {

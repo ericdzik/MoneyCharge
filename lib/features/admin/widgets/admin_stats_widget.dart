@@ -68,7 +68,7 @@ class AdminStatsWidget extends StatelessWidget {
           value: '$totalMerchants',
           subtitle: '$activeMerchants actifs',
           icon: Icons.store,
-          color: Colors.green,
+          color: AppColors.primary,
         ),
         _buildStatCard(
           isSmallScreen: isSmallScreen, // Pass isSmallScreen
@@ -117,7 +117,7 @@ class AdminStatsWidget extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(

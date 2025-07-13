@@ -93,7 +93,7 @@ class MerchantHeaderWidget extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: merchant.isVerified
-                      ? Colors.green.withOpacity(0.2)
+                      ? AppColors.primary.withOpacity(0.2)
                       : Colors.orange.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -102,7 +102,9 @@ class MerchantHeaderWidget extends StatelessWidget {
                   children: [
                     Icon(
                       merchant.isVerified ? Icons.verified : Icons.pending,
-                      color: merchant.isVerified ? Colors.green : Colors.orange,
+                      color: merchant.isVerified
+                          ? AppColors.primary
+                          : Colors.orange,
                       size: 14,
                     ),
                     const SizedBox(width: 4),
@@ -110,7 +112,7 @@ class MerchantHeaderWidget extends StatelessWidget {
                       merchant.isVerified ? 'Vérifié' : 'En attente',
                       style: AppTextStyles.caption.copyWith(
                         color: merchant.isVerified
-                            ? Colors.green
+                            ? AppColors.primary
                             : Colors.orange,
                         fontWeight: FontWeight.w600,
                       ),

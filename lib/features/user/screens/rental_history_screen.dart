@@ -3,6 +3,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/status_badge.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class RentalHistoryScreen extends StatefulWidget {
   const RentalHistoryScreen({super.key});
@@ -48,11 +49,7 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Historique des locations'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      appBar: CustomAppBar(title: 'Historique des locations', showLogo: false),
       body: Stack(
         children: [
           Positioned.fill(
@@ -194,7 +191,7 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(

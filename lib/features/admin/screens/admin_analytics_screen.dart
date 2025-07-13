@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class AdminAnalyticsScreen extends StatefulWidget {
   const AdminAnalyticsScreen({super.key});
@@ -17,10 +18,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'Analytics',
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
@@ -43,6 +42,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
             ),
           ),
         ],
+        showLogo: false,
       ),
       body: Stack(
         children: [
@@ -150,7 +150,7 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
