@@ -10,6 +10,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final bool showLogo;
   final PreferredSizeWidget? bottom;
+  final Color? backgroundColor;
 
   const CustomAppBar({
     super.key,
@@ -18,6 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.showLogo = true,
     this.bottom,
+    this.backgroundColor,
   });
 
   @override
@@ -31,7 +33,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: AppBar(
-          backgroundColor: Colors.white.withOpacity(0.15), // Glassmorphisme
+          backgroundColor: backgroundColor ?? Colors.white.withOpacity(0.15), // Glassmorphisme or custom color
           elevation: 0,
           leading: leading,
           title: Row(

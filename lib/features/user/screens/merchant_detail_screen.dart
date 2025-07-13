@@ -74,6 +74,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
       appBar: CustomAppBar(
         title: widget.merchant.name,
         showLogo: false,
+        backgroundColor: AppColors.primary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -122,30 +123,22 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                 LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) {
                     double headerHeight = constraints.maxWidth * 0.5;
-                    if (headerHeight < 150) headerHeight = 150;
+                    if (headerHeight < 150) headerHeight = 50;
                     if (headerHeight > 300) headerHeight = 300;
 
                     return Container(
                       width: double.infinity,
                       height: headerHeight,
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 255, 255, 255),
-                            Color.fromARGB(255, 255, 255, 255),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
+                        color: Color.fromARGB(190, 255, 255, 255),
                       ),
                       child: Stack(
                         children: [
                           const Center(
                             child: Icon(
                               Icons.store,
-                              size: 80,
-                              color: Colors.white54,
-                            ),
+                              size: 40,
+                              color: Color.fromARGB(255, 0, 0, 0)                            ),
                           ),
                           Positioned(
                             top: AppDimensions.paddingM,
@@ -157,33 +150,38 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     );
                   },
                 ),
-                Padding(
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  ),
+                  margin: const EdgeInsets.all(AppDimensions.paddingM),
                   padding: const EdgeInsets.all(AppDimensions.paddingM),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        widget.merchant.name,
-                        style: AppTextStyles.h2,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      _buildInfoCard(
+                        icon: Icons.storefront,
+                        title: 'Nom du commerce',
+                        content: widget.merchant.name,
                       ),
-                      const SizedBox(height: AppDimensions.paddingS),
-                      _buildInfoSection(
-                        Icons.location_on,
-                        'Adresse',
-                        widget.merchant.address,
+                      _buildInfoCard(
+                        icon: Icons.location_on,
+                        title: 'Adresse',
+                        content: widget.merchant.address,
                       ),
-                      _buildInfoSection(
-                        Icons.phone,
-                        'Téléphone',
-                        widget.merchant.phone,
+                      _buildInfoCard(
+                        icon: Icons.phone,
+                        title: 'Téléphone',
+                        content: widget.merchant.phone,
                       ),
-                      _buildInfoSection(
-                        Icons.access_time,
-                        'Horaires',
-                        '${widget.merchant.hours}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
+                      _buildInfoCard(
+                        icon: Icons.access_time,
+                        title: 'Horaires',
+                        content:
+                            '${widget.merchant.hours}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
                       ),
+                      const SizedBox(height: AppDimensions.paddingM),
                       LayoutBuilder(
                         builder: (context, constraints) {
                           if (constraints.maxWidth < 350) {
@@ -414,20 +412,28 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
     );
   }
 
-  Widget _buildInfoSection(IconData icon, String title, String content) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
+  Widget _buildInfoCard(
+      {required IconData icon,
+      required String title,
+      required String content}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
+      padding: const EdgeInsets.all(AppDimensions.paddingM),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingS),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-            ),
-            child: Icon(icon, color: AppColors.primary, size: 20),
-          ),
+          Icon(icon, color: AppColors.primary, size: 24),
           const SizedBox(width: AppDimensions.paddingM),
           Expanded(
             child: Column(
@@ -436,17 +442,15 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                 Text(
                   title,
                   style: AppTextStyles.body2.copyWith(
-                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   content,
-                  style: AppTextStyles.body1,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.body1.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

@@ -23,32 +23,63 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  final List<Widget> _screens = [
-    const MapViewContent(),
-    const ListViewScreen(),
-    const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
-    const UserProfileScreen(),
-  ];
+  bool _isFilterBarVisible = false;
+
+  void _toggleFilterBar() {
+    setState(() {
+      _isFilterBarVisible = !_isFilterBarVisible;
+    });
+  }
+
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      MapViewContent(
+        isFilterBarVisible: _isFilterBarVisible,
+        onToggleFilterBar: _toggleFilterBar,
+      ),
+      const ListViewScreen(),
+      const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
+      const UserProfileScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild _screens list if the visibility state changes
+    final List<Widget> currentScreens = [
+      MapViewContent(
+        isFilterBarVisible: _isFilterBarVisible,
+        onToggleFilterBar: _toggleFilterBar,
+      ),
+      const ListViewScreen(),
+      const FavoritesScreen(),
+      const UserProfileScreen(),
+    ];
+
     return Scaffold(
       appBar: CustomAppBar(
-        // Peut être const si les actions sont const
         title: 'Geo Money&Charge',
+        backgroundColor: AppColors.primary,
         actions: [
+          // Affiche l'icône de filtre uniquement sur l'onglet Carte (index 0)
+          if (_currentIndex == 0)
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: _toggleFilterBar,
+              tooltip: 'Afficher/Masquer les filtres',
+            ),
           Padding(
-            // Ajout d'un Padding pour l'action de l'AppBar
-            padding: const EdgeInsets.only(
-              right: AppDimensions.paddingS,
-            ), // Un peu d'espace à droite
+            padding: const EdgeInsets.only(right: AppDimensions.paddingS),
             child: CircleAvatar(
-              backgroundColor:
-                  AppColors.onPrimary, // Fond blanc (sur AppBar verte)
+              backgroundColor: AppColors.onPrimary,
               child: Icon(
                 Icons.person,
                 color: AppColors.primary,
-              ), // Icône verte
+              ),
             ),
           ),
         ],
@@ -58,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          _screens[_currentIndex],
+          currentScreens[_currentIndex],
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -78,7 +109,14 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class MapViewContent extends StatefulWidget {
-  const MapViewContent({super.key});
+  final bool isFilterBarVisible;
+  final VoidCallback onToggleFilterBar;
+
+  const MapViewContent({
+    Key? key,
+    required this.isFilterBarVisible,
+    required this.onToggleFilterBar,
+  }) : super(key: key);
 
   @override
   State<MapViewContent> createState() => _MapViewContentState();
@@ -100,15 +138,15 @@ class _MapViewContentState extends State<MapViewContent> {
   Widget build(BuildContext context) {
     return Consumer<MerchantProvider>(
       builder: (context, merchantProvider, child) {
-        // final locationProvider = Provider.of<LocationProvider>(context, listen: false);
-        // List<Merchant> processedMerchants = merchantProvider.merchants.map((m) {
-        //   return m;
-        // }).toList();
-        // Pour l'instant, on passe directement merchantProvider.merchants
-
         return Column(
           children: [
-            const FilterBarWidget(),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              child: widget.isFilterBarVisible
+                  ? const FilterBarWidget()
+                  : const SizedBox.shrink(),
+            ),
             Expanded(
               child: Stack(
                 children: [
