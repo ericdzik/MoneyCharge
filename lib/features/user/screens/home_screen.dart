@@ -63,6 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Geo Money&Charge',
+        backgroundColor: AppColors.primary,
         actions: [
           // Affiche l'icône de filtre uniquement sur l'onglet Carte (index 0)
           if (_currentIndex == 0)
