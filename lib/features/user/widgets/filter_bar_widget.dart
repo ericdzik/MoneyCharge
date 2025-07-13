@@ -15,8 +15,11 @@ class FilterBarWidget extends StatefulWidget {
 class _FilterBarWidgetState extends State<FilterBarWidget> {
   final TextEditingController _searchController = TextEditingController();
   // Liste des services disponibles pour le dialogue de filtre
-  final List<String> _availableServices = ['Recharge crédit', 'Transfert d\'argent', 'Achat de carte SIM'];
-
+  final List<String> _availableServices = [
+    'Recharge crédit',
+    'Transfert d\'argent',
+    'Achat de carte SIM',
+  ];
 
   @override
   void initState() {
@@ -33,7 +36,6 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
   //   merchantProvider.applyFilters(searchQuery: _searchController.text, updateSearchQuery: true);
   // }
 
-
   @override
   void dispose() {
     _searchController.dispose();
@@ -49,10 +51,13 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: const BoxDecoration(
             color: AppColors.surface,
-            border: Border(bottom: BorderSide(color: AppColors.border, width: 1)),
+            border: Border(
+              bottom: BorderSide(color: AppColors.border, width: 1),
+            ),
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min, // Pour que la Column ne prenne que la place nécessaire
+            mainAxisSize: MainAxisSize
+                .min, // Pour que la Column ne prenne que la place nécessaire
             children: [
               Row(
                 children: [
@@ -67,14 +72,19 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                                 icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
-                                  merchantProvider.applyFilters(searchQuery: '', searchQueryIsSet: true);
+                                  merchantProvider.applyFilters(
+                                    searchQuery: '',
+                                    searchQueryIsSet: true,
+                                  );
                                 },
                               )
                             : null,
                         filled: true,
                         fillColor: AppColors.background,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusS,
+                          ),
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -83,31 +93,89 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                         ),
                       ),
                       onSubmitted: (query) {
-                        merchantProvider.applyFilters(searchQuery: query, searchQueryIsSet: true);
+                        merchantProvider.applyFilters(
+                          searchQuery: query,
+                          searchQueryIsSet: true,
+                        );
                       },
                     ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.filter_list),
-                    onPressed: () => _showFilterDialog(context, merchantProvider),
+                    onPressed: () =>
+                        _showFilterDialog(context, merchantProvider),
                     tooltip: 'Plus de filtres',
                   ),
                 ],
               ),
               const SizedBox(height: AppDimensions.paddingS),
-              SingleChildScrollView( // Pour les chips si trop nombreux
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    _buildMerchantTypeChip(context, merchantProvider, 'Tous', null),
-                    const SizedBox(width: AppDimensions.paddingS),
-                    _buildMerchantTypeChip(context, merchantProvider, 'Boutiques', 'boutique'),
-                    const SizedBox(width: AppDimensions.paddingS),
-                    _buildMerchantTypeChip(context, merchantProvider, 'Ambulants', 'ambulant'),
-                  ],
-                ),
-              )
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Si l'écran est trop petit, afficher les chips en colonne
+                  if (constraints.maxWidth < 400) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildMerchantTypeChip(
+                          context,
+                          merchantProvider,
+                          'Tous',
+                          null,
+                        ),
+                        const SizedBox(height: AppDimensions.paddingS),
+                        Row(
+                          children: [
+                            _buildMerchantTypeChip(
+                              context,
+                              merchantProvider,
+                              'Boutiques',
+                              'boutique',
+                            ),
+                            const SizedBox(width: AppDimensions.paddingS),
+                            _buildMerchantTypeChip(
+                              context,
+                              merchantProvider,
+                              'Ambulants',
+                              'ambulant',
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Disposition horizontale pour les écrans plus larges
+                    return SingleChildScrollView(
+                      // Pour les chips si trop nombreux
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          _buildMerchantTypeChip(
+                            context,
+                            merchantProvider,
+                            'Tous',
+                            null,
+                          ),
+                          const SizedBox(width: AppDimensions.paddingS),
+                          _buildMerchantTypeChip(
+                            context,
+                            merchantProvider,
+                            'Boutiques',
+                            'boutique',
+                          ),
+                          const SizedBox(width: AppDimensions.paddingS),
+                          _buildMerchantTypeChip(
+                            context,
+                            merchantProvider,
+                            'Ambulants',
+                            'ambulant',
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                },
+              ),
             ],
           ),
         );
@@ -134,9 +202,14 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
         // On applique toujours la valeur du chip. Si c'est "Tous", filterValue est null.
         // Le ChoiceChip gère sa propre sélection visuelle.
         // On informe le provider que merchantType a été explicitement choisi.
-        provider.applyFilters(merchantType: filterValue, merchantTypeIsSet: true);
+        provider.applyFilters(
+          merchantType: filterValue,
+          merchantTypeIsSet: true,
+        );
       },
-      backgroundColor: isSelected ? AppColors.primary.withOpacity(0.1) : AppColors.background,
+      backgroundColor: isSelected
+          ? AppColors.primary.withValues(alpha: 0.1)
+          : AppColors.background,
       selectedColor: AppColors.primary,
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : AppColors.textPrimary,
@@ -150,57 +223,74 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
         ),
       ),
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS/2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingM,
+        vertical: AppDimensions.paddingS / 2,
+      ),
     );
   }
 
-  void _showFilterDialog(BuildContext context, MerchantProvider merchantProvider) {
+  void _showFilterDialog(
+    BuildContext context,
+    MerchantProvider merchantProvider,
+  ) {
     // État local pour le dialogue, initialisé avec les filtres actifs du provider
     Map<String, bool> dialogSelectedServices = {};
     for (var service in _availableServices) {
-      dialogSelectedServices[service] = merchantProvider.activeServiceFilters.contains(service);
+      dialogSelectedServices[service] = merchantProvider.activeServiceFilters
+          .contains(service);
     }
 
-    String? dialogStockServiceFilter = merchantProvider.activeStockServiceFilter;
+    String? dialogStockServiceFilter =
+        merchantProvider.activeStockServiceFilter;
     // Si un service est actif pour le filtre de stock, et qu'il n'est pas dans la liste des services sélectionnés
     // pour le dialogue, on le désactive (car l'UI du dialogue ne le montrerait pas).
-    if (dialogStockServiceFilter != null && !(dialogSelectedServices[dialogStockServiceFilter] ?? false)) {
-        dialogStockServiceFilter = null;
+    if (dialogStockServiceFilter != null &&
+        !(dialogSelectedServices[dialogStockServiceFilter] ?? false)) {
+      dialogStockServiceFilter = null;
     }
 
-    bool dialogOnlyShowAvailableStock = merchantProvider.onlyShowAvailableStockForService && (dialogStockServiceFilter != null);
-
+    bool dialogOnlyShowAvailableStock =
+        merchantProvider.onlyShowAvailableStockForService &&
+        (dialogStockServiceFilter != null);
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusM)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusM),
+        ),
       ),
       builder: (BuildContext dialogContext) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setDialogState) {
-            List<String> currentlyCheckedServicesInDialog = dialogSelectedServices.entries
-                .where((e) => e.value)
-                .map((e) => e.key)
-                .toList();
-            bool showStockFilterOptionForDialog = currentlyCheckedServicesInDialog.length == 1;
+            List<String> currentlyCheckedServicesInDialog =
+                dialogSelectedServices.entries
+                    .where((e) => e.value)
+                    .map((e) => e.key)
+                    .toList();
+            bool showStockFilterOptionForDialog =
+                currentlyCheckedServicesInDialog.length == 1;
 
             // Si l'option de stock doit être affichée et que dialogStockServiceFilter est null,
             // le pré-remplir avec le seul service coché.
-            if (showStockFilterOptionForDialog && dialogStockServiceFilter == null) {
-                dialogStockServiceFilter = currentlyCheckedServicesInDialog.first;
+            if (showStockFilterOptionForDialog &&
+                dialogStockServiceFilter == null) {
+              dialogStockServiceFilter = currentlyCheckedServicesInDialog.first;
             }
             // Si l'option de stock ne doit PAS être affichée, s'assurer que dialogStockServiceFilter est null
             // et que dialogOnlyShowAvailableStock est false.
             else if (!showStockFilterOptionForDialog) {
-                dialogStockServiceFilter = null;
-                dialogOnlyShowAvailableStock = false;
+              dialogStockServiceFilter = null;
+              dialogOnlyShowAvailableStock = false;
             }
 
-            return Padding( // Ajout de Padding pour éviter que le clavier ne cache les boutons
+            return Padding(
+              // Ajout de Padding pour éviter que le clavier ne cache les boutons
               padding: MediaQuery.of(context).viewInsets,
-              child: SingleChildScrollView( // Permettre le défilement si le contenu est trop long
+              child: SingleChildScrollView(
+                // Permettre le défilement si le contenu est trop long
                 padding: const EdgeInsets.all(AppDimensions.paddingL),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -212,14 +302,20 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
 
-                    Text('Services Proposés :', style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold)),
+                    Text(
+                      'Services Proposés :',
+                      style: AppTextStyles.body1.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     ..._availableServices.map((serviceName) {
                       return CheckboxListTile(
                         title: Text(serviceName),
                         value: dialogSelectedServices[serviceName] ?? false,
                         onChanged: (bool? value) {
                           setDialogState(() {
-                            dialogSelectedServices[serviceName] = value ?? false;
+                            dialogSelectedServices[serviceName] =
+                                value ?? false;
                             // Réévaluer ici, car la logique est dans le builder du StatefulBuilder
                           });
                         },
@@ -231,9 +327,12 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
 
                     const SizedBox(height: AppDimensions.paddingS),
 
-                    if (showStockFilterOptionForDialog && dialogStockServiceFilter != null)
+                    if (showStockFilterOptionForDialog &&
+                        dialogStockServiceFilter != null)
                       CheckboxListTile(
-                        title: Text('Uniquement stock disponible pour "$dialogStockServiceFilter"'),
+                        title: Text(
+                          'Uniquement stock disponible pour "$dialogStockServiceFilter"',
+                        ),
                         value: dialogOnlyShowAvailableStock,
                         onChanged: (bool? value) {
                           setDialogState(() {
@@ -246,89 +345,112 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                       ),
 
                     const SizedBox(height: AppDimensions.paddingL),
-                    LayoutBuilder(builder: (context, constraints) {
-                      bool useColumnForButtons = constraints.maxWidth < 300; // Threshold for switching to Column
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        bool useColumnForButtons =
+                            constraints.maxWidth <
+                            300; // Threshold for switching to Column
 
-                      if (useColumnForButtons) {
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            OutlinedButton(
-                              onPressed: () {
-                                setDialogState(() {
-                                  for (var key in dialogSelectedServices.keys) {
-                                    dialogSelectedServices[key] = false;
-                                  }
-                                });
-                                merchantProvider.applyFilters(clearServiceAndStockFilters: true);
-                                Navigator.pop(dialogContext);
-                              },
-                              child: const Text('Réinitialiser'),
-                            ),
-                            const SizedBox(height: AppDimensions.paddingS),
-                            ElevatedButton(
-                              onPressed: () {
-                                List<String> finalSelectedServices = dialogSelectedServices.entries
-                                    .where((e) => e.value)
-                                    .map((e) => e.key)
-                                    .toList();
-                                merchantProvider.applyFilters(
-                                  services: finalSelectedServices,
-                                  servicesIsSet: true,
-                                  stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
-                                  stockServiceIsSet: true,
-                                  onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
-                                  onlyAvailableStockIsSet: true
-                                );
-                                Navigator.pop(dialogContext);
-                              },
-                              child: const Text('Appliquer'),
-                            ),
-                          ],
-                        );
-                      } else {
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton(
+                        if (useColumnForButtons) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              OutlinedButton(
                                 onPressed: () {
                                   setDialogState(() {
-                                    for (var key in dialogSelectedServices.keys) {
+                                    for (var key
+                                        in dialogSelectedServices.keys) {
                                       dialogSelectedServices[key] = false;
                                     }
                                   });
-                                  merchantProvider.applyFilters(clearServiceAndStockFilters: true);
+                                  merchantProvider.applyFilters(
+                                    clearServiceAndStockFilters: true,
+                                  );
                                   Navigator.pop(dialogContext);
                                 },
                                 child: const Text('Réinitialiser'),
                               ),
-                            ),
-                            const SizedBox(width: AppDimensions.paddingM),
-                            Expanded(
-                              child: ElevatedButton(
+                              const SizedBox(height: AppDimensions.paddingS),
+                              ElevatedButton(
                                 onPressed: () {
-                                  List<String> finalSelectedServices = dialogSelectedServices.entries
-                                      .where((e) => e.value)
-                                      .map((e) => e.key)
-                                      .toList();
+                                  List<String> finalSelectedServices =
+                                      dialogSelectedServices.entries
+                                          .where((e) => e.value)
+                                          .map((e) => e.key)
+                                          .toList();
                                   merchantProvider.applyFilters(
                                     services: finalSelectedServices,
                                     servicesIsSet: true,
-                                    stockService: showStockFilterOptionForDialog ? dialogStockServiceFilter : null,
+                                    stockService: showStockFilterOptionForDialog
+                                        ? dialogStockServiceFilter
+                                        : null,
                                     stockServiceIsSet: true,
-                                    onlyAvailableStock: showStockFilterOptionForDialog ? dialogOnlyShowAvailableStock : false,
-                                    onlyAvailableStockIsSet: true
+                                    onlyAvailableStock:
+                                        showStockFilterOptionForDialog
+                                        ? dialogOnlyShowAvailableStock
+                                        : false,
+                                    onlyAvailableStockIsSet: true,
                                   );
                                   Navigator.pop(dialogContext);
                                 },
                                 child: const Text('Appliquer'),
                               ),
-                            ),
-                          ],
-                        );
-                      }
-                    }),
+                            ],
+                          );
+                        } else {
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed: () {
+                                    setDialogState(() {
+                                      for (var key
+                                          in dialogSelectedServices.keys) {
+                                        dialogSelectedServices[key] = false;
+                                      }
+                                    });
+                                    merchantProvider.applyFilters(
+                                      clearServiceAndStockFilters: true,
+                                    );
+                                    Navigator.pop(dialogContext);
+                                  },
+                                  child: const Text('Réinitialiser'),
+                                ),
+                              ),
+                              const SizedBox(width: AppDimensions.paddingM),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    List<String> finalSelectedServices =
+                                        dialogSelectedServices.entries
+                                            .where((e) => e.value)
+                                            .map((e) => e.key)
+                                            .toList();
+                                    merchantProvider.applyFilters(
+                                      services: finalSelectedServices,
+                                      servicesIsSet: true,
+                                      stockService:
+                                          showStockFilterOptionForDialog
+                                          ? dialogStockServiceFilter
+                                          : null,
+                                      stockServiceIsSet: true,
+                                      onlyAvailableStock:
+                                          showStockFilterOptionForDialog
+                                          ? dialogOnlyShowAvailableStock
+                                          : false,
+                                      onlyAvailableStockIsSet: true,
+                                    );
+                                    Navigator.pop(dialogContext);
+                                  },
+                                  child: const Text('Appliquer'),
+                                ),
+                              ),
+                            ],
+                          );
+                        }
+                      },
+                    ),
                     const SizedBox(height: AppDimensions.paddingS),
                   ],
                 ),

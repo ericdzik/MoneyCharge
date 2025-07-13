@@ -14,10 +14,8 @@ import '../../../providers/favorite_merchant_provider.dart'; // Ajout de Favorit
 class MerchantDetailScreen extends StatefulWidget {
   final Merchant merchant;
 
-  const MerchantDetailScreen({
-    Key? key,
-    required this.merchant,
-  }) : super(key: key);
+  const MerchantDetailScreen({Key? key, required this.merchant})
+    : super(key: key);
 
   @override
   _MerchantDetailScreenState createState() => _MerchantDetailScreenState();
@@ -35,7 +33,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   }
 
   Future<void> _calculateTravelTimes() async {
-    final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+    final locationProvider = Provider.of<LocationProvider>(
+      context,
+      listen: false,
+    );
 
     if (locationProvider.currentPosition == null) {
       await locationProvider.initialize();
@@ -78,13 +79,18 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          Consumer<FavoriteMerchantProvider>( // Utilisation de Consumer
+          Consumer<FavoriteMerchantProvider>(
+            // Utilisation de Consumer
             builder: (context, favoriteProvider, child) {
-              final isFavorite = favoriteProvider.isFavorite(widget.merchant.id);
+              final isFavorite = favoriteProvider.isFavorite(
+                widget.merchant.id,
+              );
               return IconButton(
                 icon: Icon(
                   isFavorite ? Icons.favorite : Icons.favorite_border,
-                  color: isFavorite ? AppColors.error : null, // Couleur rouge si favori
+                  color: isFavorite
+                      ? AppColors.error
+                      : null, // Couleur rouge si favori
                 ),
                 onPressed: () {
                   if (isFavorite) {
@@ -151,6 +157,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                   Text(
                     widget.merchant.name,
                     style: AppTextStyles.h2,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
                   _buildInfoSection(
@@ -168,54 +176,132 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     'Horaires',
                     '${widget.merchant.hours}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
                   ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildTimeCard(
-                          Icons.directions_walk,
-                          'À pied',
-                          _walkingTime,
-                        ),
-                      ),
-                      const SizedBox(width: AppDimensions.paddingM),
-                      Expanded(
-                        child: _buildTimeCard(
-                          Icons.directions_car,
-                          'En voiture',
-                          _drivingTime,
-                        ),
-                      ),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxWidth < 350) {
+                        // Disposition en colonne pour les petits écrans
+                        return Column(
+                          children: [
+                            _buildTimeCard(
+                              Icons.directions_walk,
+                              'À pied',
+                              _walkingTime,
+                            ),
+                            const SizedBox(height: AppDimensions.paddingS),
+                            _buildTimeCard(
+                              Icons.directions_car,
+                              'En voiture',
+                              _drivingTime,
+                            ),
+                          ],
+                        );
+                      } else {
+                        // Disposition horizontale pour les écrans plus larges
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: _buildTimeCard(
+                                Icons.directions_walk,
+                                'À pied',
+                                _walkingTime,
+                              ),
+                            ),
+                            const SizedBox(width: AppDimensions.paddingM),
+                            Expanded(
+                              child: _buildTimeCard(
+                                Icons.directions_car,
+                                'En voiture',
+                                _drivingTime,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                    },
                   ),
                   const SizedBox(height: AppDimensions.paddingL),
-                  Text(
-                    'Services disponibles',
-                    style: AppTextStyles.h3,
-                  ),
+                  Text('Services disponibles', style: AppTextStyles.h3),
                   const SizedBox(height: AppDimensions.paddingM),
                   widget.merchant.services.isEmpty
                       ? const Text('Aucun service disponible.')
-                      : Wrap(
-                          spacing: AppDimensions.paddingS,
-                          runSpacing: AppDimensions.paddingS,
-                          children: widget.merchant.services.map((service) {
-                            return Container(
-                              key: ValueKey(service),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppDimensions.paddingM,
-                                vertical: AppDimensions.paddingS,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                                border: Border.all(color: AppColors.border),
-                              ),
-                              child: Text(
-                                service,
-                                style: AppTextStyles.body2,
-                              ),
-                            );
-                          }).toList(),
+                      : LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Si l'écran est trop petit, afficher les services en colonne
+                            if (constraints.maxWidth < 350) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: widget.merchant.services.map((
+                                  service,
+                                ) {
+                                  return Container(
+                                    key: ValueKey(service),
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(
+                                      bottom: AppDimensions.paddingS,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: AppDimensions.paddingM,
+                                      vertical: AppDimensions.paddingS,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.background,
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusS,
+                                      ),
+                                      border: Border.all(
+                                        color: AppColors.border,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      service,
+                                      style: AppTextStyles.body2,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            } else {
+                              // Disposition Wrap pour les écrans plus larges
+                              return Wrap(
+                                spacing: AppDimensions.paddingS,
+                                runSpacing: AppDimensions.paddingS,
+                                children: widget.merchant.services.map((
+                                  service,
+                                ) {
+                                  return ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: constraints.maxWidth * 0.45,
+                                    ),
+                                    child: Container(
+                                      key: ValueKey(service),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppDimensions.paddingM,
+                                        vertical: AppDimensions.paddingS,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.background,
+                                        borderRadius: BorderRadius.circular(
+                                          AppDimensions.radiusS,
+                                        ),
+                                        border: Border.all(
+                                          color: AppColors.border,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        service,
+                                        style: AppTextStyles.body2,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                              );
+                            }
+                          },
                         ),
                 ],
               ),
@@ -242,7 +328,9 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                     type: ButtonType.outline,
                     icon: const Icon(Icons.phone, size: 20),
                     onPressed: () async {
-                      await _locationService.makePhoneCall(widget.merchant.phone);
+                      await _locationService.makePhoneCall(
+                        widget.merchant.phone,
+                      );
                     },
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
@@ -257,7 +345,11 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       );
                       if (!success && mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Impossible de lancer la navigation externe.')),
+                          const SnackBar(
+                            content: Text(
+                              'Impossible de lancer la navigation externe.',
+                            ),
+                          ),
                         );
                       }
                     },
@@ -273,7 +365,9 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       type: ButtonType.outline,
                       icon: const Icon(Icons.phone, size: 20),
                       onPressed: () async {
-                        await _locationService.makePhoneCall(widget.merchant.phone);
+                        await _locationService.makePhoneCall(
+                          widget.merchant.phone,
+                        );
                       },
                     ),
                   ),
@@ -290,7 +384,11 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                         );
                         if (!success && mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Impossible de lancer la navigation externe.')),
+                            const SnackBar(
+                              content: Text(
+                                'Impossible de lancer la navigation externe.',
+                              ),
+                            ),
                           );
                         }
                       },
@@ -326,10 +424,19 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
               children: [
                 Text(
                   title,
-                  style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.body2.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
-                Text(content, style: AppTextStyles.body1),
+                Text(
+                  content,
+                  style: AppTextStyles.body1,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),

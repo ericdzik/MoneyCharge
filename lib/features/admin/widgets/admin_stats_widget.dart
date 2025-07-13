@@ -27,16 +27,21 @@ class AdminStatsWidget extends StatelessWidget {
     int crossAxisCount;
     double childAspectRatio;
 
-    if (isSmallScreen) { // Small screens (most phones portrait)
+    if (isSmallScreen) {
+      // Small screens (most phones portrait)
       crossAxisCount = 1;
-      childAspectRatio = 5.0; // Keep it tall for now, can be adjusted if overflow is fixed
-    } else if (screenWidth < 900) { // Medium screens
+      childAspectRatio =
+          5.0; // Keep it tall for now, can be adjusted if overflow is fixed
+    } else if (screenWidth < 900) {
+      // Medium screens
       crossAxisCount = 2;
       childAspectRatio = 1.3;
-    } else if (screenWidth < 1200) { // Large screens
+    } else if (screenWidth < 1200) {
+      // Large screens
       crossAxisCount = 3;
       childAspectRatio = 1.4;
-    } else { // Extra large screens
+    } else {
+      // Extra large screens
       crossAxisCount = 4;
       childAspectRatio = 1.5;
     }
@@ -110,41 +115,40 @@ class AdminStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 8 : 12), // Réduction du padding général
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10), // Léger ajustement
+        borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Ombre plus subtile
+            color: Colors.black.withOpacity(0.08),
             blurRadius: 6,
             offset: const Offset(0, 1),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween, // Pour mieux répartir l'espace vertical
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 5 : 7), // Ajustement
+                padding: EdgeInsets.all(isSmallScreen ? 5 : 7),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18), // Icônes plus petites
+                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18),
               ),
-              // Flexible pour permettre au titre de prendre l'espace et de s'ajuster
               Flexible(
                 child: Text(
                   title,
-                  textAlign: TextAlign.right, // Alignement à droite pour le titre près de l'icône
+                  textAlign: TextAlign.right,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: isSmallScreen ? 9 : 11, // Police plus petite
+                    fontSize: isSmallScreen ? 9 : 11,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -152,30 +156,35 @@ class AdminStatsWidget extends StatelessWidget {
               ),
             ],
           ),
-          // Utilisation de Flexible et FittedBox pour les valeurs et sous-titres
-          // afin qu'ils s'adaptent à l'espace disponible.
+          const SizedBox(height: 4),
           Flexible(
-            child: FittedBox( // FittedBox pour que le texte 'value' se réduise si besoin
-              fit: BoxFit.scaleDown, // Assure que le texte ne dépasse pas
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
               child: Text(
                 value,
                 style: AppTextStyles.h2.copyWith(
-                  fontSize: isSmallScreen ? 14 : 18, // Police plus petite
+                  fontSize: isSmallScreen ? 14 : 18,
                   fontWeight: FontWeight.bold,
                 ),
-                maxLines: 1, // Forcer sur une ligne, FittedBox gère la taille
+                maxLines: 1,
+                textAlign: TextAlign.center,
               ),
             ),
           ),
+          const SizedBox(height: 2),
           Flexible(
-            child: Text(
-              subtitle,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: isSmallScreen ? 9 : 10, // Police plus petite
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                subtitle,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: isSmallScreen ? 9 : 10,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                textAlign: TextAlign.center,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: isSmallScreen ? 2 : 1, // Permettre 2 lignes sur très petit écran si besoin
             ),
           ),
         ],

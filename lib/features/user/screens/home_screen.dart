@@ -9,7 +9,6 @@ import '../../../core/constants/app_text_styles.dart';
 // import '../../../core/utils/color_utils.dart'; // Retiré car non utilisé après suppression de blackWithAlpha
 import '../widgets/map_widget.dart';
 import '../widgets/filter_bar_widget.dart';
-import '../models/merchant_model.dart';
 import 'list_view_screen.dart';
 import 'user_profile_screen.dart';
 import '../../../providers/merchant_provider.dart';
@@ -34,19 +33,34 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar( // Peut être const si les actions sont const
+      appBar: CustomAppBar(
+        // Peut être const si les actions sont const
         title: 'Geo Money&Charge',
         actions: [
-          Padding( // Ajout d'un Padding pour l'action de l'AppBar
-            padding: const EdgeInsets.only(right: AppDimensions.paddingS), // Un peu d'espace à droite
+          Padding(
+            // Ajout d'un Padding pour l'action de l'AppBar
+            padding: const EdgeInsets.only(
+              right: AppDimensions.paddingS,
+            ), // Un peu d'espace à droite
             child: CircleAvatar(
-              backgroundColor: AppColors.onPrimary, // Fond blanc (sur AppBar verte)
-              child: Icon(Icons.person, color: AppColors.primary), // Icône verte
+              backgroundColor:
+                  AppColors.onPrimary, // Fond blanc (sur AppBar verte)
+              child: Icon(
+                Icons.person,
+                color: AppColors.primary,
+              ), // Icône verte
             ),
           ),
         ],
       ),
-      body: _screens[_currentIndex],
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          ),
+          _screens[_currentIndex],
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -98,15 +112,33 @@ class _MapViewContentState extends State<MapViewContent> {
             Expanded(
               child: Stack(
                 children: [
-                  if (merchantProvider.isLoading && merchantProvider.merchants.isEmpty)
-                    const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  if (merchantProvider.isLoading &&
+                      merchantProvider.merchants.isEmpty)
+                    const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    )
                   else if (merchantProvider.error != null)
-                    Center(child: Text("Erreur: ${merchantProvider.error}", style: AppTextStyles.body1.copyWith(color: AppColors.error)))
+                    Center(
+                      child: Text(
+                        "Erreur: ${merchantProvider.error}",
+                        style: AppTextStyles.body1.copyWith(
+                          color: AppColors.error,
+                        ),
+                      ),
+                    )
                   else if (merchantProvider.merchants.isEmpty)
-                    Center(child: Text("Aucun point de service trouvé.", style: AppTextStyles.body1))
+                    Center(
+                      child: Text(
+                        "Aucun point de service trouvé.",
+                        style: AppTextStyles.body1,
+                      ),
+                    )
                   else
                     MapWidget(
-                      merchants: merchantProvider.merchants, // Utiliser directement la liste du provider
+                      merchants: merchantProvider
+                          .merchants, // Utiliser directement la liste du provider
                       onMerchantSelected: (merchant) {
                         Navigator.pushNamed(
                           context,
@@ -117,53 +149,145 @@ class _MapViewContentState extends State<MapViewContent> {
                       showUserLocation: true,
                       initialZoom: 13.0,
                     ),
-                  if (!merchantProvider.isLoading && merchantProvider.error == null && merchantProvider.merchants.isNotEmpty)
+                  if (!merchantProvider.isLoading &&
+                      merchantProvider.error == null &&
+                      merchantProvider.merchants.isNotEmpty)
                     Positioned(
                       bottom: AppDimensions.paddingL,
                       left: AppDimensions.paddingM,
                       right: AppDimensions.paddingM,
-                      child: Container(
-                        padding: const EdgeInsets.all(AppDimensions.paddingM),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface, // Beige clair
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                '${merchantProvider.merchants.length} points de service trouvés',
-                                style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Si l'écran est trop petit, utiliser une disposition en colonne
+                          if (constraints.maxWidth < 400) {
+                            return Container(
+                              padding: const EdgeInsets.all(
+                                AppDimensions.paddingM,
                               ),
-                            ),
-                            const SizedBox(width: AppDimensions.paddingM),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const ListViewScreen(),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface, // Beige clair
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusM,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.08),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.secondary, // Orange
-                                foregroundColor: AppColors.onSecondary, // Noir
-                                padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM, vertical: AppDimensions.paddingS),
-                                textStyle: AppTextStyles.button.copyWith(fontSize: 12, color: AppColors.onSecondary), // Assurer la couleur du texte
+                                ],
                               ),
-                              child: const Text('Vue Liste'),
-                            ),
-                          ],
-                        ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${merchantProvider.merchants.length} points de service trouvés',
+                                    style: AppTextStyles.body1.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textPrimary,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(
+                                    height: AppDimensions.paddingS,
+                                  ),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                const ListViewScreen(),
+                                          ),
+                                        );
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            AppColors.secondary, // Orange
+                                        foregroundColor:
+                                            AppColors.onSecondary, // Noir
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: AppDimensions.paddingM,
+                                          vertical: AppDimensions.paddingS,
+                                        ),
+                                        textStyle: AppTextStyles.button
+                                            .copyWith(
+                                              fontSize: 12,
+                                              color: AppColors.onSecondary,
+                                            ),
+                                      ),
+                                      child: const Text('Vue Liste'),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          } else {
+                            // Disposition horizontale pour les écrans plus larges
+                            return Container(
+                              padding: const EdgeInsets.all(
+                                AppDimensions.paddingM,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface, // Beige clair
+                                borderRadius: BorderRadius.circular(
+                                  AppDimensions.radiusM,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.08),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '${merchantProvider.merchants.length} points de service trouvés',
+                                      style: AppTextStyles.body1.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppDimensions.paddingM),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const ListViewScreen(),
+                                        ),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          AppColors.secondary, // Orange
+                                      foregroundColor:
+                                          AppColors.onSecondary, // Noir
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: AppDimensions.paddingM,
+                                        vertical: AppDimensions.paddingS,
+                                      ),
+                                      textStyle: AppTextStyles.button.copyWith(
+                                        fontSize: 12,
+                                        color: AppColors.onSecondary,
+                                      ),
+                                    ),
+                                    child: const Text('Vue Liste'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ),
                 ],

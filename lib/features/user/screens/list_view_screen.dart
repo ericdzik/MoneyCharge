@@ -8,6 +8,7 @@ import 'merchant_detail_screen.dart';
 import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
 import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
 // import '../../../services/location_service.dart'; // Retiré car plus utilisé directement
+import '../../../core/constants/app_routes.dart'; // Ajout de l'import pour AppRoutes
 
 class ListViewScreen extends StatefulWidget {
   const ListViewScreen({Key? key}) : super(key: key);
@@ -41,51 +42,53 @@ class _ListViewScreenState extends State<ListViewScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: Stack(
         children: [
-          const FilterBarWidget(),
-          Expanded(
-            child: Consumer<MerchantProvider>(
-              builder: (context, merchantProvider, child) {
-                if (merchantProvider.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          ),
+          Column(
+            children: [
+              const FilterBarWidget(),
+              Expanded(
+                child: Consumer<MerchantProvider>(
+                  builder: (context, merchantProvider, child) {
+                    if (merchantProvider.isLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                if (merchantProvider.merchants.isEmpty) {
-                  return const Center(
-                    child: Text('Aucun point de service trouvé'),
-                  );
-                }
+                    if (merchantProvider.merchants.isEmpty) {
+                      return const Center(
+                        child: Text('Aucun point de service trouvé'),
+                      );
+                    }
 
-                return RefreshIndicator(
-                  onRefresh: () => merchantProvider.loadMerchants(),
-                  child: ListView.builder(
-                    itemCount: merchantProvider.merchants.length,
-                    itemBuilder: (context, index) {
-                      final merchant = merchantProvider.merchants[index];
-                      return MerchantCard(
-                        merchant: merchant,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => MerchantDetailScreen(
-                                merchant: merchant,
-                              ),
-                            ),
+                    return RefreshIndicator(
+                      onRefresh: () => merchantProvider.loadMerchants(),
+                      child: ListView.builder(
+                        itemCount: merchantProvider.merchants.length,
+                        itemBuilder: (context, index) {
+                          final merchant = merchantProvider.merchants[index];
+                          return MerchantCard(
+                            merchant: merchant,
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.merchantDetail,
+                                arguments: {'merchant': merchant},
+                              );
+                            },
+                            onDirectionsPressed: () {
+                              _openDirections(merchant);
+                            },
                           );
                         },
-                        onDirectionsPressed: () {
-                          _openDirections(merchant);
-                        },
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -93,11 +96,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
   }
 
   void _openDirections(Merchant merchant) {
-    Navigator.push(
+    Navigator.pushNamed(
       context,
-      MaterialPageRoute(
-        builder: (_) => MapViewScreen(targetMerchant: merchant),
-      ),
+      AppRoutes.mapView,
+      arguments: {'merchant': merchant},
     );
   }
 }

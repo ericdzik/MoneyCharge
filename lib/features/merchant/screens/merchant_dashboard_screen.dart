@@ -28,10 +28,14 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       if (mounted) {
         final authProvider = Provider.of<AuthProvider>(context, listen: false);
         if (authProvider.merchantProfile != null) {
-          Provider.of<TransactionProvider>(context, listen: false)
-              .fetchMerchantTransactions(authProvider);
+          Provider.of<TransactionProvider>(
+            context,
+            listen: false,
+          ).fetchMerchantTransactions(authProvider);
         } else {
-          print("[MerchantDashboardScreen] initState: merchantProfile est null, impossible de fetch les transactions.");
+          print(
+            "[MerchantDashboardScreen] initState: merchantProfile est null, impossible de fetch les transactions.",
+          );
         }
       }
     });
@@ -43,10 +47,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     final transactionProvider = Provider.of<TransactionProvider>(context);
     final MerchantAuthModel? currentMerchant = authProvider.merchantProfile;
 
-    if ((authProvider.isLoading || transactionProvider.isLoadingTransactions) && currentMerchant == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+    if ((authProvider.isLoading || transactionProvider.isLoadingTransactions) &&
+        currentMerchant == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (currentMerchant == null) {
@@ -65,76 +68,101 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: RefreshIndicator( // Ajout du RefreshIndicator
-          onRefresh: () async {
-            // Mettre à jour le profil et les transactions
-            // On suppose que fetchUserProfile dans AuthProvider est appelé si nécessaire
-            // ou que le profil est déjà à jour.
-             if (authProvider.merchantProfile != null) {
-                await Provider.of<TransactionProvider>(context, listen: false)
-                    .fetchMerchantTransactions(authProvider);
-             }
-          },
-          child: Column(
-            children: [
-              MerchantHeaderWidget(merchant: currentMerchant, onLogout: () => _handleLogout(context)),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Aperçu',
-                        style: AppTextStyles.h2.copyWith(fontSize: 20),
-                      ),
-                      const SizedBox(height: 16),
-                      Builder(
-                        builder: (context) {
-                          final int totalServicesCount = currentMerchant.services?.length ?? 0;
-                          final int activeServicesCount = currentMerchant.serviceStockStatus?.entries
-                              .where((entry) => entry.value.toLowerCase() == 'disponible')
-                              .length ?? 0;
-
-                          return DashboardStatsWidget(
-                            totalServices: totalServicesCount,
-                            activeServices: activeServicesCount,
-                            totalRevenue: transactionProvider.totalRevenue,
-                            totalTransactions: transactionProvider.totalSalesTransactionsCount,
-                          );
-                        }
-                      ),
-                      const SizedBox(height: 32),
-                      if (transactionProvider.transactionsError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: AppDimensions.paddingM),
-                          child: Text(
-                            "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
-                            style: AppTextStyles.body2.copyWith(color: Colors.red),
-                          ),
-                        ),
-                      Text(
-                        'Actions rapides',
-                        style: AppTextStyles.h2.copyWith(fontSize: 20),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildQuickActions(currentMerchant),
-                      const SizedBox(height: 32),
-                      Text(
-                        'Activité récente',
-                        style: AppTextStyles.h2.copyWith(fontSize: 20),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRecentActivity(), // Sera mis à jour pour utiliser TransactionProvider
-                    ],
-                  ),
-                ),
-              ),
-            ],
+      appBar: null,
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-        ),
+          SafeArea(
+            child: RefreshIndicator(
+              // Ajout du RefreshIndicator
+              onRefresh: () async {
+                // Mettre à jour le profil et les transactions
+                // On suppose que fetchUserProfile dans AuthProvider est appelé si nécessaire
+                // ou que le profil est déjà à jour.
+                if (authProvider.merchantProfile != null) {
+                  await Provider.of<TransactionProvider>(
+                    context,
+                    listen: false,
+                  ).fetchMerchantTransactions(authProvider);
+                }
+              },
+              child: Column(
+                children: [
+                  MerchantHeaderWidget(
+                    merchant: currentMerchant,
+                    onLogout: () => _handleLogout(context),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppDimensions.paddingL),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Aperçu',
+                            style: AppTextStyles.h2.copyWith(fontSize: 20),
+                          ),
+                          const SizedBox(height: 16),
+                          Builder(
+                            builder: (context) {
+                              final int totalServicesCount =
+                                  currentMerchant.services?.length ?? 0;
+                              final int activeServicesCount =
+                                  currentMerchant.serviceStockStatus?.entries
+                                      .where(
+                                        (entry) =>
+                                            entry.value.toLowerCase() ==
+                                            'disponible',
+                                      )
+                                      .length ??
+                                  0;
+
+                              return DashboardStatsWidget(
+                                totalServices: totalServicesCount,
+                                activeServices: activeServicesCount,
+                                totalRevenue: transactionProvider.totalRevenue,
+                                totalTransactions: transactionProvider
+                                    .totalSalesTransactionsCount,
+                              );
+                            },
+                          ),
+                          const SizedBox(height: 32),
+                          if (transactionProvider.transactionsError != null)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppDimensions.paddingM,
+                              ),
+                              child: Text(
+                                "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
+                                style: AppTextStyles.body2.copyWith(
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ),
+                          Text(
+                            'Actions rapides',
+                            style: AppTextStyles.h2.copyWith(fontSize: 20),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildQuickActions(currentMerchant),
+                          const SizedBox(height: 32),
+                          Text(
+                            'Activité récente',
+                            style: AppTextStyles.h2.copyWith(fontSize: 20),
+                          ),
+                          const SizedBox(height: 16),
+                          _buildRecentActivity(), // Sera mis à jour pour utiliser TransactionProvider
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -146,16 +174,20 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         int crossAxisCount;
         double childAspectRatio;
 
-        if (screenWidth < 360) { // Very small screens
+        if (screenWidth < 360) {
+          // Very small screens
           crossAxisCount = 1;
           childAspectRatio = 2.8; // Plus grand pour une seule colonne
-        } else if (screenWidth < 600) { // Small screens (typical phones portrait)
+        } else if (screenWidth < 600) {
+          // Small screens (typical phones portrait)
           crossAxisCount = 2;
           childAspectRatio = 1.3; // Ajusté pour un meilleur espacement
-        } else if (screenWidth < 900) { // Medium screens (tablets portrait, large phones landscape)
+        } else if (screenWidth < 900) {
+          // Medium screens (tablets portrait, large phones landscape)
           crossAxisCount = 3;
           childAspectRatio = 1.2;
-        } else { // Large screens
+        } else {
+          // Large screens
           crossAxisCount = 4;
           childAspectRatio = 1.2;
         }
@@ -182,9 +214,13 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               icon: Icons.receipt_long,
               color: Colors.green,
               onTap: () {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navigation vers l\'historique des transactions (TODO)'))
-                 );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Navigation vers l\'historique des transactions (TODO)',
+                    ),
+                  ),
+                );
               },
             ),
             _buildActionCard(
@@ -196,7 +232,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => EditMerchantProfileScreen(merchant: merchant),
+                    builder: (_) =>
+                        EditMerchantProfileScreen(merchant: merchant),
                   ),
                 );
               },
@@ -207,9 +244,11 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               icon: Icons.support_agent,
               color: Colors.orange,
               onTap: () {
-                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Navigation vers le support (TODO)'))
-                 );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Navigation vers le support (TODO)'),
+                  ),
+                );
               },
             ),
           ],
@@ -230,7 +269,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12), // Padding réduit
+        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
@@ -252,29 +291,41 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: isVerySmallScreen ? 24 : 28),
+              child: Icon(
+                icon,
+                color: color,
+                size: isVerySmallScreen ? 24 : 28,
+              ),
             ),
             SizedBox(height: isVerySmallScreen ? 6 : 8),
             Flexible(
-              child: Text(
-                title,
-                style: AppTextStyles.h3.copyWith(fontSize: isVerySmallScreen ? 13 : 15),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  style: AppTextStyles.h3.copyWith(
+                    fontSize: isVerySmallScreen ? 13 : 15,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
               ),
             ),
             SizedBox(height: isVerySmallScreen ? 3 : 4),
             Flexible(
-              child: Text(
-                subtitle,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: isVerySmallScreen ? 10 : 11,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: isVerySmallScreen ? 10 : 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
               ),
             ),
           ],
@@ -286,39 +337,53 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   Widget _buildRecentActivity() {
     final transactionProvider = Provider.of<TransactionProvider>(context);
 
-    if (transactionProvider.isLoadingTransactions && transactionProvider.recentTransactions.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: CircularProgressIndicator(),
-      ));
+    if (transactionProvider.isLoadingTransactions &&
+        transactionProvider.recentTransactions.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
-    if (transactionProvider.transactionsError != null && transactionProvider.recentTransactions.isEmpty) {
-        return Center(child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
+    if (transactionProvider.transactionsError != null &&
+        transactionProvider.recentTransactions.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Text(
             "Erreur: ${transactionProvider.transactionsError}",
             style: AppTextStyles.body1.copyWith(color: Colors.red),
             textAlign: TextAlign.center,
+          ),
         ),
-        ));
+      );
     }
 
     if (transactionProvider.recentTransactions.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(16.0),
-        child: Text('Aucune activité récente.'),
-      ));
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Text('Aucune activité récente.'),
+        ),
+      );
     }
 
     return Column(
-      children: transactionProvider.recentTransactions.map<Widget>((transaction) { // Explicitement Widget
-        String description = '${transaction.typeDisplay}: ${transaction.serviceName} - ${transaction.amount.toStringAsFixed(0)} FCFA';
+      children: transactionProvider.recentTransactions.map<Widget>((
+        transaction,
+      ) {
+        // Explicitement Widget
+        String description =
+            '${transaction.typeDisplay}: ${transaction.serviceName} - ${transaction.amount.toStringAsFixed(0)} FCFA';
         if (transaction.userId != null && transaction.userId!.isNotEmpty) {
-          description += ' (Client: ${transaction.userId!.substring(0,5)}...)';
+          description += ' (Client: ${transaction.userId!.substring(0, 5)}...)';
         }
 
-        final timeAgo = DateTime.now().difference(transaction.timestamp.toDate());
+        final timeAgo = DateTime.now().difference(
+          transaction.timestamp.toDate(),
+        );
         String timeDisplay;
         if (timeAgo.inMinutes < 1) {
           timeDisplay = 'À l\'instant';
@@ -343,7 +408,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: _getTransactionActivityColor(transaction.type).withOpacity(0.1),
+                  color: _getTransactionActivityColor(
+                    transaction.type,
+                  ).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -371,7 +438,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                         Text(
                           transaction.statusDisplay,
                           style: AppTextStyles.caption.copyWith(
-                            color: _getTransactionStatusColor(transaction.status),
+                            color: _getTransactionStatusColor(
+                              transaction.status,
+                            ),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -432,7 +501,10 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   }
 
   void _handleLogout(BuildContext dialogContext) {
-    final authProvider = Provider.of<AuthProvider>(dialogContext, listen: false);
+    final authProvider = Provider.of<AuthProvider>(
+      dialogContext,
+      listen: false,
+    );
     showDialog(
       context: dialogContext,
       builder: (BuildContext alertContext) => AlertDialog(
@@ -448,7 +520,11 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               Navigator.pop(alertContext);
               await authProvider.logout();
               if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(dialogContext, AppRoutes.login, (route) => false);
+                Navigator.pushNamedAndRemoveUntil(
+                  dialogContext,
+                  AppRoutes.login,
+                  (route) => false,
+                );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),

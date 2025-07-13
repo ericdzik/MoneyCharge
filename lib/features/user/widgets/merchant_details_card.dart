@@ -45,58 +45,142 @@ class MerchantDetailsCard extends StatelessWidget {
                 top: Radius.circular(16),
               ),
             ),
-            child: Row(
-              children: [
-                // Avatar du marchand
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Icon(Icons.store, color: Colors.white, size: 24),
-                ),
-                const SizedBox(width: 12),
-                // Informations principales
-                Expanded(
-                  child: Column(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                bool isSmallScreen = constraints.maxWidth < 350;
+
+                if (isSmallScreen) {
+                  // Disposition en colonne pour les petits écrans
+                  return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        merchant.name,
-                        style: AppTextStyles.h3.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          // Avatar du marchand
+                          Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                            child: const Icon(
+                              Icons.store,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Informations principales
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  merchant.name,
+                                  style: AppTextStyles.h3.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  merchant.address,
+                                  style: AppTextStyles.body2.copyWith(
+                                    color: Colors.grey[600],
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        merchant.address,
-                        style: AppTextStyles.body2.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildStatusChip(merchant.status),
+                          if (onClose != null)
+                            IconButton(
+                              onPressed: onClose,
+                              icon: const Icon(Icons.close, size: 20),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.grey[200],
+                                minimumSize: const Size(32, 32),
+                              ),
+                            ),
+                        ],
                       ),
                     ],
-                  ),
-                ),
-                // Statut et bouton fermer
-                Column(
-                  children: [
-                    _buildStatusChip(merchant.status),
-                    if (onClose != null) ...[
-                      const SizedBox(height: 8),
-                      IconButton(
-                        onPressed: onClose,
-                        icon: const Icon(Icons.close, size: 20),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
-                          minimumSize: const Size(32, 32),
+                  );
+                } else {
+                  // Disposition horizontale pour les écrans plus larges
+                  return Row(
+                    children: [
+                      // Avatar du marchand
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(25),
+                        ),
+                        child: const Icon(
+                          Icons.store,
+                          color: Colors.white,
+                          size: 24,
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      // Informations principales
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              merchant.name,
+                              style: AppTextStyles.h3.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              merchant.address,
+                              style: AppTextStyles.body2.copyWith(
+                                color: Colors.grey[600],
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Statut et bouton fermer
+                      Column(
+                        children: [
+                          _buildStatusChip(merchant.status),
+                          if (onClose != null) ...[
+                            const SizedBox(height: 8),
+                            IconButton(
+                              onPressed: onClose,
+                              icon: const Icon(Icons.close, size: 20),
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.grey[200],
+                                minimumSize: const Size(32, 32),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ],
-                  ],
-                ),
-              ],
+                  );
+                }
+              },
             ),
           ),
 
@@ -116,11 +200,10 @@ class MerchantDetailsCard extends StatelessWidget {
                     '${merchant.distance} km',
                   ),
                   _buildInfoRow(
-  Icons.directions_car,
-  'Temps de trajet',
-  merchant.drivingTime ?? 'Indisponible',
-),
-
+                    Icons.directions_car,
+                    'Temps de trajet',
+                    merchant.drivingTime ?? 'Indisponible',
+                  ),
                 ]),
 
                 const SizedBox(height: 16),
@@ -133,66 +216,159 @@ class MerchantDetailsCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: merchant.services
-                      .map(
-                        (service) => Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.primary.withOpacity(0.3),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 300) {
+                      // Disposition en colonne pour les très petits écrans
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: merchant.services.map((service) {
+                          return Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
                             ),
-                          ),
-                          child: Text(
-                            service,
-                            style: AppTextStyles.caption.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w500,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: AppColors.primary.withOpacity(0.3),
+                              ),
                             ),
-                          ),
-                        ),
-                      )
-                      .toList(),
+                            child: Text(
+                              service,
+                              style: AppTextStyles.caption.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    } else {
+                      // Disposition Wrap pour les écrans plus larges
+                      return Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: merchant.services.map((service) {
+                          return ConstrainedBox(
+                            constraints: BoxConstraints(
+                              maxWidth: constraints.maxWidth * 0.4,
+                            ),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.primary.withOpacity(0.3),
+                                ),
+                              ),
+                              child: Text(
+                                service,
+                                style: AppTextStyles.caption.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 16),
 
                 // Boutons d'action
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: onCall ?? () => _callMerchant(context),
-                        icon: const Icon(Icons.phone, size: 18),
-                        label: const Text('Appeler'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          side: BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            onNavigate ?? () => _navigateToMerchant(context),
-                        icon: const Icon(Icons.directions, size: 18),
-                        label: const Text('Itinéraire'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    if (constraints.maxWidth < 300) {
+                      // Disposition en colonne pour les très petits écrans
+                      return Column(
+                        children: [
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: onCall ?? () => _callMerchant(context),
+                              icon: const Icon(Icons.phone, size: 18),
+                              label: const Text('Appeler'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                side: BorderSide(color: AppColors.primary),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  onNavigate ??
+                                  () => _navigateToMerchant(context),
+                              icon: const Icon(Icons.directions, size: 18),
+                              label: const Text('Itinéraire'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      // Disposition horizontale pour les écrans plus larges
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onCall ?? () => _callMerchant(context),
+                              icon: const Icon(Icons.phone, size: 18),
+                              label: const Text('Appeler'),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                side: BorderSide(color: AppColors.primary),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed:
+                                  onNavigate ??
+                                  () => _navigateToMerchant(context),
+                              icon: const Icon(Icons.directions, size: 18),
+                              label: const Text('Itinéraire'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                  },
                 ),
               ],
             ),
@@ -237,12 +413,16 @@ class MerchantDetailsCard extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: color),
           const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              color: color,
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: color,
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -268,9 +448,11 @@ class MerchantDetailsCard extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: Colors.grey[600]),
           const SizedBox(width: 8),
-          Text(
-            '$label: ',
-            style: AppTextStyles.caption.copyWith(color: Colors.grey[600]),
+          Flexible(
+            child: Text(
+              '$label: ',
+              style: AppTextStyles.caption.copyWith(color: Colors.grey[600]),
+            ),
           ),
           Expanded(
             child: Text(
@@ -278,6 +460,8 @@ class MerchantDetailsCard extends StatelessWidget {
               style: AppTextStyles.caption.copyWith(
                 fontWeight: FontWeight.w500,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

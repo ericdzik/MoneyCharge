@@ -44,27 +44,34 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Statistiques principales
-            _buildMainStats(),
-            const SizedBox(height: 24),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Statistiques principales
+                _buildMainStats(),
+                const SizedBox(height: 24),
 
-            // Graphiques
-            _buildCharts(),
-            const SizedBox(height: 24),
+                // Graphiques
+                _buildCharts(),
+                const SizedBox(height: 24),
 
-            // Top marchands
-            _buildTopMerchants(),
-            const SizedBox(height: 24),
+                // Top marchands
+                _buildTopMerchants(),
+                const SizedBox(height: 24),
 
-            // Activité récente
-            _buildRecentActivity(),
-          ],
-        ),
+                // Activité récente
+                _buildRecentActivity(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -74,13 +81,16 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
     int crossAxisCount;
     double childAspectRatio;
 
-    if (screenWidth < 600) { // Small screens
+    if (screenWidth < 600) {
+      // Small screens
       crossAxisCount = 1;
       childAspectRatio = 2.8; // Adjust for taller items
-    } else if (screenWidth < 900) { // Medium screens
+    } else if (screenWidth < 900) {
+      // Medium screens
       crossAxisCount = 2;
       childAspectRatio = 1.5; // Original aspect ratio
-    } else { // Large screens
+    } else {
+      // Large screens
       crossAxisCount = 3; // Or 4 if cards are made more compact
       childAspectRatio = 1.6;
     }
@@ -203,7 +213,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       children: [
         Text('Évolution des locations', style: AppTextStyles.h3),
         const SizedBox(height: 16),
-        LayoutBuilder( // Use LayoutBuilder to get available width
+        LayoutBuilder(
+          // Use LayoutBuilder to get available width
           builder: (context, constraints) {
             final screenWidth = MediaQuery.of(context).size.width;
             double chartHeight;
@@ -221,25 +232,25 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
               width: constraints.maxWidth, // Take full available width
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: const Center(
-            child: Text(
-              'Graphique des locations\n(À implémenter avec une librairie de graphiques)',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-          ),
-        );
-          }
+              child: const Center(
+                child: Text(
+                  'Graphique des locations\n(À implémenter avec une librairie de graphiques)',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textSecondary),
+                ),
+              ),
+            );
+          },
         ),
       ],
     );
@@ -302,11 +313,13 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     ),
                   ),
                 ),
-                title: Expanded( // Allow merchant name to take available space and wrap
+                title: Expanded(
+                  // Allow merchant name to take available space and wrap
                   child: Text(
                     merchant['name'] as String,
                     style: AppTextStyles.body1,
-                    overflow: TextOverflow.ellipsis, // Add ellipsis for very long names
+                    overflow: TextOverflow
+                        .ellipsis, // Add ellipsis for very long names
                     maxLines: 2, // Allow up to 2 lines for name
                   ),
                 ),
@@ -316,7 +329,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     color: AppColors.textSecondary,
                   ),
                 ),
-                trailing: SizedBox( // Constrain width of trailing text
+                trailing: SizedBox(
+                  // Constrain width of trailing text
                   width: 100, // Adjust as needed
                   child: Text(
                     '${merchant['revenue']} FCFA',
@@ -406,11 +420,13 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
                     size: 20,
                   ),
                 ),
-                title: Expanded( // Allow activity message to take available space and wrap
+                title: Expanded(
+                  // Allow activity message to take available space and wrap
                   child: Text(
                     activity['message'] as String,
                     style: AppTextStyles.body2,
-                    overflow: TextOverflow.ellipsis, // Add ellipsis for very long messages
+                    overflow: TextOverflow
+                        .ellipsis, // Add ellipsis for very long messages
                     maxLines: 2, // Allow up to 2 lines
                   ),
                 ),
