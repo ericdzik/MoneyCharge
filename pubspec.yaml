@@ -45,6 +45,8 @@ flutter:
     - assets/splash/new.png
     - assets/splash/32.png
     - assets/splash/33.png
+    - assets/splash/25.png
+    - assets/splash/24.png
     
   # fonts:
   # - family: Inter
