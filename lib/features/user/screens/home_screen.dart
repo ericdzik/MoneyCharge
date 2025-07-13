@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          _screens[_currentIndex],
+          currentScreens[_currentIndex],
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
