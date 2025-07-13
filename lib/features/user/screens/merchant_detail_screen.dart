@@ -123,23 +123,22 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                 LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints constraints) {
                     double headerHeight = constraints.maxWidth * 0.5;
-                    if (headerHeight < 150) headerHeight = 150;
+                    if (headerHeight < 150) headerHeight = 50;
                     if (headerHeight > 300) headerHeight = 300;
 
                     return Container(
                       width: double.infinity,
                       height: headerHeight,
                       decoration: const BoxDecoration(
-                        color: Colors.transparent,
+                        color: Color.fromARGB(190, 255, 255, 255),
                       ),
                       child: Stack(
                         children: [
                           const Center(
                             child: Icon(
                               Icons.store,
-                              size: 80,
-                              color: Colors.white54,
-                            ),
+                              size: 40,
+                              color: Color.fromARGB(255, 0, 0, 0)                            ),
                           ),
                           Positioned(
                             top: AppDimensions.paddingM,
