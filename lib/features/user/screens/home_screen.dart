@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_app_bar.dart';

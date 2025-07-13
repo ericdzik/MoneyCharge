@@ -37,57 +37,71 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inscription'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+Widget build(BuildContext context) {
+  return Scaffold(
+    extendBodyBehindAppBar: true, // Pour que l'image passe aussi derrière l'app bar
+    appBar: AppBar(
+      title: const Text('Inscription'),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => Navigator.pop(context),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppDimensions.paddingL),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Logo et titre
-                Column(
-                  children: [
-                    Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(20),
+    ),
+    body: Stack(
+      children: [
+        // 🔴 Image de fond
+        Positioned.fill(
+          child: Image.asset(
+            'assets/splash/32.png', // Change ce chemin selon ton image
+            fit: BoxFit.cover,
+          ),
+        ),
+
+        // 🔵 Contenu principal
+        SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppDimensions.paddingL),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // Logo et titre
+                  Column(
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 22, 52, 23).withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: const Icon(
+                          Icons.person_add,
+                          color: AppColors.onPrimary,
+                          size: 40,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.person_add,
-                        color: AppColors.onPrimary,
-                        size: 40,
+                      const SizedBox(height: 24),
+                      Text(
+                        'Créer un compte',
+                        style: AppTextStyles.h1.copyWith(fontSize: 28,
+                         color: const Color(0xFF235225),),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Créer un compte',
-                      style: AppTextStyles.h1.copyWith(fontSize: 28),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Rejoignez LocaCharge et accédez à tous nos services',
-                      style: AppTextStyles.body2.copyWith(
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Rejoignez GEO et accédez à tous nos services',
+                        style: AppTextStyles.body2.copyWith(
+                          color: const Color.fromARGB(255, 215, 226, 69),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+
                 const SizedBox(height: 32),
 
                 // Formulaire
@@ -387,19 +401,22 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                 const SizedBox(height: 32),
 
                 // Footer
-                Text(
+                /**Text(
                   '© 2024 LocaCharge - Tous droits réservés',
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
                   ),
                   textAlign: TextAlign.center,
-                ),
+                ),**/
               ],
             ),
           ),
         ),
       ),
+      ]
+    )
     );
+  
   }
 
   Future<void> _handleRegister() async {

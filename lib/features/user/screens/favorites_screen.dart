@@ -79,7 +79,7 @@ class FavoritesScreen extends StatelessWidget {
                  return Center(
                     child: Text(
                       'Vous n\'avez pas encore de favoris.',
-                      style: AppTextStyles.body1.copyWith(color: AppTextColors.textSecondary),
+                      style: AppTextStyles.body1.copyWith(color: AppColors.textSecondary),
                       textAlign: TextAlign.center,
                     ),
                   );
