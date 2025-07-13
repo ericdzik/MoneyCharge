@@ -79,7 +79,7 @@ class ResponsiveCard extends StatelessWidget {
         maxWidth: adaptiveMaxWidth,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.surface,
+        color: backgroundColor ?? Colors.white,
         borderRadius: adaptiveBorderRadius,
         boxShadow: [adaptiveShadow],
         border: border,
@@ -173,7 +173,7 @@ class ResponsiveScrollCard extends StatelessWidget {
         maxHeight: adaptiveMaxHeight,
       ),
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.surface,
+        color: backgroundColor ?? Colors.white,
         borderRadius: adaptiveBorderRadius,
         boxShadow: [adaptiveShadow],
         border: border,

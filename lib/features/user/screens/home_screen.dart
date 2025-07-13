@@ -165,7 +165,7 @@ class _MapViewContentState extends State<MapViewContent> {
                                 AppDimensions.paddingM,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.surface, // Beige clair
+                                color: Colors.white, // Blanc
                                 borderRadius: BorderRadius.circular(
                                   AppDimensions.radiusM,
                                 ),
@@ -231,7 +231,7 @@ class _MapViewContentState extends State<MapViewContent> {
                                 AppDimensions.paddingM,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.surface, // Beige clair
+                                color: Colors.white, // Blanc
                                 borderRadius: BorderRadius.circular(
                                   AppDimensions.radiusM,
                                 ),

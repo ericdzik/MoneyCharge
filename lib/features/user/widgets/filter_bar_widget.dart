@@ -50,7 +50,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
         return Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: const BoxDecoration(
-            color: AppColors.surface,
+            color: Colors.white,
             border: Border(
               bottom: BorderSide(color: AppColors.border, width: 1),
             ),
@@ -80,7 +80,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
                               )
                             : null,
                         filled: true,
-                        fillColor: AppColors.background,
+                        fillColor: Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(
                             AppDimensions.radiusS,
@@ -208,8 +208,8 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
         );
       },
       backgroundColor: isSelected
-          ? AppColors.primary.withValues(alpha: 0.1)
-          : AppColors.background,
+          ? AppColors.primary.withOpacity(0.1)
+          : Colors.white,
       selectedColor: AppColors.primary,
       labelStyle: TextStyle(
         color: isSelected ? AppColors.primary : AppColors.textPrimary,

@@ -63,7 +63,7 @@ class DashboardStatsWidget extends StatelessWidget {
               value: '${totalRevenue.toStringAsFixed(0)} FCFA',
               subtitle: 'Total',
               icon: Icons.monetization_on,
-              color: Colors.green,
+              color: AppColors.primary,
             ),
             _buildStatCard(
               isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
@@ -98,7 +98,7 @@ class DashboardStatsWidget extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(

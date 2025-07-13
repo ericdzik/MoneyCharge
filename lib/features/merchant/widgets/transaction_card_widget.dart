@@ -6,7 +6,8 @@ import '../../../core/constants/app_dimensions.dart';
 import '../../../models/transaction_model.dart'; // Importer le modèle centralisé
 
 class TransactionCardWidget extends StatelessWidget {
-  final TransactionModel transaction; // Doit maintenant utiliser le TransactionModel centralisé
+  final TransactionModel
+  transaction; // Doit maintenant utiliser le TransactionModel centralisé
   final VoidCallback? onTap;
 
   const TransactionCardWidget({
@@ -18,6 +19,7 @@ class TransactionCardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Colors.white,
       margin: const EdgeInsets.only(bottom: AppDimensions.paddingM),
       elevation: 2,
       child: InkWell(
@@ -58,7 +60,8 @@ class TransactionCardWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          transaction.customerPhone ?? 'N/A', // Gérer la nullité
+                          transaction.customerPhone ??
+                              'N/A', // Gérer la nullité
                           style: AppTextStyles.body2.copyWith(
                             color: AppColors.onSurface.withOpacity(0.7),
                           ),
@@ -77,7 +80,7 @@ class TransactionCardWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           // Assurez-vous que BalanceType.credit est correctement importé/accessible
                           color: transaction.balanceType == BalanceType.credit
-                              ? AppColors.success
+                              ? AppColors.primary
                               : AppColors.outOfStock,
                         ),
                       ),
@@ -87,13 +90,17 @@ class TransactionCardWidget extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(transaction.status).withOpacity(0.1), // Utiliser une méthode helper
+                          color: _getStatusColor(
+                            transaction.status,
+                          ).withOpacity(0.1), // Utiliser une méthode helper
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           transaction.statusDisplay, // Utiliser le getter
                           style: AppTextStyles.caption.copyWith(
-                            color: _getStatusColor(transaction.status), // Utiliser une méthode helper
+                            color: _getStatusColor(
+                              transaction.status,
+                            ), // Utiliser une méthode helper
                             fontSize: 10,
                           ),
                         ),
@@ -130,7 +137,9 @@ class TransactionCardWidget extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _formatTime(transaction.timestamp.toDate()), // Utiliser timestamp.toDate()
+                    _formatTime(
+                      transaction.timestamp.toDate(),
+                    ), // Utiliser timestamp.toDate()
                     style: AppTextStyles.body2.copyWith(
                       color: AppColors.onSurface.withOpacity(0.7),
                     ),
@@ -147,7 +156,7 @@ class TransactionCardWidget extends StatelessWidget {
   Color _getTypeColor(TransactionType type) {
     switch (type) {
       case TransactionType.sale:
-        return AppColors.success; // Vert pour les ventes (crédits)
+        return AppColors.primary; // Vert harmonisé pour les ventes (crédits)
       case TransactionType.stockPurchase:
         return AppColors.primary; // Bleu pour achat de stock (débits)
       case TransactionType.refund:
@@ -177,7 +186,7 @@ class TransactionCardWidget extends StatelessWidget {
   Color _getStatusColor(TransactionStatus status) {
     switch (status) {
       case TransactionStatus.completed:
-        return AppColors.success;
+        return AppColors.primary;
       case TransactionStatus.pending:
         return Colors.orange; // Ou AppColors.warning si défini
       case TransactionStatus.failed:

@@ -81,14 +81,15 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
 
   Widget _buildMerchantCard(Merchant merchant) {
     return Card(
+      color: Colors.white,
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: AppColors.primary,
+          backgroundColor: Colors.white,
           child: Text(
             merchant.name[0].toUpperCase(),
             style: const TextStyle(
-              color: Colors.white,
+              color: AppColors.primary,
               fontWeight: FontWeight.bold,
             ),
           ),

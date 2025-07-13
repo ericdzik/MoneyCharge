@@ -21,7 +21,8 @@ class AppColors {
   static const Color error = Color(0xFFB71C1C); // Rouge sombre (erreur)
   static const Color onError = Color(0xFFFFFFFF);
 
-  static const Color success = Color(0xFF2E7D32); // Vert foncé (succès)
+  // Harmonisation : tous les verts métier pointent sur primary
+  static const Color success = primary; // Vert succès harmonisé
   static const Color warning = Color(
     0xFFFFC107,
   ); // Jaune orangé (avertissement)
@@ -36,7 +37,7 @@ class AppColors {
   static const Color divider = Color(0xFFEEEEEE); // Gris très clair
 
   // Alias métier (stock)
-  static const Color available = success; // Vert succès
+  static const Color available = primary; // Vert succès harmonisé
   static const Color lowStock = warning; // Jaune avertissement
   static const Color outOfStock = error; // Rouge erreur/rupture
 

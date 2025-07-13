@@ -212,7 +212,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               title: 'Transactions',
               subtitle: 'Voir l\'historique',
               icon: Icons.receipt_long,
-              color: Colors.green,
+              color: AppColors.primary,
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -271,7 +271,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       child: Container(
         padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -459,7 +459,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   Color _getTransactionActivityColor(TransactionType type) {
     switch (type) {
       case TransactionType.sale:
-        return Colors.green;
+        return AppColors.primary;
       case TransactionType.stockPurchase:
         return Colors.blue;
       case TransactionType.refund:
@@ -489,7 +489,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   Color _getTransactionStatusColor(TransactionStatus status) {
     switch (status) {
       case TransactionStatus.completed:
-        return Colors.green;
+        return AppColors.primary;
       case TransactionStatus.pending:
         return Colors.orange;
       case TransactionStatus.failed:

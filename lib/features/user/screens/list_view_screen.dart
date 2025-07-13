@@ -29,19 +29,6 @@ class _ListViewScreenState extends State<ListViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Points de service',
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map),
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      ),
       body: Stack(
         children: [
           Positioned.fill(
