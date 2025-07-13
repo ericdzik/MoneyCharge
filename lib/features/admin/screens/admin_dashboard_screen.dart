@@ -14,7 +14,6 @@ import '../../../providers/merchant_provider.dart'; // Added
 // Removed AdminMockDataService import as it's being replaced for primary data
 // import '../services/admin_mock_data_service.dart';
 
-
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
 
@@ -24,14 +23,14 @@ class AdminDashboardScreen extends StatefulWidget {
 
 class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   // final AdminMockDataService _mockDataService = AdminMockDataService(); // Will be removed
-  final AdminFirestoreService _adminFirestoreService = AdminFirestoreService(); // Added
+  final AdminFirestoreService _adminFirestoreService =
+      AdminFirestoreService(); // Added
   AdminModel? _admin;
   List<MerchantAuthModel> _merchants = [];
   Map<String, dynamic> _platformStats = {};
   bool _isLoading = true;
   bool _isMounted = false;
   String? _dataError;
-
 
   @override
   void initState() {
@@ -60,35 +59,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+      final merchantProvider = Provider.of<MerchantProvider>(
+        context,
+        listen: false,
+      );
 
       String? adminId = authProvider.userId;
       if (adminId == null) {
-        throw Exception("Admin ID not found. User may not be logged in or not an admin.");
+        throw Exception(
+          "Admin ID not found. User may not be logged in or not an admin.",
+        );
       }
 
       // Fetch admin profile
-      final adminProfileFuture = _adminFirestoreService.getAdminProfile(adminId);
+      final adminProfileFuture = _adminFirestoreService.getAdminProfile(
+        adminId,
+      );
       // Fetch platform statistics
-      final platformStatsFuture = _adminFirestoreService.getPlatformStatistics();
+      final platformStatsFuture = _adminFirestoreService
+          .getPlatformStatistics();
       // Load merchants via provider (this will also set its internal loading state)
-      final merchantLoadFuture = merchantProvider.loadAllMerchantsForAdmin(forceRefresh: true);
+      final merchantLoadFuture = merchantProvider.loadAllMerchantsForAdmin(
+        forceRefresh: true,
+      );
 
       // Await all futures
       final results = await Future.wait([
         adminProfileFuture,
         platformStatsFuture,
-        merchantLoadFuture.then((_) => merchantProvider.adminMerchants) // Ensure provider is done, then get merchants
+        merchantLoadFuture.then(
+          (_) => merchantProvider.adminMerchants,
+        ), // Ensure provider is done, then get merchants
       ]);
 
       if (!_isMounted) return;
 
       final AdminModel? fetchedAdmin = results[0] as AdminModel?;
-      final Map<String, dynamic> fetchedStats = results[1] as Map<String, dynamic>;
+      final Map<String, dynamic> fetchedStats =
+          results[1] as Map<String, dynamic>;
       // Merchants are already updated in the provider, now get them for local state if needed
       // or rely on Consumer/Selector for MerchantTableWidget. For simplicity here, we get them.
-      final List<MerchantAuthModel> fetchedMerchants = merchantProvider.adminMerchants;
-
+      final List<MerchantAuthModel> fetchedMerchants =
+          merchantProvider.adminMerchants;
 
       if (fetchedAdmin == null) {
         // If admin profile is null, it could mean the user is not a valid admin in Firestore
@@ -102,7 +114,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         _merchants = fetchedMerchants; // Update local merchants list
         _isLoading = false;
       });
-
     } catch (e) {
       if (!_isMounted) return;
       print("Error loading admin data: $e");
@@ -116,7 +127,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Dashboard Administrateur'),
         backgroundColor: AppColors.primary,
@@ -132,10 +142,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             icon: const Icon(Icons.notifications),
             onPressed: _showNotifications,
           ),
-          IconButton(icon: const Icon(Icons.logout), onPressed: () => _handleLogout(context)),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () => _handleLogout(context),
+          ),
         ],
       ),
-      body: _buildBody(),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          ),
+          _buildBody(),
+        ],
+      ),
     );
   }
 
@@ -152,9 +172,16 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             children: [
               const Icon(Icons.error_outline, color: Colors.red, size: 48),
               const SizedBox(height: 16),
-              Text(_dataError!, textAlign: TextAlign.center, style: AppTextStyles.body1.copyWith(color: Colors.red)),
+              Text(
+                _dataError!,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.body1.copyWith(color: Colors.red),
+              ),
               const SizedBox(height: 16),
-              ElevatedButton(onPressed: _loadAllAdminData, child: const Text('Réessayer'))
+              ElevatedButton(
+                onPressed: _loadAllAdminData,
+                child: const Text('Réessayer'),
+              ),
             ],
           ),
         ),
@@ -167,7 +194,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         children: [
           _buildAdminHeader(),
           const SizedBox(height: 24),
-          Text('Statistiques de la plateforme', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+          Text(
+            'Statistiques de la plateforme',
+            style: AppTextStyles.h2.copyWith(fontSize: 20),
+          ),
           const SizedBox(height: 16),
           // Décommentons AdminStatsWidget
           AdminStatsWidget(
@@ -175,16 +205,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0,
             activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0,
             totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0,
-            totalTransactions: _platformStats['totalTransactions']?.toInt() ?? 0,
-            pendingVerifications: _platformStats['pendingVerifications']?.toInt() ?? 0,
+            totalTransactions:
+                _platformStats['totalTransactions']?.toInt() ?? 0,
+            pendingVerifications:
+                _platformStats['pendingVerifications']?.toInt() ?? 0,
           ),
           // const Text("AdminStatsWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)), // On enlève le message temporaire
           const SizedBox(height: 32),
-          Text('Actions rapides', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+          Text(
+            'Actions rapides',
+            style: AppTextStyles.h2.copyWith(fontSize: 20),
+          ),
           const SizedBox(height: 16),
           _buildQuickActions(),
           const SizedBox(height: 32),
-          Text('Gestion des marchands', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+          Text(
+            'Gestion des marchands',
+            style: AppTextStyles.h2.copyWith(fontSize: 20),
+          ),
           const SizedBox(height: 16),
           // Décommentons MerchantTableWidget
           MerchantTableWidget(
@@ -200,7 +238,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildAdminHeader() {
-    if (_admin == null && !_isLoading) { // If not loading and admin is still null, show error/placeholder
+    if (_admin == null && !_isLoading) {
+      // If not loading and admin is still null, show error/placeholder
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -225,8 +264,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
       );
-    } else if (_admin == null && _isLoading) { // If loading and admin is null
-       return Container( // Placeholder while loading specifically for admin header
+    } else if (_admin == null && _isLoading) {
+      // If loading and admin is null
+      return Container(
+        // Placeholder while loading specifically for admin header
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.primary.withOpacity(0.5),
@@ -237,12 +278,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const CircleAvatar(
               radius: 25,
               backgroundColor: AppColors.onPrimary,
-              child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary)),
+              child: CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
             ),
             const SizedBox(width: 16),
             Text(
               'Chargement...',
-              style: AppTextStyles.h2.copyWith(color: AppColors.onPrimary, fontSize: 18),
+              style: AppTextStyles.h2.copyWith(
+                color: AppColors.onPrimary,
+                fontSize: 18,
+              ),
             ),
           ],
         ),
@@ -303,7 +349,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   Widget _buildQuickActions() {
-    final pendingVerifications = _platformStats['pendingVerifications']?.toInt() ?? 0;
+    final pendingVerifications =
+        _platformStats['pendingVerifications']?.toInt() ?? 0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -311,19 +358,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         int crossAxisCount;
         double childAspectRatio;
 
-        if (screenWidth < 360) { // Very small screens
+        if (screenWidth < 360) {
+          // Very small screens
           crossAxisCount = 1;
           childAspectRatio = 2.8;
-        } else if (screenWidth < 600) { // Small screens (typical phones portrait)
+        } else if (screenWidth < 600) {
+          // Small screens (typical phones portrait)
           crossAxisCount = 2;
           childAspectRatio = 1.5;
-        } else if (screenWidth < 900) { // Medium screens (tablets portrait, large phones landscape)
+        } else if (screenWidth < 900) {
+          // Medium screens (tablets portrait, large phones landscape)
           crossAxisCount = 3;
           childAspectRatio = 1.2;
-        } else if (screenWidth < 1200) { // Large screens (tablets landscape)
+        } else if (screenWidth < 1200) {
+          // Large screens (tablets landscape)
           crossAxisCount = 4;
           childAspectRatio = 1.3;
-        } else { // Extra large screens
+        } else {
+          // Extra large screens
           crossAxisCount = 5;
           childAspectRatio = 1.3;
         }
@@ -382,15 +434,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    // isSmallScreen peut être dérivé du LayoutBuilder parent si nécessaire,
-    // ou nous pouvons utiliser MediaQuery ici pour des ajustements ponctuels.
-    // Pour simplifier, nous allons rendre les cartes plus compactes de manière générale.
     final bool isVerySmallScreen = MediaQuery.of(context).size.width < 360;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12), // Padding réduit
+        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(10),
@@ -403,38 +452,50 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center, // Centrer verticalement
-          crossAxisAlignment: CrossAxisAlignment.center, // Centrer horizontalement
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: EdgeInsets.all(isVerySmallScreen ? 8 : 10), // Padding réduit pour l'icône
+              padding: EdgeInsets.all(isVerySmallScreen ? 8 : 10),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: color, size: isVerySmallScreen ? 24 : 28), // Taille d'icône réduite
-            ),
-            SizedBox(height: isVerySmallScreen ? 6 : 8), // Espace réduit
-            Flexible( // Flexible pour que le texte puisse prendre plusieurs lignes si nécessaire
-              child: Text(
-                title,
-                style: AppTextStyles.h3.copyWith(fontSize: isVerySmallScreen ? 13 : 15), // Taille de police réduite
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis, // Ajout pour le titre aussi
-                maxLines: 2, // Permettre au titre de prendre 2 lignes
+              child: Icon(
+                icon,
+                color: color,
+                size: isVerySmallScreen ? 24 : 28,
               ),
             ),
-            SizedBox(height: isVerySmallScreen ? 3 : 4), // Espace réduit
-            Flexible( // Flexible pour le sous-titre
-              child: Text(
-                subtitle,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: isVerySmallScreen ? 10 : 11, // Taille de police réduite
+            SizedBox(height: isVerySmallScreen ? 6 : 8),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  style: AppTextStyles.h3.copyWith(
+                    fontSize: isVerySmallScreen ? 13 : 15,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
-                textAlign: TextAlign.center,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2, // Permettre au sous-titre de prendre 2 lignes
+              ),
+            ),
+            SizedBox(height: isVerySmallScreen ? 3 : 4),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  subtitle,
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: isVerySmallScreen ? 10 : 11,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
+                ),
               ),
             ),
           ],
@@ -461,7 +522,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               // Simulate update for now, then reload data
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${merchant.businessName} a été marqué comme vérifié (simulé).'),
+                  content: Text(
+                    '${merchant.businessName} a été marqué comme vérifié (simulé).',
+                  ),
                   backgroundColor: Colors.green,
                 ),
               );
@@ -469,9 +532,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               // then reload data or update local state optimistically.
               // For now, we can reload all data to see the change if it were real.
               // Or, update locally:
-              if(_isMounted) {
+              if (_isMounted) {
                 setState(() {
-                  final index = _merchants.indexWhere((m) => m.id == merchant.id);
+                  final index = _merchants.indexWhere(
+                    (m) => m.id == merchant.id,
+                  );
                   if (index != -1) {
                     // This is a local update, actual verification needs Firestore call
                     // _merchants[index] = merchant.copyWith(isVerified: true);
@@ -505,7 +570,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${merchant.businessName} a été suspendu (simulé).'),
+                  content: Text(
+                    '${merchant.businessName} a été suspendu (simulé).',
+                  ),
                   backgroundColor: Colors.red,
                 ),
               );
@@ -529,23 +596,39 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SelectableText('ID: ${merchant.id}'), // Make IDs selectable for easy copying
+              SelectableText(
+                'ID: ${merchant.id}',
+              ), // Make IDs selectable for easy copying
               SelectableText('Email: ${merchant.email}'),
               Text('Téléphone: ${merchant.phone}'),
               Text('Adresse: ${merchant.address}'),
               Text('Type: ${merchant.merchantType}'),
               Text('Horaires: ${merchant.openingHours ?? 'Non spécifié'}'),
-              Text('Services: ${merchant.services?.join(', ') ?? 'Non spécifiés'}'),
-              Text('Statut: ${merchant.isVerified ? "Vérifié" : "En attente de vérification"}'),
+              Text(
+                'Services: ${merchant.services?.join(', ') ?? 'Non spécifiés'}',
+              ),
+              Text(
+                'Statut: ${merchant.isVerified ? "Vérifié" : "En attente de vérification"}',
+              ),
               Text('Inscrit le: ${_formatDate(merchant.createdAt)}'),
               Text('Dernière connexion: ${_formatDate(merchant.lastLoginAt)}'),
               if (merchant.latitude != null && merchant.longitude != null)
-                Text('Coordonnées: ${merchant.latitude}, ${merchant.longitude}'),
-              if (merchant.serviceStockStatus != null && merchant.serviceStockStatus!.isNotEmpty) ...[
+                Text(
+                  'Coordonnées: ${merchant.latitude}, ${merchant.longitude}',
+                ),
+              if (merchant.serviceStockStatus != null &&
+                  merchant.serviceStockStatus!.isNotEmpty) ...[
                 const SizedBox(height: 8),
-                Text('Statut du stock des services:', style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.bold)),
-                ...merchant.serviceStockStatus!.entries.map((entry) => Text(' - ${entry.key}: ${entry.value}')),
-              ]
+                Text(
+                  'Statut du stock des services:',
+                  style: AppTextStyles.body1.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                ...merchant.serviceStockStatus!.entries.map(
+                  (entry) => Text(' - ${entry.key}: ${entry.value}'),
+                ),
+              ],
             ],
           ),
         ),
@@ -561,23 +644,28 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   void _showNotifications() {
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Affichage des notifications (simulé)')));
+      const SnackBar(content: Text('Affichage des notifications (simulé)')),
+    );
   }
 
-  void _handleLogout(BuildContext navContext) async { // navContext for Navigator
+  void _handleLogout(BuildContext navContext) async {
+    // navContext for Navigator
     final authProvider = Provider.of<AuthProvider>(navContext, listen: false);
     bool? confirmLogout = await showDialog<bool>(
       context: navContext, // Use navContext for dialog
-      builder: (dialogContext) => AlertDialog( // Use dialogContext for builder
+      builder: (dialogContext) => AlertDialog(
+        // Use dialogContext for builder
         title: const Text('Déconnexion'),
         content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false), // Use dialogContext
+            onPressed: () =>
+                Navigator.pop(dialogContext, false), // Use dialogContext
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(dialogContext, true), // Use dialogContext
+            onPressed: () =>
+                Navigator.pop(dialogContext, true), // Use dialogContext
             child: const Text('Déconnexion'),
           ),
         ],
@@ -588,35 +676,43 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       await authProvider.logout();
       // Ensure context is still valid before navigating
       if (mounted && navContext.mounted) {
-         // Using pushReplacementNamed to clear the stack up to login
+        // Using pushReplacementNamed to clear the stack up to login
         Navigator.pushReplacementNamed(navContext, AppRoutes.login);
       }
     }
   }
 
   void _showPendingVerifications() {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Affichage des vérifications en attente (simulé)')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Affichage des vérifications en attente (simulé)'),
+      ),
+    );
   }
 
   void _generateReports() {
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Génération de rapports (simulé)')));
+      const SnackBar(content: Text('Génération de rapports (simulé)')),
+    );
   }
 
   void _manageUsers() {
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gestion des utilisateurs (simulé)')));
+      const SnackBar(content: Text('Gestion des utilisateurs (simulé)')),
+    );
   }
 
   void _showSupportTickets() {
     ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Affichage des tickets de support (simulé)')));
+      const SnackBar(
+        content: Text('Affichage des tickets de support (simulé)'),
+      ),
+    );
   }
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'Jamais';
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} '
-           'à ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        'à ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }

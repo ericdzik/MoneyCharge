@@ -93,18 +93,63 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
             ),
           ),
         ),
-        title: Text(merchant.name, style: AppTextStyles.h3),
+        title: Text(
+          merchant.name,
+          style: AppTextStyles.h3,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(merchant.address),
-            Text('${merchant.distance.toStringAsFixed(1)} km'),
+            Text(
+              merchant.address,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '${merchant.distance.toStringAsFixed(1)} km',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
-        trailing: _buildStatusChip(merchant.status),
+        trailing: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < 80) {
+              // Pour les très petits écrans, afficher seulement l'icône
+              return _buildStatusIcon(merchant.status);
+            } else {
+              // Pour les écrans plus larges, afficher le chip complet
+              return _buildStatusChip(merchant.status);
+            }
+          },
+        ),
         onTap: () => widget.onMerchantTap?.call(merchant),
       ),
     );
+  }
+
+  Widget _buildStatusIcon(MerchantStatus status) {
+    Color color;
+    IconData icon;
+
+    switch (status) {
+      case MerchantStatus.available:
+        color = AppColors.available;
+        icon = Icons.check_circle;
+        break;
+      case MerchantStatus.lowStock:
+        color = AppColors.lowStock;
+        icon = Icons.warning;
+        break;
+      case MerchantStatus.outOfStock:
+        color = AppColors.outOfStock;
+        icon = Icons.cancel;
+        break;
+    }
+
+    return Icon(icon, color: color, size: 20);
   }
 
   Widget _buildStatusChip(MerchantStatus status) {
@@ -140,6 +185,8 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
     );
   }

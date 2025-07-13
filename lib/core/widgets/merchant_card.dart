@@ -35,15 +35,15 @@ class MerchantCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM), // Correspond au CardTheme
+        borderRadius: BorderRadius.circular(
+          AppDimensions.radiusM,
+        ), // Correspond au CardTheme
         child: Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: BoxDecoration(
             // Le borderRadius ici est pour la bordure, Card gère le clip du contenu
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            border: Border(
-              left: BorderSide(color: statusColor, width: 4),
-            ),
+            border: Border(left: BorderSide(color: statusColor, width: 4)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,15 +52,31 @@ class MerchantCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Text(merchant.name, style: AppTextStyles.h3)),
-                  Row( // Row pour StatusBadge et IconButton
+                  Expanded(
+                    child: Text(
+                      merchant.name,
+                      style: AppTextStyles.h3,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                    ),
+                  ),
+                  Row(
+                    // Row pour StatusBadge et IconButton
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      StatusBadge(status: statusType), // Utilise les couleurs de AppColors via StatusBadge
-                      const SizedBox(width: AppDimensions.paddingXS), // Petit espace
+                      StatusBadge(
+                        status: statusType,
+                      ), // Utilise les couleurs de AppColors via StatusBadge
+                      const SizedBox(
+                        width: AppDimensions.paddingXS,
+                      ), // Petit espace
                       IconButton(
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? AppColors.error : AppColors.textSecondary, // Rouge si favori, gris sinon
+                          color: isFavorite
+                              ? AppColors.error
+                              : AppColors
+                                    .textSecondary, // Rouge si favori, gris sinon
                         ),
                         onPressed: () {
                           if (isFavorite) {
@@ -71,7 +87,7 @@ class MerchantCard extends StatelessWidget {
                         },
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
               const SizedBox(height: AppDimensions.paddingS),
@@ -82,39 +98,86 @@ class MerchantCard extends StatelessWidget {
                 '${merchant.hours} • ${merchant.isOpen ? "Ouvert" : "Fermé"}',
               ),
               const SizedBox(height: AppDimensions.paddingM),
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: AppDimensions.paddingM,
-                runSpacing: AppDimensions.paddingS,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.paddingM,
-                      vertical: AppDimensions.paddingS,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withOpacity(0.1), // Vert très clair
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusS),
-                    ),
-                    child: Text(
-                      '🚶 ${merchant.walkingTime}',
-                      style: AppTextStyles.caption.copyWith(
-                        color: AppColors.primary, // Texte en vert primaire
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  CustomButton(
-                    text: 'Itinéraire',
-                    type: ButtonType.primary, // Vert avec texte blanc
-                    onPressed: onDirectionsPressed,
-                    // L'icône dans CustomButton prendra la couleur du texte du bouton si elle est null
-                    // ou on peut la spécifier explicitement ici si CustomButton ne le gère pas.
-                    // CustomButton a été mis à jour pour tenter de colorer l'icône.
-                    icon: const Icon(Icons.directions, size: 16 /*, color: AppColors.onPrimary */),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Si l'écran est trop petit, utiliser une disposition en colonne
+                  if (constraints.maxWidth < 300) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.paddingM,
+                            vertical: AppDimensions.paddingS,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(
+                              alpha: 0.1,
+                            ), // Vert très clair
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusS,
+                            ),
+                          ),
+                          child: Text(
+                            '🚶 ${merchant.walkingTime}',
+                            style: AppTextStyles.caption.copyWith(
+                              color:
+                                  AppColors.primary, // Texte en vert primaire
+                              fontWeight: FontWeight.w500,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        const SizedBox(height: AppDimensions.paddingS),
+                        CustomButton(
+                          text: 'Itinéraire',
+                          type: ButtonType.primary, // Vert avec texte blanc
+                          onPressed: onDirectionsPressed,
+                          icon: const Icon(Icons.directions, size: 16),
+                        ),
+                      ],
+                    );
+                  } else {
+                    // Disposition horizontale pour les écrans plus larges
+                    return Row(
+                      children: [
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppDimensions.paddingM,
+                              vertical: AppDimensions.paddingS,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(
+                                alpha: 0.1,
+                              ), // Vert très clair
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusS,
+                              ),
+                            ),
+                            child: Text(
+                              '🚶 ${merchant.walkingTime}',
+                              style: AppTextStyles.caption.copyWith(
+                                color:
+                                    AppColors.primary, // Texte en vert primaire
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppDimensions.paddingM),
+                        Flexible(
+                          child: CustomButton(
+                            text: 'Itinéraire',
+                            type: ButtonType.primary, // Vert avec texte blanc
+                            onPressed: onDirectionsPressed,
+                            icon: const Icon(Icons.directions, size: 16),
+                          ),
+                        ),
+                      ],
+                    );
+                  }
+                },
               ),
             ],
           ),
@@ -127,10 +190,22 @@ class MerchantCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppDimensions.paddingXS),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary), // Gris pour l'icône
+          Icon(
+            icon,
+            size: 16,
+            color: AppColors.textSecondary,
+          ), // Gris pour l'icône
           const SizedBox(width: AppDimensions.paddingS),
-          Expanded(child: Text(text, style: AppTextStyles.body2)), // Texte en gris (via AppTextStyles.body2)
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.body2,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+            ),
+          ), // Texte en gris (via AppTextStyles.body2)
         ],
       ),
     );

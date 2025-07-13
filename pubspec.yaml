@@ -41,8 +41,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/splash/mone.png
+    - assets/icon/logo.png
+    - assets/splash/new.png
     - assets/splash/32.png
+    - assets/splash/33.png
+    
   # fonts:
   # - family: Inter
   #   fonts:
@@ -58,10 +61,10 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/iconn.png" 
+  image_path: "assets/icon/logo.png" 
 flutter_native_splash:
   color: "#000000" # couleur de fond (sera masquée si image couvre tout)
-  image: assets/splash/mone.png
+  image: assets/splash/new.png
   android: true
   ios: true
   android_gravity: center

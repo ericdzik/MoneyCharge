@@ -51,7 +51,8 @@ class DashboardStatsWidget extends StatelessWidget {
             _buildStatCard(
               isSmallScreen: isSmallScreen,
               title: 'Services',
-              value: '$totalServices', // Assuré d'être un argument nommé correct
+              value:
+                  '$totalServices', // Assuré d'être un argument nommé correct
               subtitle: '$activeServices actifs',
               icon: Icons.inventory,
               color: AppColors.primary,
@@ -108,7 +109,7 @@ class DashboardStatsWidget extends StatelessWidget {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
@@ -136,6 +137,7 @@ class DashboardStatsWidget extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 4),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -146,18 +148,24 @@ class DashboardStatsWidget extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
+                textAlign: TextAlign.center,
               ),
             ),
           ),
+          const SizedBox(height: 2),
           Flexible(
-            child: Text(
-              subtitle,
-              style: AppTextStyles.caption.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: isSmallScreen ? 9 : 10,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                subtitle,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: isSmallScreen ? 9 : 10,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+                textAlign: TextAlign.center,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: isSmallScreen ? 2 : 1,
             ),
           ),
         ],
@@ -166,7 +174,8 @@ class DashboardStatsWidget extends StatelessWidget {
   }
 
   int _calculatePerformance() {
-    if (totalServices == 0) { // CORRIGÉ: Vérification pour éviter la division par zéro
+    if (totalServices == 0) {
+      // CORRIGÉ: Vérification pour éviter la division par zéro
       return 0;
     }
     return ((activeServices / totalServices) * 100).round();

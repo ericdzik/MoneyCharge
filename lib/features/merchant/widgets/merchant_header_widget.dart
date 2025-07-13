@@ -119,10 +119,14 @@ class MerchantHeaderWidget extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Text(
-                'Dernière connexion: ${_formatDate(merchant.lastLoginAt)}',
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.onPrimary.withOpacity(0.6),
+              Expanded(
+                child: Text(
+                  'Dernière connexion:  A0${_formatDate(merchant.lastLoginAt)}',
+                  style: AppTextStyles.caption.copyWith(
+                    color: AppColors.onPrimary.withOpacity(0.6),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

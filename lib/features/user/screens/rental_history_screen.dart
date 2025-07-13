@@ -53,26 +53,33 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: _rentals.isEmpty
-          ? _buildEmptyState()
-          : Column(
-              children: [
-                // Statistiques
-                _buildStats(),
-                const SizedBox(height: 16),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          ),
+          _rentals.isEmpty
+              ? _buildEmptyState()
+              : Column(
+                  children: [
+                    // Statistiques
+                    _buildStats(),
+                    const SizedBox(height: 16),
 
-                // Liste des locations
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(AppDimensions.paddingL),
-                    itemCount: _rentals.length,
-                    itemBuilder: (context, index) {
-                      return _buildRentalCard(_rentals[index]);
-                    },
-                  ),
+                    // Liste des locations
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(AppDimensions.paddingL),
+                        itemCount: _rentals.length,
+                        itemBuilder: (context, index) {
+                          return _buildRentalCard(_rentals[index]);
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+        ],
+      ),
     );
   }
 
@@ -127,10 +134,11 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
           ),
         ],
       ),
-      child: Wrap( // Use Wrap for responsive stats layout
+      child: Wrap(
+        // Use Wrap for responsive stats layout
         alignment: WrapAlignment.spaceAround, // Distribute items evenly
-        spacing: AppDimensions.paddingM,       // Horizontal space between items
-        runSpacing: AppDimensions.paddingM,    // Vertical space if items wrap
+        spacing: AppDimensions.paddingM, // Horizontal space between items
+        runSpacing: AppDimensions.paddingM, // Vertical space if items wrap
         children: [
           _buildStatItem(
             icon: Icons.history,
@@ -232,10 +240,12 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
             const SizedBox(height: 16),
 
             // Détails
-            Wrap( // Use Wrap for responsive detail items
+            Wrap(
+              // Use Wrap for responsive detail items
               alignment: WrapAlignment.spaceBetween, // Distribute items
-              spacing: AppDimensions.paddingS,       // Horizontal space
-              runSpacing: AppDimensions.paddingM,    // Vertical space if items wrap
+              spacing: AppDimensions.paddingS, // Horizontal space
+              runSpacing:
+                  AppDimensions.paddingM, // Vertical space if items wrap
               children: [
                 _buildDetailItem(
                   icon: Icons.access_time,
@@ -259,7 +269,8 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
             // Actions
             LayoutBuilder(
               builder: (context, constraints) {
-                bool useColumnLayout = constraints.maxWidth < 300; // Threshold for small screens
+                bool useColumnLayout =
+                    constraints.maxWidth < 300; // Threshold for small screens
 
                 if (useColumnLayout) {
                   return Column(
@@ -273,7 +284,9 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
                         icon: const Icon(Icons.info_outline, size: 16),
                         label: const Text('Détails'),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10), // Adjusted padding
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ), // Adjusted padding
                         ),
                       ),
                       const SizedBox(height: AppDimensions.paddingS),
@@ -284,7 +297,9 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
                         icon: const Icon(Icons.replay, size: 16),
                         label: const Text('Relouer'),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 10), // Adjusted padding
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                          ), // Adjusted padding
                         ),
                       ),
                     ],
@@ -320,7 +335,7 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
                     ],
                   );
                 }
-              }
+              },
             ),
           ],
         ),
