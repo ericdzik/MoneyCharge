@@ -4,6 +4,7 @@ import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/merchant/widgets/opening_hours_selector.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
@@ -24,7 +25,8 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   late TextEditingController _businessNameController;
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
-  late TextEditingController _openingHoursController;
+  // late TextEditingController _openingHoursController; // Remplacé
+  Map<String, Map<String, String>> _openingHours = {};
   late TextEditingController _otherServiceController;
 
   // Gestion des services
@@ -42,7 +44,10 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     _businessNameController = TextEditingController(text: widget.merchant.businessName);
     _phoneController = TextEditingController(text: widget.merchant.phone);
     _addressController = TextEditingController(text: widget.merchant.address);
-    _openingHoursController = TextEditingController(text: widget.merchant.openingHours ?? '');
+    // _openingHoursController = TextEditingController(text: widget.merchant.openingHours ?? '');
+    if (widget.merchant.openingHours != null) {
+      _openingHours = Map<String, Map<String, String>>.from(widget.merchant.openingHours!);
+    }
     _otherServiceController = TextEditingController();
 
     // Initialiser _selectedServices et _customService
@@ -138,7 +143,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     _businessNameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
-    _openingHoursController.dispose();
+    // _openingHoursController.dispose();
     _otherServiceController.dispose();
     super.dispose();
   }
@@ -176,7 +181,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         businessName: _businessNameController.text,
         phone: _phoneController.text,
         address: _addressController.text,
-        openingHours: _openingHoursController.text,
+        openingHours: _openingHours,
         services: finalServices,
         serviceStockStatus: finalServiceStockStatus,
       );
@@ -200,6 +205,40 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         }
       }
     }
+  }
+
+  Widget _buildOpeningHoursSummary() {
+    if (_openingHours.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8.0),
+        child: Text('Aucun horaire défini.'),
+      );
+    }
+
+    List<String> days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    List<Widget> summary = [];
+
+    for (var day in days) {
+      if (_openingHours.containsKey(day) && _openingHours[day] is Map) {
+        final hoursMap = _openingHours[day] as Map<String, dynamic>;
+        summary.add(
+          Text('$day: ${hoursMap['open']} - ${hoursMap['close']}'),
+        );
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      margin: const EdgeInsets.only(top: 8.0),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: summary,
+      ),
+    );
   }
 
   @override
@@ -253,12 +292,29 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
               ),
               const SizedBox(height: AppDimensions.paddingM),
 
-              CustomTextField(
-                controller: _openingHoursController,
-                labelText: 'Horaires d\'ouverture',
-                hintText: 'Ex: 08:00-18:00, Lun-Ven',
-                validator: (value) => value == null || value.isEmpty ? 'Champ requis' : null,
+              Text(
+                'Horaires d\'ouverture',
+                style: AppTextStyles.h2.copyWith(fontSize: 18),
               ),
+              const SizedBox(height: AppDimensions.paddingS),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.timer_outlined),
+                label: const Text('Modifier les horaires'),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => OpeningHoursSelector(
+                      initialHours: _openingHours,
+                      onHoursChanged: (newHours) {
+                        setState(() {
+                          _openingHours = newHours;
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
+              _buildOpeningHoursSummary(),
               const SizedBox(height: AppDimensions.paddingXL),
 
               // Section Services
