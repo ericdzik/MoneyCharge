@@ -10,7 +10,7 @@ import '../../../providers/auth_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; // Import pour kIsWeb
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
 import '../../../core/widgets/custom_app_bar.dart'; // Added import for CustomAppBar
 import '../widgets/opening_hours_selector.dart';
 
