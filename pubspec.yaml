@@ -16,8 +16,6 @@ dependencies:
   url_launcher: ^6.2.1
   shared_preferences: ^2.2.2
   google_maps_flutter: ^2.6.1
-  google_maps_flutter_android: ^2.8.0
-  google_maps_flutter_platform_interface: ^2.7.0
   cupertino_icons: ^1.0.2
   flutter_local_notifications: ^19.3.0 # Updated to latest stable version
   timezone: ^0.10.0 # Updated to be compatible with flutter_local_notifications 19.3.0
