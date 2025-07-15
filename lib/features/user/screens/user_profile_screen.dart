@@ -56,19 +56,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     print('-----------------------------------------------------');
 
     return Scaffold(
-      appBar: CustomAppBar(
-        title: 'Mon Profil',
-        leading: null,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () {
-              Navigator.pushNamed(context, AppRoutes.editProfile);
-            },
-            tooltip: 'Modifier le profil',
-          ),
-        ],
-      ),
       body: Stack(
         children: [
           Positioned.fill(
