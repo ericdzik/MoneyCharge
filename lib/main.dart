@@ -7,12 +7,14 @@ import 'firebase_options.dart';
 import 'app.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   final GoogleMapsFlutterPlatform mapsImplementation =
       GoogleMapsFlutterPlatform.instance;
   if (mapsImplementation is GoogleMapsFlutterAndroid) {
     mapsImplementation.useAndroidViewSurface = true;
+    await mapsImplementation.initializeWithRenderer(AndroidMapRenderer.legacy);
   }
-  WidgetsFlutterBinding.ensureInitialized();
 
   // Initialisation de Firebase
   await Firebase.initializeApp(
