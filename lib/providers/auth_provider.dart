@@ -284,7 +284,7 @@ class AuthProvider with ChangeNotifier {
     required String businessName,
     required String phone,
     required String address,
-    required String openingHours,
+    required Map<String, dynamic> openingHours,
     required List<String> services,
     required Map<String, String> serviceStockStatus,
   }) async {
