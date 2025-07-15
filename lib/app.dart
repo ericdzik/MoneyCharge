@@ -19,6 +19,7 @@ import 'features/user/screens/merchant_detail_screen.dart';
 import 'features/user/screens/user_login_screen.dart';
 import 'features/user/screens/user_register_screen.dart';
 import 'features/user/screens/forgot_password_screen.dart';
+import 'core/widgets/auth_wrapper.dart';
 import 'features/user/screens/user_profile_screen.dart';
 import 'features/user/screens/rental_history_screen.dart';
 
@@ -47,7 +48,7 @@ class LocaChargeApp extends StatelessWidget {
         title: 'Geo Money&Charge',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
-        initialRoute: AppRoutes.login, // Splash Flutter supprimé
+        initialRoute: '/',
         onGenerateRoute: _generateRoute,
       ),
     );
@@ -55,6 +56,8 @@ class LocaChargeApp extends StatelessWidget {
 
   Route<dynamic> _generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(builder: (_) => const AuthWrapper());
       // Routes publiques
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());

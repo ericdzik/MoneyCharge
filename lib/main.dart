@@ -28,8 +28,5 @@ void main() async {
     ),
   );
 
-  // Délai de 3 secondes avant d'afficher l'application
-  await Future.delayed(const Duration(seconds: 3));
-
   runApp(const LocaChargeApp());
 }
