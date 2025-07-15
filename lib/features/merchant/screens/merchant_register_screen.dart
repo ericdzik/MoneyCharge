@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart' show kIsWeb; // Import pour kIsWeb
 import '../../../core/widgets/custom_app_bar.dart'; // Added import for CustomAppBar
+import '../widgets/opening_hours_selector.dart';
 
 class MerchantRegisterScreen extends StatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -28,7 +29,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final _addressController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _openingHoursController = TextEditingController();
+  // final _openingHoursController = TextEditingController(); // Remplacé par _openingHours
+  Map<String, Map<String, String>> _openingHours = {};
   // final _servicesController = TextEditingController(); // Ancien champ texte pour les services, sera remplacé
   late TextEditingController _otherServiceController; // Pour le service "Autre"
 
@@ -47,6 +49,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     'Point de Recharge',
     'Autre',
   ];
+
+  // Nouveau state pour le type de marchand (fixe ou mobile)
+  String _merchantProfileType = 'fixed'; // 'fixed' ou 'mobile'
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -103,11 +108,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         if (mounted) {
           _isLocationPermissionGranted =
               true; // Supposer true si la position est obtenue
+          final userLocation = LatLng(position.latitude, position.longitude);
           setState(() {
             _cameraPosition = CameraPosition(
-              target: LatLng(position.latitude, position.longitude),
+              target: userLocation,
               zoom: 15,
             );
+            // Placer automatiquement le marqueur
+            _onMapTapped(userLocation);
           });
         }
       } catch (e) {
@@ -148,11 +156,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
               "[MerchantRegisterScreen] Mobile - Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}",
             );
             if (mounted) {
+              final userLocation = LatLng(position.latitude, position.longitude);
               setState(() {
                 _cameraPosition = CameraPosition(
-                  target: LatLng(position.latitude, position.longitude),
+                  target: userLocation,
                   zoom: 15,
                 );
+                // Placer automatiquement le marqueur
+                _onMapTapped(userLocation);
               });
             }
           } catch (e) {
@@ -189,6 +200,39 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     );
   }
 
+  Widget _buildOpeningHoursSummary() {
+    if (_openingHours.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8.0),
+        child: Text('Aucun horaire défini.', style: TextStyle(color: Colors.white70)),
+      );
+    }
+
+    List<String> days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    List<Widget> summary = [];
+
+    for (var day in days) {
+      if (_openingHours.containsKey(day)) {
+        summary.add(
+          Text('$day: ${_openingHours[day]!['open']} - ${_openingHours[day]!['close']}', style: const TextStyle(color: Colors.white)),
+        );
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      margin: const EdgeInsets.only(top: 8.0),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: summary,
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _businessNameController.dispose();
@@ -197,7 +241,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     _addressController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _openingHoursController.dispose();
+    // _openingHoursController.dispose();
     // _servicesController.dispose(); // Ancien contrôleur
     _otherServiceController.dispose(); // Nouveau contrôleur pour "Autre"
     super.dispose();
@@ -467,21 +511,72 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                         ? 'Veuillez sélectionner un type de commerce'
                         : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 24),
+
+                  // Merchant Profile Type Selection
+                  Text(
+                    'Quel type de marchand êtes-vous ?',
+                    style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: RadioListTile<String>(
+                          title: const Text('Boutique (Fixe)'),
+                          value: 'fixed',
+                          groupValue: _merchantProfileType,
+                          onChanged: (value) {
+                            setState(() {
+                              _merchantProfileType = value!;
+                            });
+                          },
+                          activeColor: AppColors.secondary,
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioListTile<String>(
+                          title: const Text('Ambulant (Mobile)'),
+                          value: 'mobile',
+                          groupValue: _merchantProfileType,
+                          onChanged: (value) {
+                            setState(() {
+                              _merchantProfileType = value!;
+                            });
+                          },
+                          activeColor: AppColors.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // End of Merchant Profile Type Selection
 
                   // End of Merchant Type Dropdown
-                  CustomTextField(
-                    controller: _openingHoursController,
-                    labelText: 'Horaires d\'ouverture',
-                    hintText: 'Ex: 8h00 - 20h00, Lundi-Samedi',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer vos horaires';
-                      }
-                      return null;
+                  Text(
+                    'Horaires d\'ouverture',
+                    style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.timer_outlined),
+                    label: const Text('Définir les horaires'),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => OpeningHoursSelector(
+                          initialHours: _openingHours,
+                          onHoursChanged: (newHours) {
+                            setState(() {
+                              _openingHours = newHours;
+                            });
+                          },
+                        ),
+                      );
                     },
                   ),
-                  const SizedBox(height: 16),
+                  _buildOpeningHoursSummary(),
+                  const SizedBox(height: 24),
 
                   // Section Services Proposés
                   Text(
@@ -844,6 +939,16 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       return;
     }
 
+    if (_openingHours.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez définir au moins un jour d\'ouverture.'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     if (!_isBusinessOwner) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -899,13 +1004,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         email: _emailController.text,
         phone: _phoneController.text,
         address: _addressController.text,
-        openingHours: _openingHoursController.text,
+        openingHours: _openingHours,
         // services: _servicesController.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(), // Ancienne méthode
         services: finalServices, // Nouvelle méthode
         password: _passwordController.text,
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
         merchantType: _selectedMerchantType!,
+        profileType: _merchantProfileType, // Ajout du type de profil
       );
 
       if (!mounted) return;

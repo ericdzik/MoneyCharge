@@ -238,12 +238,13 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String phone,
     required String address,
-    required String openingHours,
+    required Map<String, Map<String, String>> openingHours,
     required List<String> services, // CHANGED to List<String>
     required String password,
     required double? latitude,
     required double? longitude,
     required String merchantType, // ADDED
+    required String profileType, // NOUVEAU
   }) async {
     _setLoading(true);
     _error = null;
@@ -255,7 +256,8 @@ class AuthProvider with ChangeNotifier {
           'email': email,
           'name': businessName,
           'role': 'merchant',
-          'merchantType': merchantType, // ADDED
+          'merchantType': merchantType, // Type de commerce (Alimentation, etc.)
+          'profileType': profileType, // Type de profil (fixed ou mobile)
           'createdAt': FieldValue.serverTimestamp(),
           'phone': phone,
           'address': address,
