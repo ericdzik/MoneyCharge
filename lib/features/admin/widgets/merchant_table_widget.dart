@@ -170,13 +170,18 @@ class MerchantTableWidget extends StatelessWidget {
                               );
                             }
                           } else {
-                            if (!merchant.isVerified) {
-                              actionWidgets.add(IconButton(
-                                icon: const Icon(Icons.verified, size: 18, color: Colors.green),
-                                tooltip: 'Vérifier',
-                                onPressed: () => onVerify(merchant),
-                              ));
-                            }
+                            actionWidgets.add(
+                              Tooltip(
+                                message: merchant.isVerified ? 'Annuler la vérification' : 'Vérifier',
+                                child: Switch(
+                                  value: merchant.isVerified,
+                                  onChanged: (newValue) {
+                                    onVerify(merchant);
+                                  },
+                                  activeColor: AppColors.success,
+                                ),
+                              ),
+                            );
                             actionWidgets.add(IconButton(
                               icon: const Icon(Icons.block, size: 18, color: Colors.red),
                               tooltip: 'Suspendre',

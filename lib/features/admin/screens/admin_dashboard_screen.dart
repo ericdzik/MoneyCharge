@@ -504,12 +504,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _verifyMerchant(MerchantAuthModel merchant) {
-    // TODO: Implement actual Firestore update for verification
+    final newStatus = !merchant.isVerified;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Vérifier le marchand'),
-        content: Text('Voulez-vous vérifier ${merchant.businessName} ?'),
+        title: Text('${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?'),
+        content: Text('Voulez-vous vraiment changer le statut de ${merchant.businessName} ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -518,34 +518,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              // Simulate update for now, then reload data
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '${merchant.businessName} a été marqué comme vérifié (simulé).',
-                  ),
-                  backgroundColor: Colors.green,
-                ),
-              );
-              // In a real app, you'd call a service method to update Firestore,
-              // then reload data or update local state optimistically.
-              // For now, we can reload all data to see the change if it were real.
-              // Or, update locally:
-              if (_isMounted) {
-                setState(() {
-                  final index = _merchants.indexWhere(
-                    (m) => m.id == merchant.id,
-                  );
-                  if (index != -1) {
-                    // This is a local update, actual verification needs Firestore call
-                    // _merchants[index] = merchant.copyWith(isVerified: true);
-                  }
-                  // To reflect a real change, you'd typically call _loadAllAdminData()
-                  // or a more specific data refresh method after a Firestore update.
-                });
-              }
+              final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+              await merchantProvider.updateMerchantVerification(merchant.id, newStatus);
             },
-            child: const Text('Vérifier'),
+            child: Text(newStatus ? 'Vérifier' : 'Confirmer'),
           ),
         ],
       ),

@@ -239,4 +239,21 @@ class MerchantProvider with ChangeNotifier {
   //     return null;
   //   }
   // }
+
+  Future<void> updateMerchantVerification(String merchantId, bool isVerified) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _firestore.collection('users').doc(merchantId).update({
+        'isVerified': isVerified,
+      });
+      // Refresh the list of merchants for the admin view
+      await loadAllMerchantsForAdmin(forceRefresh: true);
+    } catch (e) {
+      _error = "Erreur lors de la mise à jour de la vérification: ${e.toString()}";
+      print(_error);
+    } finally {
+      _setLoading(false);
+    }
+  }
 }
