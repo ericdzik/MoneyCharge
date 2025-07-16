@@ -30,7 +30,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   // final _openingHoursController = TextEditingController(); // Remplacé par _openingHours
-  Map<String, Map<String, String>> _openingHours = {};
+  Map<String, dynamic> _openingHours = {};
   // final _servicesController = TextEditingController(); // Ancien champ texte pour les services, sera remplacé
   late TextEditingController _otherServiceController; // Pour le service "Autre"
 
@@ -213,8 +213,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     for (var day in days) {
       if (_openingHours.containsKey(day)) {
+        final hoursMap = _openingHours[day] as Map<String, dynamic>;
         summary.add(
-          Text('$day: ${_openingHours[day]!['open']} - ${_openingHours[day]!['close']}', style: const TextStyle(color: Colors.white)),
+          Text('$day: ${hoursMap['open']} - ${hoursMap['close']}', style: const TextStyle(color: Colors.white)),
         );
       }
     }
