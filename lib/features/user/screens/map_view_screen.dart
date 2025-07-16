@@ -198,7 +198,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                     _buildInfoRow(
                                       Icons.access_time,
                                       'Horaires',
-                                      merchant.hours,
+                                      _formatHours(merchant.hours),
                                     ),
                                     _buildInfoRow(
                                       Icons.phone,
@@ -227,7 +227,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                           child: _buildInfoRow(
                                             Icons.access_time,
                                             'Horaires',
-                                            merchant.hours,
+                                            _formatHours(merchant.hours),
                                           ),
                                         ),
                                         const SizedBox(width: 16),
@@ -653,6 +653,17 @@ class _MapViewScreenState extends State<MapViewScreen> {
     );
   }
 
+  String _formatHours(Map<String, dynamic>? hours) {
+    if (hours == null || hours.isEmpty) {
+      return 'Non disponible';
+    }
+    // Pour simplifier, on affiche le premier jour disponible.
+    // Une logique plus complexe pourrait formater tous les jours.
+    final firstDay = hours.keys.first;
+    final schedule = hours[firstDay] as Map<String, dynamic>;
+    return '$firstDay: ${schedule['open']} - ${schedule['close']}';
+  }
+
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -809,7 +820,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                               onTap: () => _onMerchantSelected(merchant),
                             ),
                             icon: BitmapDescriptor.defaultMarkerWithHue(
-                              BitmapDescriptor.hueAzure,
+                              merchant.profileType == 'mobile' ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueAzure,
                             ), // Personnaliser
                           );
                         }).toSet(),

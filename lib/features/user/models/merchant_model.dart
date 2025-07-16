@@ -8,7 +8,8 @@ class Merchant {
   final String name;
   final String address;
   final String phone;
-  final String hours;
+  final Map<String, dynamic>? hours;
+  final String? profileType;
   // final bool isOpen; // Supprimé pour éviter conflit et erreur d'initialisation
   final MerchantStatus status;
   final double latitude;
@@ -37,7 +38,8 @@ class Merchant {
     this.email, // Nouveau
     required this.address,
     required this.phone,
-    required this.hours, // openingHours depuis Firestore
+    this.hours, // openingHours depuis Firestore
+    this.profileType,
     required this.latitude,
     required this.longitude,
     required this.services,
@@ -64,7 +66,8 @@ class Merchant {
       name: json['name'] as String? ?? 'Nom indisponible',
       address: json['address'] as String? ?? 'Adresse indisponible',
       phone: json['phone'] as String? ?? 'Téléphone indisponible',
-      hours: json['hours'] as String? ?? 'Horaires indisponibles',
+      hours: json['hours'] as Map<String, dynamic>?,
+      profileType: json['profileType'] as String?,
       // isOpen: json['isOpen'] as bool? ?? false, // Sera calculé
       status: json['status'] != null && json['status'] is int && json['status'] < MerchantStatus.values.length
           ? MerchantStatus.values[json['status'] as int]
@@ -124,7 +127,8 @@ class Merchant {
       email: data['email'] as String?,
       address: data['address'] as String? ?? 'Adresse Indisponible',
       phone: data['phone'] as String? ?? 'Téléphone Indisponible',
-      hours: data['openingHours'] as String? ?? 'Horaires Indisponibles',
+      hours: data['openingHours'] as Map<String, dynamic>?,
+      profileType: data['profileType'] as String?,
       latitude: latitude,
       longitude: longitude,
       services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
@@ -141,12 +145,7 @@ class Merchant {
   }
 
   void _updateOpenStatusBasedOnHours() {
-    // Si hours est la valeur par défaut "Horaires indisponibles" ou vide, on considère fermé.
-    if (hours.toLowerCase() == 'horaires indisponibles' || hours.isEmpty) {
-      clientCalculatedIsOpen = false;
-      return;
-    }
-    clientCalculatedIsOpen = OpeningHoursParser.isStoreOpen(hours, DateTime.now());
+    clientCalculatedIsOpen = OpeningHoursParser.isStoreOpenFromMap(hours, DateTime.now());
   }
 
   // Assurer que le getter `isOpen` utilise la valeur calculée.
@@ -162,7 +161,7 @@ class Merchant {
       'email': email,
       'address': address,
       'phone': phone,
-      'hours': hours,
+      'hours': hours, // C'est déjà une Map
       'isOpen': isOpen,
       'status': status.index,
       'latitude': latitude,

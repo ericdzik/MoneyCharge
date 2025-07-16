@@ -1,6 +1,55 @@
 import 'package:flutter/material.dart'; // Pour TimeOfDay
 
 class OpeningHoursParser {
+  static String getDayOfWeek(DateTime now) {
+    switch (now.weekday) {
+      case DateTime.monday: return 'Lundi';
+      case DateTime.tuesday: return 'Mardi';
+      case DateTime.wednesday: return 'Mercredi';
+      case DateTime.thursday: return 'Jeudi';
+      case DateTime.friday: return 'Vendredi';
+      case DateTime.saturday: return 'Samedi';
+      case DateTime.sunday: return 'Dimanche';
+      default: return '';
+    }
+  }
+
+  static TimeOfDay? parseTime(String? timeStr) {
+    if (timeStr == null) return null;
+    try {
+      final parts = timeStr.replaceAll('h', ':').split(':');
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      return TimeOfDay(hour: hour, minute: minute);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  static bool isStoreOpenFromMap(Map<String, dynamic>? hoursMap, DateTime now) {
+    if (hoursMap == null || hoursMap.isEmpty) {
+      return false;
+    }
+
+    final dayOfWeek = getDayOfWeek(now);
+    if (hoursMap.containsKey(dayOfWeek)) {
+      final schedule = hoursMap[dayOfWeek] as Map<String, dynamic>?;
+      if (schedule == null) return false;
+
+      final openTime = parseTime(schedule['open']);
+      final closeTime = parseTime(schedule['close']);
+      final currentTime = TimeOfDay.fromDateTime(now);
+
+      if (openTime != null && closeTime != null) {
+        final openDateTime = DateTime(now.year, now.month, now.day, openTime.hour, openTime.minute);
+        final closeDateTime = DateTime(now.year, now.month, now.day, closeTime.hour, closeTime.minute);
+
+        return now.isAfter(openDateTime) && now.isBefore(closeDateTime);
+      }
+    }
+    return false;
+  }
+
   static const Map<String, int> _dayAbbreviations = {
     'lun': DateTime.monday,
     'mar': DateTime.tuesday,
