@@ -28,7 +28,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
   // late TextEditingController _openingHoursController; // Remplacé
-  Map<String, Map<String, String>> _openingHours = {};
+  Map<String, dynamic> _openingHours = {};
   late TextEditingController _otherServiceController;
 
   // Gestion des services
@@ -54,7 +54,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     _addressController = TextEditingController(text: widget.merchant.address);
     // _openingHoursController = TextEditingController(text: widget.merchant.openingHours ?? '');
     if (widget.merchant.openingHours != null) {
-      _openingHours = Map<String, Map<String, String>>.from(widget.merchant.openingHours!);
+      _openingHours = widget.merchant.openingHours!;
     }
     if (widget.merchant.imageUrls != null) {
       _imageUrls = List<String>.from(widget.merchant.imageUrls!);
@@ -232,7 +232,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
 
     for (var day in days) {
       if (_openingHours.containsKey(day) && _openingHours[day] is Map) {
-        final hoursMap = _openingHours[day] as Map<String, dynamic>;
+        final hoursMap = _openingHours[day];
         summary.add(
           Text('$day: ${hoursMap['open']} - ${hoursMap['close']}'),
         );

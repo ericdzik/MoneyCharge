@@ -238,7 +238,7 @@ class AuthProvider with ChangeNotifier {
     required String email,
     required String phone,
     required String address,
-    required Map<String, Map<String, String>> openingHours,
+    required Map<String, dynamic> openingHours,
     required List<String> services, // CHANGED to List<String>
     required String password,
     required double? latitude,
