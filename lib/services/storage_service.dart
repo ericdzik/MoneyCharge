@@ -3,13 +3,14 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:path/path.dart' as p;
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<String?> uploadImage(XFile image, String merchantId) async {
     try {
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+      final String fileName = '${DateTime.now().millisecondsSinceEpoch}_${p.basename(image.path)}';
       final Reference ref = _storage.ref().child('merchants/$merchantId/$fileName');
       final UploadTask uploadTask = ref.putFile(File(image.path));
       final TaskSnapshot snapshot = await uploadTask;
