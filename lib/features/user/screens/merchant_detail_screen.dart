@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' hide CarouselController;
+import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/status_badge.dart';
@@ -8,7 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+import 'package:carousel_slider/carousel_slider.dart' as cs;
 import '../../../providers/location_provider.dart';
 import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
 
@@ -136,8 +136,8 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       child: Stack(
                         children: [
                           if (widget.merchant.imageUrls != null && widget.merchant.imageUrls!.isNotEmpty)
-                            CarouselSlider(
-                              options: CarouselOptions(
+                            cs.CarouselSlider(
+                              options: cs.CarouselOptions(
                                 height: headerHeight,
                                 viewportFraction: 1.0,
                                 autoPlay: true,
