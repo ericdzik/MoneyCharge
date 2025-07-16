@@ -128,7 +128,7 @@ class _MapViewContentState extends State<MapViewContent> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
+        Provider.of<MerchantProvider>(context, listen: false).listenToMerchants();
         Provider.of<LocationProvider>(context, listen: false).initialize();
       }
     });

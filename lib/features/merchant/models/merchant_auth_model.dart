@@ -14,6 +14,7 @@ class MerchantAuthModel {
   final double? latitude;
   final double? longitude;
   final String merchantType; // Ajouté
+  final String? profileType;
   final Map<String, String>? serviceStockStatus; // Ajouté
   final List<String>? imageUrls;
 
@@ -31,6 +32,7 @@ class MerchantAuthModel {
     this.latitude,
     this.longitude,
     required this.merchantType, // Ajouté
+    this.profileType,
     this.serviceStockStatus, // Ajouté
     this.imageUrls,
   });
@@ -74,6 +76,7 @@ class MerchantAuthModel {
       latitude: (data['latitude'] as num?)?.toDouble(),
       longitude: (data['longitude'] as num?)?.toDouble(),
       merchantType: data['merchantType'] as String? ?? 'boutique', // Ajouté avec défaut
+      profileType: data['profileType'] as String?,
       serviceStockStatus: stockStatus, // Ajouté
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
     );
@@ -95,6 +98,7 @@ class MerchantAuthModel {
       'latitude': latitude,
       'longitude': longitude,
       'merchantType': merchantType, // Ajouté
+      'profileType': profileType,
       'serviceStockStatus': serviceStockStatus, // Ajouté
       'imageUrls': imageUrls,
     };
@@ -114,6 +118,7 @@ class MerchantAuthModel {
     double? latitude,
     double? longitude,
     String? merchantType, // Ajouté
+    String? profileType,
     Map<String, String>? serviceStockStatus, // Ajouté
     List<String>? imageUrls,
   }) {
@@ -131,6 +136,7 @@ class MerchantAuthModel {
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       merchantType: merchantType ?? this.merchantType,
+      profileType: profileType ?? this.profileType,
       serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus,
       imageUrls: imageUrls ?? this.imageUrls,
     );

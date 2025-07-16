@@ -22,7 +22,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<MerchantProvider>(context, listen: false).loadMerchants();
+      Provider.of<MerchantProvider>(context, listen: false).listenToMerchants();
     });
   }
 
@@ -51,7 +51,10 @@ class _ListViewScreenState extends State<ListViewScreen> {
                     }
 
                     return RefreshIndicator(
-                      onRefresh: () => merchantProvider.loadMerchants(),
+                  onRefresh: () {
+                    merchantProvider.refreshMerchants();
+                    return Future.value();
+                  },
                       child: ListView.builder(
                         itemCount: merchantProvider.merchants.length,
                         itemBuilder: (context, index) {
