@@ -3,8 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/user/models/merchant_model.dart'; // For user-facing merchant list
 import '../features/merchant/models/merchant_auth_model.dart'; // For admin-facing merchant list
 
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../features/user/models/merchant_model.dart'; // For user-facing merchant list
+import '../features/merchant/models/merchant_auth_model.dart'; // For admin-facing merchant list
+
 class MerchantProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  StreamSubscription? _merchantsSubscription;
 
   List<Merchant> _allLoadedMerchants = []; // For user view (verified merchants, type Merchant)
   List<Merchant> _filteredMerchants = []; // For user view (filtered list of Merchant)
@@ -28,6 +35,12 @@ class MerchantProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  @override
+  void dispose() {
+    _merchantsSubscription?.cancel();
+    super.dispose();
+  }
+
   // Getters pour l'état actuel des filtres (for user view)
   String? get activeMerchantTypeFilter => _activeMerchantTypeFilter;
   List<String> get activeServiceFilters => List.unmodifiable(_activeServiceFilters);
@@ -35,25 +48,15 @@ class MerchantProvider with ChangeNotifier {
   bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
   String get searchQuery => _searchQuery;
 
-  Future<void> loadMerchants({bool forceRefresh = false}) async { // For user view
-    if (_isLoading && !forceRefresh) return;
-
-    if (_allLoadedMerchants.isNotEmpty && !forceRefresh) {
-        _applyInternalFilters();
-        notifyListeners();
-        return;
-    }
-
+  void listenToMerchants() {
     _setLoading(true);
-    _error = null;
-
-    try {
-      final querySnapshot = await _firestore
-          .collection('users')
-          .where('role', isEqualTo: 'merchant')
-          .where('isVerified', isEqualTo: true) // Users see only verified merchants
-          .get();
-
+    _merchantsSubscription?.cancel();
+    _merchantsSubscription = _firestore
+        .collection('users')
+        .where('role', isEqualTo: 'merchant')
+        .where('isVerified', isEqualTo: true)
+        .snapshots()
+        .listen((querySnapshot) {
       _allLoadedMerchants = querySnapshot.docs.map((doc) {
         try {
           return Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>);
@@ -62,17 +65,15 @@ class MerchantProvider with ChangeNotifier {
           return null;
         }
       }).whereType<Merchant>().toList();
-
       _applyInternalFilters();
-
-    } catch (e) {
-      _error = "Erreur lors du chargement des marchands: ${e.toString()}";
+      _setLoading(false);
+    }, onError: (e) {
+      _error = "Erreur lors de l'écoute des marchands: ${e.toString()}";
       _allLoadedMerchants = [];
       _filteredMerchants = [];
-      print(_error);
-    } finally {
       _setLoading(false);
-    }
+      print(_error);
+    });
   }
 
   Future<void> loadAllMerchantsForAdmin({bool forceRefresh = false}) async { // For admin view
@@ -215,8 +216,8 @@ class MerchantProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> refreshMerchants() async { // Refreshes user-facing merchants
-    await loadMerchants(forceRefresh: true);
+  void refreshMerchants() { // Refreshes user-facing merchants
+    listenToMerchants();
   }
 
   Future<void> refreshAdminMerchants() async { // Refreshes admin-facing merchants

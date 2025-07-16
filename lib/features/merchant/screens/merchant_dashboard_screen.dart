@@ -10,6 +10,9 @@ import '../widgets/dashboard_stats_widget.dart';
 import '../../../core/constants/app_routes.dart';
 import 'edit_merchant_profile_screen.dart';
 import '../../../providers/transaction_provider.dart'; // Ajout de l'import pour TransactionProvider
+import 'dart:async';
+import 'package:geolocator/geolocator.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/transaction_model.dart'; // Ajout de l'import pour TransactionModel et enums
 
 class MerchantDashboardScreen extends StatefulWidget {
@@ -21,6 +24,9 @@ class MerchantDashboardScreen extends StatefulWidget {
 }
 
 class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
+  bool _isTrackingPosition = false;
+  Timer? _positionUpdateTimer;
+
   @override
   void initState() {
     super.initState();
@@ -148,6 +154,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                           const SizedBox(height: 16),
                           _buildQuickActions(currentMerchant),
                           const SizedBox(height: 32),
+                          if (currentMerchant.profileType == 'mobile')
+                            _buildLiveLocationCard(),
                           Text(
                             'Activité récente',
                             style: AppTextStyles.h2.copyWith(fontSize: 20),
@@ -500,7 +508,92 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
   }
 
+  Widget _buildLiveLocationCard() {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 32),
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Suivi de la Position', style: AppTextStyles.h3),
+                  SizedBox(height: 4),
+                  Text('Activez pour être visible par les clients.', style: AppTextStyles.body2),
+                ],
+              ),
+            ),
+            Switch(
+              value: _isTrackingPosition,
+              onChanged: (value) {
+                _togglePositionTracking(value);
+              },
+              activeColor: AppColors.success,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _togglePositionTracking(bool value) async {
+    if (value) {
+      // Demander la permission avant d'activer le suivi
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('La permission de localisation est requise pour activer le suivi.')),
+        );
+        return;
+      }
+
+      setState(() {
+        _isTrackingPosition = true;
+      });
+      _positionUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        _updatePositionInFirestore();
+      });
+    } else {
+      setState(() {
+        _isTrackingPosition = false;
+      });
+      _positionUpdateTimer?.cancel();
+    }
+  }
+
+  Future<void> _updatePositionInFirestore() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.userId != null) {
+        await FirebaseFirestore.instance.collection('users').doc(authProvider.userId).update({
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        });
+      }
+    } catch (e) {
+      print("Erreur lors de la mise à jour de la position: $e");
+    }
+  }
+
+  @override
+  void dispose() {
+    _positionUpdateTimer?.cancel();
+    super.dispose();
+  }
+
   void _handleLogout(BuildContext dialogContext) {
+    // Arrêter le suivi de la position avant de se déconnecter
+    if (_isTrackingPosition) {
+      _togglePositionTracking(false);
+    }
     final authProvider = Provider.of<AuthProvider>(
       dialogContext,
       listen: false,

@@ -41,7 +41,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
           listen: false,
         );
 
-        merchantProvider.loadMerchants();
+        merchantProvider.listenToMerchants();
         locationProvider.initialize().then((_) {
           // Après l'initialisation de la localisation, vérifier si un marchand cible est fourni
           if (widget.targetMerchant != null &&
