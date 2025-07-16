@@ -82,7 +82,7 @@ class Merchant {
       services: List<String>.from(json['services'] as List? ?? []),
       merchantType: json['merchantType'] as String?,
       serviceStockStatus: json['serviceStockStatus'] != null
-          ? Map<String, String>.from(json['serviceStockStatus'] as Map)
+          ? (json['serviceStockStatus'] as Map).map((key, value) => MapEntry(key.toString(), value.toString()))
           : null,
       imageUrls: List<String>.from(json['imageUrls'] as List? ?? []),
       // Les champs comme email, isVerified, createdAt, lastLoginAt devraient aussi être lus ici si présents dans le JSON
@@ -125,9 +125,8 @@ class Merchant {
 
     Map<String, String>? serviceStockStatusMap;
     if (data['serviceStockStatus'] != null && data['serviceStockStatus'] is Map) {
-      serviceStockStatusMap = (data['serviceStockStatus'] as Map).map(
-            (key, value) => MapEntry(key.toString(), value.toString()),
-      );
+      serviceStockStatusMap = (data['serviceStockStatus'] as Map)
+          .map((key, value) => MapEntry(key.toString(), value.toString()));
     }
 
     Merchant merchant = Merchant(

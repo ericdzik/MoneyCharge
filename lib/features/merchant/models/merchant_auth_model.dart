@@ -60,7 +60,7 @@ class MerchantAuthModel {
 
     Map<String, String>? stockStatus;
     if (data['serviceStockStatus'] != null && data['serviceStockStatus'] is Map) {
-      stockStatus = Map<String, String>.from(data['serviceStockStatus'] as Map);
+      stockStatus = (data['serviceStockStatus'] as Map).map((key, value) => MapEntry(key.toString(), value.toString()));
     }
 
     Map<String, dynamic>? hours;
