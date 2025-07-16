@@ -41,6 +41,12 @@ class MerchantAuthModel {
       DocumentSnapshot<Map<String, dynamic>> snapshot) {
     final data = snapshot.data()!;
 
+    Map<String, dynamic>? openingHoursData;
+    final openingHoursField = data['openingHours'];
+    if (openingHoursField is Map) {
+      openingHoursData = openingHoursField as Map<String, dynamic>;
+    }
+
     List<String>? servicesList;
     if (data['services'] != null) {
       if (data['services'] is String) {
@@ -68,7 +74,7 @@ class MerchantAuthModel {
       businessName: data['name'] as String? ?? '', // Firestore 'name' field
       phone: data['phone'] as String? ?? '',
       address: data['address'] as String? ?? '',
-      openingHours: hours,
+      openingHours: openingHoursData,
       services: servicesList, // Modifié
       isVerified: data['isVerified'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),

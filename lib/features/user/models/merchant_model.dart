@@ -105,6 +105,12 @@ class Merchant {
       throw Exception("Document marchand vide pour l'UID: ${userDoc.id}");
     }
 
+    Map<String, dynamic>? openingHoursData;
+    final openingHoursField = data['openingHours'];
+    if (openingHoursField is Map) {
+      openingHoursData = openingHoursField as Map<String, dynamic>;
+    }
+
     // Extraction du GeoPoint et conversion
     double latitude = 0.0;
     double longitude = 0.0;
@@ -130,7 +136,7 @@ class Merchant {
       email: data['email'] as String?,
       address: data['address'] as String? ?? 'Adresse Indisponible',
       phone: data['phone'] as String? ?? 'Téléphone Indisponible',
-      hours: data['openingHours'] as Map<String, dynamic>?,
+      hours: openingHoursData,
       profileType: data['profileType'] as String?,
       latitude: latitude,
       longitude: longitude,
