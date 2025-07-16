@@ -1,7 +1,25 @@
+import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class StorageService {
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+
+  Future<String?> uploadImage(XFile image, String merchantId) async {
+    try {
+      final String fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+      final Reference ref = _storage.ref().child('merchants/$merchantId/$fileName');
+      final UploadTask uploadTask = ref.putFile(File(image.path));
+      final TaskSnapshot snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      print("Erreur lors de l'upload de l'image: $e");
+      return null;
+    }
+  }
+
   static const String _tokenKey = 'auth_token';
   static const String _userTypeKey = 'user_type';
   static const String _userDataKey = 'user_data';

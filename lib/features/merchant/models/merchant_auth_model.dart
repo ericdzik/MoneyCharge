@@ -15,6 +15,7 @@ class MerchantAuthModel {
   final double? longitude;
   final String merchantType; // Ajouté
   final Map<String, String>? serviceStockStatus; // Ajouté
+  final List<String>? imageUrls;
 
   MerchantAuthModel({
     required this.id,
@@ -31,6 +32,7 @@ class MerchantAuthModel {
     this.longitude,
     required this.merchantType, // Ajouté
     this.serviceStockStatus, // Ajouté
+    this.imageUrls,
   });
 
   factory MerchantAuthModel.fromFirestore(
@@ -73,6 +75,7 @@ class MerchantAuthModel {
       longitude: (data['longitude'] as num?)?.toDouble(),
       merchantType: data['merchantType'] as String? ?? 'boutique', // Ajouté avec défaut
       serviceStockStatus: stockStatus, // Ajouté
+      imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
     );
   }
 
@@ -93,6 +96,7 @@ class MerchantAuthModel {
       'longitude': longitude,
       'merchantType': merchantType, // Ajouté
       'serviceStockStatus': serviceStockStatus, // Ajouté
+      'imageUrls': imageUrls,
     };
   }
 
@@ -111,6 +115,7 @@ class MerchantAuthModel {
     double? longitude,
     String? merchantType, // Ajouté
     Map<String, String>? serviceStockStatus, // Ajouté
+    List<String>? imageUrls,
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -127,6 +132,7 @@ class MerchantAuthModel {
       longitude: longitude ?? this.longitude,
       merchantType: merchantType ?? this.merchantType,
       serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus,
+      imageUrls: imageUrls ?? this.imageUrls,
     );
   }
 }

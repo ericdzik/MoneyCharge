@@ -20,6 +20,7 @@ class Merchant {
   final List<String> services; // Champ 'servicesOffered' dans Firestore
   final String? merchantType; // Ajout du type de marchand
   final Map<String, String>? serviceStockStatus; // Ajout du statut du stock des services
+  final List<String>? imageUrls;
 
   // Nouveaux champs pour correspondre à MerchantAuthModel et aux besoins de l'admin
   final String? email;
@@ -45,6 +46,7 @@ class Merchant {
     required this.services,
     this.merchantType,
     this.serviceStockStatus,
+    this.imageUrls,
     this.isVerified, // Nouveau
     this.createdAt, // Nouveau
     this.lastLoginAt, // Nouveau
@@ -82,6 +84,7 @@ class Merchant {
       serviceStockStatus: json['serviceStockStatus'] != null
           ? Map<String, String>.from(json['serviceStockStatus'] as Map)
           : null,
+      imageUrls: List<String>.from(json['imageUrls'] as List? ?? []),
       // Les champs comme email, isVerified, createdAt, lastLoginAt devraient aussi être lus ici si présents dans le JSON
       email: json['email'] as String?,
       isVerified: json['isVerified'] as bool?,
@@ -134,6 +137,7 @@ class Merchant {
       services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
       merchantType: data['merchantType'] as String?,
       serviceStockStatus: serviceStockStatusMap,
+      imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
       isVerified: data['isVerified'] as bool?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
@@ -172,6 +176,7 @@ class Merchant {
       'services': services,
       'merchantType': merchantType,
       'serviceStockStatus': serviceStockStatus,
+      'imageUrls': imageUrls,
       'isVerified': isVerified,
       'createdAt': createdAt?.toIso8601String(),
       'lastLoginAt': lastLoginAt?.toIso8601String(),

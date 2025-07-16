@@ -287,6 +287,7 @@ class AuthProvider with ChangeNotifier {
     required Map<String, dynamic> openingHours,
     required List<String> services,
     required Map<String, String> serviceStockStatus,
+    required List<String> imageUrls,
   }) async {
     _setLoading(true);
     _error = null;
@@ -305,6 +306,7 @@ class AuthProvider with ChangeNotifier {
       'openingHours': openingHours,
       'services': services,
       'serviceStockStatus': serviceStockStatus,
+      'imageUrls': imageUrls,
       'lastProfileUpdateAt': FieldValue.serverTimestamp(),
     };
 

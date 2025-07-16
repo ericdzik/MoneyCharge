@@ -8,6 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import '../../../providers/location_provider.dart';
 import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
 
@@ -134,12 +135,25 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       ),
                       child: Stack(
                         children: [
-                          const Center(
-                            child: Icon(
-                              Icons.store,
-                              size: 40,
-                              color: Color.fromARGB(255, 0, 0, 0)                            ),
-                          ),
+                          if (widget.merchant.imageUrls != null && widget.merchant.imageUrls!.isNotEmpty)
+                            CarouselSlider(
+                              options: CarouselOptions(
+                                height: headerHeight,
+                                viewportFraction: 1.0,
+                                autoPlay: true,
+                              ),
+                              items: widget.merchant.imageUrls!.map((item) => Center(
+                                child: Image.network(item, fit: BoxFit.cover, width: double.infinity)
+                              )).toList(),
+                            )
+                          else
+                            const Center(
+                              child: Icon(
+                                Icons.store,
+                                size: 40,
+                                color: Color.fromARGB(255, 0, 0, 0)
+                              ),
+                            ),
                           Positioned(
                             top: AppDimensions.paddingM,
                             right: AppDimensions.paddingM,
@@ -179,7 +193,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                         icon: Icons.access_time,
                         title: 'Horaires',
                         content:
-                            '${widget.merchant.hours}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
+                            '${_formatHours(widget.merchant.hours)}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
                       LayoutBuilder(
@@ -458,6 +472,17 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
         ],
       ),
     );
+  }
+
+  String _formatHours(Map<String, dynamic>? hours) {
+    if (hours == null || hours.isEmpty) {
+      return 'Non disponible';
+    }
+    // Pour simplifier, on affiche le premier jour disponible.
+    // Une logique plus complexe pourrait formater tous les jours.
+    final firstDay = hours.keys.first;
+    final schedule = hours[firstDay] as Map<String, dynamic>;
+    return '$firstDay: ${schedule['open']} - ${schedule['close']}';
   }
 
   Widget _buildTimeCard(IconData icon, String label, String time) {

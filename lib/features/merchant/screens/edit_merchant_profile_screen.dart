@@ -6,8 +6,10 @@ import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/widgets/opening_hours_selector.dart';
 import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/services/storage_service.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 
 class EditMerchantProfileScreen extends StatefulWidget {
@@ -38,6 +40,12 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   final List<String> _stockStatusOptions = ['Disponible', 'Faible', 'Épuisé'];
   Map<String, String> _serviceStockStatus = {};
 
+  // Gestion des images
+  final ImagePicker _picker = ImagePicker();
+  final StorageService _storageService = StorageService();
+  List<String> _imageUrls = [];
+  bool _isUploading = false;
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +55,9 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     // _openingHoursController = TextEditingController(text: widget.merchant.openingHours ?? '');
     if (widget.merchant.openingHours != null) {
       _openingHours = Map<String, Map<String, String>>.from(widget.merchant.openingHours!);
+    }
+    if (widget.merchant.imageUrls != null) {
+      _imageUrls = List<String>.from(widget.merchant.imageUrls!);
     }
     _otherServiceController = TextEditingController();
 
@@ -184,6 +195,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         openingHours: _openingHours,
         services: finalServices,
         serviceStockStatus: finalServiceStockStatus,
+        imageUrls: _imageUrls,
       );
 
       if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
@@ -239,6 +251,68 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         children: summary,
       ),
     );
+  }
+
+  Widget _buildImageGallery() {
+    if (_imageUrls.isEmpty) {
+      return const Text('Aucune image pour le moment.');
+    }
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+      ),
+      itemCount: _imageUrls.length,
+      itemBuilder: (context, index) {
+        return Stack(
+          children: [
+            Image.network(_imageUrls[index], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: IconButton(
+                icon: const Icon(Icons.remove_circle, color: Colors.red),
+                onPressed: () {
+                  setState(() {
+                    _imageUrls.removeAt(index);
+                  });
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _pickAndUploadImages() async {
+    setState(() {
+      _isUploading = true;
+    });
+    try {
+      final List<XFile> pickedFiles = await _picker.pickMultiImage();
+      if (pickedFiles.isNotEmpty) {
+        for (var file in pickedFiles) {
+          final imageUrl = await _storageService.uploadImage(file, widget.merchant.id);
+          if (imageUrl != null) {
+            setState(() {
+              _imageUrls.add(imageUrl);
+            });
+          }
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur lors de la sélection d'images: $e")),
+      );
+    } finally {
+      setState(() {
+        _isUploading = false;
+      });
+    }
   }
 
   @override
@@ -315,6 +389,22 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
                 },
               ),
               _buildOpeningHoursSummary(),
+              const SizedBox(height: AppDimensions.paddingXL),
+
+              // Section Images
+              Text('Images de la boutique', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+              const SizedBox(height: AppDimensions.paddingS),
+              _buildImageGallery(),
+              const SizedBox(height: AppDimensions.paddingM),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.add_a_photo_outlined),
+                label: const Text('Ajouter des images'),
+                onPressed: _isUploading ? null : _pickAndUploadImages,
+              ),
+              if (_isUploading) const Padding(
+                padding: EdgeInsets.only(top: 8.0),
+                child: Center(child: CircularProgressIndicator()),
+              ),
               const SizedBox(height: AppDimensions.paddingXL),
 
               // Section Services
