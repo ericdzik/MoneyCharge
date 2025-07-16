@@ -8,7 +8,7 @@ import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
-import 'package:carousel_slider/carousel_slider.dart' as cs;
+import 'package:card_swiper/card_swiper.dart';
 import '../../../providers/location_provider.dart';
 import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
 
@@ -136,15 +136,16 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                       child: Stack(
                         children: [
                           if (widget.merchant.imageUrls != null && widget.merchant.imageUrls!.isNotEmpty)
-                            cs.CarouselSlider(
-                              options: cs.CarouselOptions(
-                                height: headerHeight,
-                                viewportFraction: 1.0,
-                                autoPlay: true,
-                              ),
-                              items: widget.merchant.imageUrls!.map((item) => Center(
-                                child: Image.network(item, fit: BoxFit.cover, width: double.infinity)
-                              )).toList(),
+                            Swiper(
+                              itemBuilder: (BuildContext context, int index) {
+                                return Image.network(
+                                  widget.merchant.imageUrls![index],
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                              itemCount: widget.merchant.imageUrls!.length,
+                              pagination: const SwiperPagination(),
+                              control: const SwiperControl(),
                             )
                           else
                             const Center(

@@ -33,7 +33,7 @@ dependencies:
   # Nouvelles dépendances pour les images
   firebase_storage: ^11.7.0
   image_picker: ^1.1.2
-  carousel_slider: ^4.2.1
+  card_swiper: ^3.0.1
 
 
 dev_dependencies:
