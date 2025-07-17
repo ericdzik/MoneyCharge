@@ -15,9 +15,26 @@ class StorageService {
       final UploadTask uploadTask = ref.putFile(File(image.path));
       final TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
-    } catch (e) {
-      print("Erreur lors de l'upload de l'image: $e");
-      return null;
+    } on FirebaseException catch (e, s) {
+      print('############################################################');
+      print('### ERREUR FIREBASE STORAGE LORS DE L\'UPLOAD');
+      print('### Fichier: storage_service.dart');
+      print("### Code d'erreur: ${e.code}");
+      print("### Message d'erreur: ${e.message}");
+      print("### Stack Trace: \n$s");
+      print('############################################################');
+      // On relance l'exception pour que l'UI puisse la catcher et afficher un message.
+      // Cela permet de ne pas masquer l'erreur.
+      throw Exception("Firebase Storage Error (${e.code}): ${e.message}");
+    } catch (e, s) {
+      print('############################################################');
+      print('### ERREUR GÉNÉRALE LORS DE L\'UPLOAD');
+      print('### Fichier: storage_service.dart');
+      print("### Exception: ${e.toString()}");
+      print("### Stack Trace: \n$s");
+      print('############################################################');
+      // On peut aussi relancer ici si on veut que l'UI soit notifiée de toutes les erreurs.
+      throw Exception("Erreur inconnue lors de l'upload: ${e.toString()}");
     }
   }
 
