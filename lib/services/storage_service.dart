@@ -15,9 +15,28 @@ class StorageService {
       final UploadTask uploadTask = ref.putFile(File(image.path));
       final TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
-    } catch (e) {
-      print("Erreur lors de l'upload de l'image: $e");
-      return null;
+    } on FirebaseException catch (e, s) {
+      print('############################################################');
+      print('### ERREUR FIREBASE STORAGE LORS DE L\'UPLOAD');
+      print('### Fichier: storage_service.dart');
+      print("### Code d'erreur: ${e.code}");
+      print("### Message d'erreur: ${e.message}");
+      print("### Stack Trace: \n$s");
+      print('############################################################');
+      // Relancer l'exception est crucial pour que le widget appelant (l'écran)
+      // puisse être notifié de l'échec et réagir en conséquence (par exemple, en affichant une SnackBar).
+      // Sans cela, l'erreur serait "silencieuse" et l'utilisateur ne saurait pas pourquoi le chargement a échoué.
+      throw Exception("Firebase Storage Error (${e.code}): ${e.message}");
+    } catch (e, s) {
+      print('############################################################');
+      print('### ERREUR GÉNÉRALE LORS DE L\'UPLOAD');
+      print('### Fichier: storage_service.dart');
+      print("### Exception: ${e.toString()}");
+      print("### Stack Trace: \n$s");
+      print('############################################################');
+      // Il est également important de relancer les erreurs non spécifiques à Firebase
+      // pour assurer une gestion cohérente des erreurs dans l'interface utilisateur.
+      throw Exception("Erreur inconnue lors de l'upload: ${e.toString()}");
     }
   }
 
