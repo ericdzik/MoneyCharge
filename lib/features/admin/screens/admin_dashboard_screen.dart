@@ -529,32 +529,48 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _suspendMerchant(MerchantAuthModel merchant) {
-    // TODO: Implement actual Firestore update for suspension
+    final newStatus = !(merchant.isSuspended ?? false);
+    final actionText = newStatus ? 'Suspendre' : 'Réactiver';
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Suspendre le marchand'),
-        content: Text('Voulez-vous suspendre ${merchant.businessName} ?'),
+        title: Text('$actionText le marchand ?'),
+        content: Text('Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Annuler'),
           ),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '${merchant.businessName} a été suspendu (simulé).',
-                  ),
-                  backgroundColor: Colors.red,
-                ),
-              );
-              // Similar to verify, update Firestore then refresh or update locally.
+              final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+              try {
+                await merchantProvider.updateMerchantSuspension(merchant.id, newStatus);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${merchant.businessName} a été ${newStatus ? "suspendu" : "réactivé"}.'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Erreur: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Suspendre'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: newStatus ? Colors.red : AppColors.success,
+            ),
+            child: Text(actionText),
           ),
         ],
       ),

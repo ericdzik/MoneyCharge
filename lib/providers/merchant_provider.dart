@@ -257,4 +257,21 @@ class MerchantProvider with ChangeNotifier {
       _setLoading(false);
     }
   }
+
+  Future<void> updateMerchantSuspension(String merchantId, bool isSuspended) async {
+    _setLoading(true);
+    _error = null;
+    try {
+      await _firestore.collection('users').doc(merchantId).update({
+        'isSuspended': isSuspended,
+      });
+      // Refresh the list of merchants for the admin view
+      await loadAllMerchantsForAdmin(forceRefresh: true);
+    } catch (e) {
+      _error = "Erreur lors de la mise à jour de la suspension: ${e.toString()}";
+      print(_error);
+    } finally {
+      _setLoading(false);
+    }
+  }
 }

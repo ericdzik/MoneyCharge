@@ -304,16 +304,10 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
           }
         }
       }
-    } catch (e, s) {
-      print('############################################################');
-      print('### ERREUR LORS DE LA SÉLECTION ET UPLOAD D\'IMAGES');
-      print('### Fichier: edit_merchant_profile_screen.dart');
-      print("### Exception: ${e.toString()}");
-      print("### Stack Trace: \n$s");
-      print('############################################################');
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur détaillée (voir logs): ${e.toString()}")),
+        SnackBar(content: Text("Erreur lors de la sélection d'images: $e")),
       );
     } finally {
       setState(() {

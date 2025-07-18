@@ -98,29 +98,7 @@ class MerchantTableWidget extends StatelessWidget {
                     ),
                     DataCell(SizedBox(width: 180, child: Text(merchant.email, overflow: TextOverflow.ellipsis))),
                     DataCell(SizedBox(width: 120, child: Text(merchant.merchantType, overflow: TextOverflow.ellipsis))), // Affichage du type
-                    DataCell(
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: merchant.isVerified
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.orange.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          merchant.isVerified ? 'Vérifié' : 'En attente',
-                          style: AppTextStyles.caption.copyWith(
-                            color: merchant.isVerified
-                                ? Colors.green
-                                : Colors.orange,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
+                    DataCell(_buildStatusChip(merchant)),
                     DataCell(
                       SizedBox(
                         width: 100,
@@ -144,14 +122,21 @@ class MerchantTableWidget extends StatelessWidget {
 
                           if (usePopupMenu) { // usePopupMenu est défini au début de la méthode build du widget parent
                             List<PopupMenuEntry<String>> popupItems = [];
-                            if (!merchant.isVerified) {
+                            // Si le marchand est suspendu, la seule action est de le réactiver.
+                            if (merchant.isSuspended) {
+                               popupItems.add(
+                                const PopupMenuItem(value: 'suspend', child: Text('Réactiver')),
+                              );
+                            } else {
+                               if (!merchant.isVerified) {
+                                popupItems.add(
+                                  const PopupMenuItem(value: 'verify', child: Text('Vérifier')),
+                                );
+                              }
                               popupItems.add(
-                                const PopupMenuItem(value: 'verify', child: Text('Vérifier')),
+                                const PopupMenuItem(value: 'suspend', child: Text('Suspendre')),
                               );
                             }
-                            popupItems.add(
-                              const PopupMenuItem(value: 'suspend', child: Text('Suspendre')),
-                            );
 
                             if (popupItems.isNotEmpty) {
                               actionWidgets.add(
@@ -170,23 +155,32 @@ class MerchantTableWidget extends StatelessWidget {
                               );
                             }
                           } else {
-                            actionWidgets.add(
-                              Tooltip(
-                                message: merchant.isVerified ? 'Annuler la vérification' : 'Vérifier',
-                                child: Switch(
-                                  value: merchant.isVerified,
-                                  onChanged: (newValue) {
-                                    onVerify(merchant);
-                                  },
-                                  activeColor: AppColors.success,
+                            // Actions pour écrans plus larges
+                            if (merchant.isSuspended) {
+                               actionWidgets.add(IconButton(
+                                icon: const Icon(Icons.play_circle_outline, size: 18, color: AppColors.success),
+                                tooltip: 'Réactiver',
+                                onPressed: () => onSuspend(merchant),
+                              ));
+                            } else {
+                               actionWidgets.add(
+                                Tooltip(
+                                  message: merchant.isVerified ? 'Annuler la vérification' : 'Vérifier',
+                                  child: Switch(
+                                    value: merchant.isVerified,
+                                    onChanged: (newValue) {
+                                      onVerify(merchant);
+                                    },
+                                    activeColor: AppColors.success,
+                                  ),
                                 ),
-                              ),
-                            );
-                            actionWidgets.add(IconButton(
-                              icon: const Icon(Icons.block, size: 18, color: Colors.red),
-                              tooltip: 'Suspendre',
-                              onPressed: () => onSuspend(merchant),
-                            ));
+                              );
+                              actionWidgets.add(IconButton(
+                                icon: const Icon(Icons.block, size: 18, color: Colors.red),
+                                tooltip: 'Suspendre',
+                                onPressed: () => onSuspend(merchant),
+                              ));
+                            }
                           }
 
                           return Row(
@@ -202,6 +196,44 @@ class MerchantTableWidget extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(MerchantAuthModel merchant) {
+    String text;
+    Color color;
+    Color backgroundColor;
+
+    if (merchant.isSuspended) {
+      text = 'Suspendu';
+      color = Colors.white;
+      backgroundColor = Colors.red;
+    } else if (merchant.isVerified) {
+      text = 'Vérifié';
+      color = Colors.green;
+      backgroundColor = Colors.green.withOpacity(0.1);
+    } else {
+      text = 'En attente';
+      color = Colors.orange;
+      backgroundColor = Colors.orange.withOpacity(0.1);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        text,
+        style: AppTextStyles.caption.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

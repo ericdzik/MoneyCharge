@@ -17,6 +17,7 @@ class MerchantAuthModel {
   final String? profileType;
   final Map<String, String>? serviceStockStatus; // Ajouté
   final List<String>? imageUrls;
+  final bool isSuspended;
 
   MerchantAuthModel({
     required this.id,
@@ -27,6 +28,7 @@ class MerchantAuthModel {
     this.openingHours,
     this.services, // Modifié
     this.isVerified = false,
+    this.isSuspended = false,
     required this.createdAt,
     this.lastLoginAt,
     this.latitude,
@@ -77,6 +79,7 @@ class MerchantAuthModel {
       openingHours: openingHoursData,
       services: servicesList, // Modifié
       isVerified: data['isVerified'] as bool? ?? false,
+      isSuspended: data['isSuspended'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
       latitude: (data['latitude'] as num?)?.toDouble(),
@@ -99,6 +102,7 @@ class MerchantAuthModel {
       'openingHours': openingHours,
       'services': services, // Sera une liste
       'isVerified': isVerified,
+      'isSuspended': isSuspended,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
       'latitude': latitude,
@@ -119,6 +123,7 @@ class MerchantAuthModel {
     Map<String, dynamic>? openingHours,
     List<String>? services, // Modifié
     bool? isVerified,
+    bool? isSuspended,
     DateTime? createdAt,
     DateTime? lastLoginAt,
     double? latitude,
@@ -137,6 +142,7 @@ class MerchantAuthModel {
       openingHours: openingHours ?? this.openingHours,
       services: services ?? this.services,
       isVerified: isVerified ?? this.isVerified,
+      isSuspended: isSuspended ?? this.isSuspended,
       createdAt: createdAt ?? this.createdAt,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       latitude: latitude ?? this.latitude,
