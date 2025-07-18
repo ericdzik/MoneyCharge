@@ -110,7 +110,6 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                     CustomTextField(
                       controller: TextEditingController(text: user.email),
                       labelText: 'Email (non modifiable)',
-                      readOnly: true,
                       enabled: false,
                     ),
                     const SizedBox(height: AppDimensions.paddingXL),
