@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 import '../models/admin_model.dart';
 // Import User model if you have one for 'role' == 'user'
 // For now, we'll count documents directly.
@@ -95,6 +96,33 @@ class AdminFirestoreService {
         'customerSatisfaction': 0.0,
         'totalChargerRentals': 0,
       };
+    }
+  }
+
+  Future<List<User>> getAllUsers() async {
+    try {
+      final querySnapshot = await _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'user')
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => User.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .toList();
+    } catch (e) {
+      print('Error fetching all users: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateUserSuspension(String userId, bool isSuspended) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'isSuspended': isSuspended,
+      });
+    } catch (e) {
+      print('Error updating user suspension: $e');
+      rethrow;
     }
   }
 }

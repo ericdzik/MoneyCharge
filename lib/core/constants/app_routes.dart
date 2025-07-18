@@ -33,4 +33,5 @@ class AppRoutes {
   static const String adminAnalytics = '/admin/analytics';
   static const String adminSettings = '/admin/settings';
   static const String adminPendingVerifications = '/admin/pending-verifications';
+  static const String adminManageUsers = '/admin/manage-users';
 }
