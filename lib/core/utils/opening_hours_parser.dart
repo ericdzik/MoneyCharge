@@ -70,36 +70,12 @@ class OpeningHoursParser {
       return false; // Si aucune règle valide n'est parsée, considérer comme fermé
     }
 
-    final currentDayOfWeek = now.weekday;
-    final currentTimeOfDay = TimeOfDay.fromDateTime(now);
-
     for (final rule in rules) {
-      if (rule.appliesToDay(currentDayOfWeek)) {
-        if (rule.isClosed) {
-          return false; // Règle explicite de fermeture pour ce jour
-        }
-        if (rule.startTime != null && rule.endTime != null) {
-          // Convertir TimeOfDay en minutes pour une comparaison facile
-          final startTimeInMinutes = rule.startTime!.hour * 60 + rule.startTime!.minute;
-          final endTimeInMinutes = rule.endTime!.hour * 60 + rule.endTime!.minute;
-          final currentTimeInMinutes = currentTimeOfDay.hour * 60 + currentTimeOfDay.minute;
-
-          if (startTimeInMinutes <= endTimeInMinutes) {
-            // Cas normal: 09h00-17h00
-            if (currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes < endTimeInMinutes) {
-              return true;
-            }
-          } else {
-            // Cas où la plage passe minuit: 22h00-02h00
-            // Ouvert si heure actuelle >= heure début OU heure actuelle < heure fin
-            if (currentTimeInMinutes >= startTimeInMinutes || currentTimeInMinutes < endTimeInMinutes) {
-              return true;
-            }
-          }
-        }
+      if (rule.isOpenAt(now)) {
+        return true;
       }
     }
-    return false; // Aucune règle d'ouverture trouvée pour le jour/heure actuel
+    return false;
   }
 
   static List<_OpeningHoursRule> _parseRules(String hoursString) {
@@ -213,6 +189,32 @@ class _OpeningHoursRule {
 
   bool appliesToDay(int dayOfWeek) {
     return daysOfWeek.contains(dayOfWeek);
+  }
+
+  bool isOpenAt(DateTime now) {
+    if (isClosed) {
+      return false;
+    }
+    if (startTime == null || endTime == null) {
+      return false;
+    }
+
+    final currentTimeOfDay = TimeOfDay.fromDateTime(now);
+    final startTimeInMinutes = startTime!.hour * 60 + startTime!.minute;
+    final endTimeInMinutes = endTime!.hour * 60 + endTime!.minute;
+    final currentTimeInMinutes = currentTimeOfDay.hour * 60 + currentTimeOfDay.minute;
+
+    if (startTimeInMinutes <= endTimeInMinutes) {
+      // Cas normal: 09h00-17h00
+      return appliesToDay(now.weekday) &&
+          currentTimeInMinutes >= startTimeInMinutes &&
+          currentTimeInMinutes < endTimeInMinutes;
+    } else {
+      // Cas où la plage passe minuit: 22h00-02h00
+      final previousDay = now.subtract(const Duration(days: 1));
+      return (appliesToDay(now.weekday) && currentTimeInMinutes >= startTimeInMinutes) ||
+          (appliesToDay(previousDay.weekday) && currentTimeInMinutes < endTimeInMinutes);
+    }
   }
 }
 
