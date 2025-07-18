@@ -327,6 +327,34 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> updateUserProfile({required String name, String? phone}) async {
+    _setLoading(true);
+    _error = null;
+
+    if (_firebaseUser == null || _userType != UserType.user) {
+      _error = "Aucun utilisateur connecté pour la mise à jour.";
+      _setLoading(false);
+      return false;
+    }
+    final uid = _firebaseUser!.uid;
+
+    Map<String, dynamic> dataToUpdate = {
+      'name': name,
+      'phone': phone,
+    };
+
+    try {
+      await _firestore.collection('users').doc(uid).update(dataToUpdate);
+      await _fetchUserProfile(uid); // Recharger pour la cohérence
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _error = "Erreur lors de la mise à jour du profil: ${e.toString()}";
+      _setLoading(false);
+      return false;
+    }
+  }
+
   void _setLoading(bool loading) {
     if(_isLoading == loading) return;
     _isLoading = loading;

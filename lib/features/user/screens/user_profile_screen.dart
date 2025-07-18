@@ -135,6 +135,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: AppDimensions.paddingS),
+                          TextButton.icon(
+                            icon: const Icon(Icons.edit, size: 16),
+                            label: const Text('Modifier le profil'),
+                            onPressed: () {
+                              Navigator.pushNamed(context, AppRoutes.editProfile);
+                            },
+                          ),
                         ],
                       ),
                     ),
