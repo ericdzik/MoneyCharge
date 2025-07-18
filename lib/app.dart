@@ -30,6 +30,8 @@ import 'features/merchant/screens/balance_management_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
+import 'features/admin/screens/pending_verifications_screen.dart';
+import 'features/merchant/models/merchant_auth_model.dart';
 
 class LocaChargeApp extends StatelessWidget {
   const LocaChargeApp({super.key});
@@ -121,6 +123,16 @@ class LocaChargeApp extends StatelessWidget {
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(const AdminDashboardScreen(), UserType.admin),
+        );
+
+      case AppRoutes.adminPendingVerifications:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final pendingMerchants = args?['merchants'] as List<MerchantAuthModel>? ?? [];
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            PendingVerificationsScreen(pendingMerchants: pendingMerchants),
+            UserType.admin,
+          ),
         );
 
       default:

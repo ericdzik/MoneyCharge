@@ -674,10 +674,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _showPendingVerifications() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Affichage des vérifications en attente (simulé)'),
-      ),
+    final pendingMerchants = _merchants.where((m) => !m.isVerified).toList();
+    Navigator.pushNamed(
+      context,
+      AppRoutes.adminPendingVerifications,
+      arguments: {'merchants': pendingMerchants},
     );
   }
 
