@@ -15,7 +15,6 @@ class User {
   final String? phone;
   final DateTime? createdAt;
   final DateTime? lastLoginAt;
-  final bool isSuspended;
 
   User({
     required this.id,
@@ -24,7 +23,6 @@ class User {
     this.phone,
     this.createdAt,
     this.lastLoginAt,
-    this.isSuspended = false,
   });
 
   factory User.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
@@ -36,7 +34,6 @@ class User {
       phone: data['phone'] as String?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
-      isSuspended: data['isSuspended'] as bool? ?? false,
     );
   }
 }

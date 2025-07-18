@@ -689,7 +689,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _manageUsers() {
-    Navigator.pushNamed(context, AppRoutes.adminManageUsers);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Gestion des utilisateurs (simulé)')),
+    );
   }
 
   void _showSupportTickets() {
