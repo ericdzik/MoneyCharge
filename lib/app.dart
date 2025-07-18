@@ -22,6 +22,7 @@ import 'features/user/screens/forgot_password_screen.dart';
 import 'core/widgets/auth_wrapper.dart';
 import 'features/user/screens/user_profile_screen.dart';
 import 'features/user/screens/rental_history_screen.dart';
+import 'features/user/screens/favorites_screen.dart';
 
 // Import des écrans marchand
 import 'features/merchant/screens/merchant_register_screen.dart';
@@ -107,6 +108,11 @@ class LocaChargeApp extends StatelessWidget {
       case AppRoutes.rentalHistory:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(const RentalHistoryScreen(), UserType.user),
+        );
+
+      case AppRoutes.favorites:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(const FavoritesScreen(), UserType.user),
         );
 
       // Routes marchand

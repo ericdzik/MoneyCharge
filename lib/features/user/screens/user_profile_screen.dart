@@ -218,15 +218,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           icon: Icons.favorite_border_outlined,
                           title: 'Mes favoris',
                           onTap: () {
-                            // TODO: Implement navigation to AppRoutes.favorites if it exists
-                            // Navigator.pushNamed(context, AppRoutes.favorites);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Navigation vers Favoris non implémentée.',
-                                ),
-                              ),
-                            );
+                            Navigator.pushNamed(context, AppRoutes.favorites);
                           },
                         ),
                         _buildActionTile(
