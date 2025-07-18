@@ -68,7 +68,7 @@ void main() {
     });
 
      test('loadFavorites handles empty list from SharedPreferences (null)', () async {
-      SharedPreferences.setMockInitialValues({favoritesKey: null}); // Simule une clé non existante
+      SharedPreferences.setMockInitialValues({}); // Simule une clé non existante
 
       favoriteMerchantProvider = FavoriteMerchantProvider();
       await Future.delayed(Duration.zero);
