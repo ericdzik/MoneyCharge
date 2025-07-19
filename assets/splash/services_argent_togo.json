@@ -1,0 +1,43 @@
+{
+    "Banques Commerciales": [
+        "Bank of Africa Togo",
+        "Banque Atlantique Togo",
+        "BIA-Togo (Attijariwafa Bank)",
+        "BSIC-Togo",
+        "Coris Bank International",
+        "Ecobank Togo",
+        "IB Bank Togo",
+        "Orabank Togo",
+        "SIAB",
+        "SUNU Bank",
+        "UTB (Union Togolaise de Banque)"
+    ],
+    "Mobile Money": [
+        "Moov Money Flooz",
+        "Mixx by Yas (ex TMoney – Togocom)",
+        "Orange Money (via Orange Money Europe)",
+        "EziPay Africa",
+        "Express Union Mobile",
+        "Quickcash"
+    ],
+    "Transferts Internationaux": [
+        "Western Union",
+        "MoneyGram",
+        "Ria Money Transfer",
+        "Paysend",
+        "WorldRemit",
+        "DanaPay",
+        "Remitly",
+        "Wave",
+        "Zelle"
+    ],
+    "Poste et Services Publics": [
+        "Société des Postes du Togo (SPT)",
+        "Trésor Public"
+    ],
+    "Commerçants Agréés": [
+        "Boutiques avec terminal mobile (Mixx, Flooz, Orange)",
+        "Dépôts agréés avec distributeurs automatiques",
+        "Cybercafés partenaires"
+    ]
+}
