@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
+import 'package:locacharge/features/user/models/user_model.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
