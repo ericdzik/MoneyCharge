@@ -79,12 +79,12 @@ class Merchant {
       distance: (json['distance'] as num?)?.toDouble() ?? 0.0,
       walkingTime: json['walkingTime'] as String?,
       drivingTime: json['drivingTime'] as String?,
-      services: List<String>.from(json['services'] as List? ?? []),
+      services: (json['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       merchantType: json['merchantType'] as String?,
       serviceStockStatus: json['serviceStockStatus'] != null
           ? (json['serviceStockStatus'] as Map).map((key, value) => MapEntry(key.toString(), value.toString()))
           : null,
-      imageUrls: List<String>.from(json['imageUrls'] as List? ?? []),
+      imageUrls: (json['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       // Les champs comme email, isVerified, createdAt, lastLoginAt devraient aussi être lus ici si présents dans le JSON
       email: json['email'] as String?,
       isVerified: json['isVerified'] as bool?,
@@ -139,10 +139,10 @@ class Merchant {
       profileType: data['profileType'] as String?,
       latitude: latitude,
       longitude: longitude,
-      services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
+      services: (data['servicesOffered'] as List<dynamic>? ?? data['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       merchantType: data['merchantType'] as String?,
       serviceStockStatus: serviceStockStatusMap,
-      imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      imageUrls: (data['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       isVerified: data['isVerified'] as bool?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),

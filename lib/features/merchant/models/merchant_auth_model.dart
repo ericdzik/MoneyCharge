@@ -58,7 +58,7 @@ class MerchantAuthModel {
         // On pourrait la splitter par un délimiteur ou la mettre dans une liste d'un seul élément
         servicesList = [data['services'] as String];
       } else if (data['services'] is List) {
-        servicesList = List<String>.from(data['services'] as List);
+        servicesList = (data['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
       }
     }
 
