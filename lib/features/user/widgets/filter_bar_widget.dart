@@ -15,11 +15,7 @@ class FilterBarWidget extends StatefulWidget {
 class _FilterBarWidgetState extends State<FilterBarWidget> {
   final TextEditingController _searchController = TextEditingController();
   // Liste des services disponibles pour le dialogue de filtre
-  final List<String> _availableServices = [
-    'Recharge crédit',
-    'Transfert d\'argent',
-    'Achat de carte SIM',
-  ];
+  List<String> _availableServices = [];
 
   @override
   void initState() {
@@ -47,6 +43,13 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
     // Utiliser Consumer pour reconstruire lorsque les filtres changent dans le provider
     return Consumer<MerchantProvider>(
       builder: (context, merchantProvider, child) {
+        // Get all unique services from all merchants
+        final allServices = merchantProvider.merchants
+            .expand((merchant) => merchant.services ?? [])
+            .toSet()
+            .toList();
+        _availableServices = allServices;
+
         return Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: const BoxDecoration(
@@ -329,19 +332,55 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
 
                     if (showStockFilterOptionForDialog &&
                         dialogStockServiceFilter != null)
-                      CheckboxListTile(
-                        title: Text(
-                          'Uniquement stock disponible pour "$dialogStockServiceFilter"',
-                        ),
-                        value: dialogOnlyShowAvailableStock,
-                        onChanged: (bool? value) {
-                          setDialogState(() {
-                            dialogOnlyShowAvailableStock = value ?? false;
-                          });
-                        },
-                        activeColor: AppColors.primary,
-                        controlAffinity: ListTileControlAffinity.leading,
-                        contentPadding: EdgeInsets.zero,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CheckboxListTile(
+                            title: Text(
+                              'Uniquement stock disponible pour "$dialogStockServiceFilter"',
+                            ),
+                            value: dialogOnlyShowAvailableStock,
+                            onChanged: (bool? value) {
+                              setDialogState(() {
+                                dialogOnlyShowAvailableStock = value ?? false;
+                              });
+                            },
+                            activeColor: AppColors.primary,
+                            controlAffinity: ListTileControlAffinity.leading,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          const SizedBox(height: AppDimensions.paddingM),
+                          Text(
+                            'Filtrer par statut du stock :',
+                            style: AppTextStyles.body1.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          DropdownButtonFormField<String>(
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.paddingM,
+                                vertical: AppDimensions.paddingS,
+                              ),
+                            ),
+                            value: merchantProvider.activeStockStatusFilter,
+                            items: ['Tous', ..._stockStatusOptions].map((String status) {
+                              return DropdownMenuItem<String>(
+                                value: status == 'Tous' ? null : status,
+                                child: Text(status),
+                              );
+                            }).toList(),
+                            onChanged: (String? newValue) {
+                              merchantProvider.applyFilters(
+                                stockStatus: newValue,
+                                stockStatusIsSet: true,
+                              );
+                            },
+                          ),
+                        ],
                       ),
 
                     const SizedBox(height: AppDimensions.paddingL),

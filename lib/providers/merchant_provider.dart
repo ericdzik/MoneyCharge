@@ -26,6 +26,7 @@ class MerchantProvider with ChangeNotifier {
   List<String> _activeServiceFilters = [];
   String? _activeStockServiceFilter;
   bool _onlyShowAvailableStockForService = false;
+  String? _activeStockStatusFilter;
   String _searchQuery = '';
 
   // Getters publics
@@ -46,6 +47,7 @@ class MerchantProvider with ChangeNotifier {
   List<String> get activeServiceFilters => List.unmodifiable(_activeServiceFilters);
   String? get activeStockServiceFilter => _activeStockServiceFilter;
   bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
+  String? get activeStockStatusFilter => _activeStockStatusFilter;
   String get searchQuery => _searchQuery;
 
   void listenToMerchants() {
@@ -150,6 +152,14 @@ class MerchantProvider with ChangeNotifier {
           m.serviceStockStatus![_activeStockServiceFilter!]?.toLowerCase() == 'disponible');
     }
 
+    if (_activeStockStatusFilter != null && _activeStockStatusFilter!.isNotEmpty) {
+      tempList.retainWhere((m) {
+        if (m.serviceStockStatus == null) return false;
+        // Check if any of the services has the desired stock status
+        return m.serviceStockStatus!.values.any((status) => status.toLowerCase() == _activeStockStatusFilter!.toLowerCase());
+      });
+    }
+
     if (_searchQuery.isNotEmpty) {
       tempList.retainWhere((m) =>
           m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -163,6 +173,7 @@ class MerchantProvider with ChangeNotifier {
     List<String>? services,
     String? stockService,
     bool? onlyAvailableStock,
+    String? stockStatus,
     String? searchQuery,
     bool clearAll = false,
     bool clearServiceAndStockFilters = false,
@@ -170,6 +181,7 @@ class MerchantProvider with ChangeNotifier {
     bool servicesIsSet = false,
     bool stockServiceIsSet = false,
     bool onlyAvailableStockIsSet = false,
+    bool stockStatusIsSet = false,
     bool searchQueryIsSet = false,
   }) {
     if (clearAll) {
@@ -177,11 +189,13 @@ class MerchantProvider with ChangeNotifier {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
+      _activeStockStatusFilter = null;
       _searchQuery = '';
     } else if (clearServiceAndStockFilters) {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
+      _activeStockStatusFilter = null;
     } else {
       if (merchantTypeIsSet) {
         _activeMerchantTypeFilter = merchantType;
@@ -209,6 +223,10 @@ class MerchantProvider with ChangeNotifier {
         _searchQuery = searchQuery;
       } else if (searchQueryIsSet && searchQuery == null) {
         _searchQuery = '';
+      }
+
+      if (stockStatusIsSet) {
+        _activeStockStatusFilter = stockStatus;
       }
     }
 

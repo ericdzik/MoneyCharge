@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/features/user/models/user_model.dart';
+import 'package:locacharge/providers/favorite_merchant_provider.dart';
+import 'package:locacharge/providers/transaction_provider.dart';
 //intl is not used yet, but good for future date formatting
 // import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
@@ -20,50 +22,30 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
-  Widget build(BuildContext context) {
-    // Debug prints to check AuthProvider state when UserProfileScreen builds
-    final authProviderForDebug = Provider.of<AuthProvider>(
-      context,
-      listen: false,
-    );
-    print('-----------------------------------------------------');
-    print('[UserProfileScreen] Building UserProfileScreen...');
-    print(
-      '[UserProfileScreen]   isAuthenticated: ${authProviderForDebug.isAuthenticated}',
-    );
-    print('[UserProfileScreen]   userType: ${authProviderForDebug.userType}');
-    print('[UserProfileScreen]   userId: ${authProviderForDebug.userId}');
-    print(
-      '[UserProfileScreen]   appUserProfile is null: ${authProviderForDebug.appUserProfile == null}',
-    );
-    if (authProviderForDebug.appUserProfile != null) {
-      print(
-        '[UserProfileScreen]   appUserProfile Name: ${authProviderForDebug.appUserProfile!.name}',
-      );
-      print(
-        '[UserProfileScreen]   appUserProfile Email: ${authProviderForDebug.appUserProfile!.email}',
-      );
-    } else {
-      print('[UserProfileScreen]   appUserProfile is indeed NULL.');
-    }
-    print(
-      '[UserProfileScreen]   merchantProfile is null: ${authProviderForDebug.merchantProfile == null}',
-    );
-    print(
-      '[UserProfileScreen]   adminProfile is null: ${authProviderForDebug.adminProfile == null}',
-    );
-    print('[UserProfileScreen]   isLoading: ${authProviderForDebug.isLoading}');
-    print('[UserProfileScreen]   error: ${authProviderForDebug.error}');
-    print('-----------------------------------------------------');
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.isAuthenticated && authProvider.userId != null) {
+        Provider.of<TransactionProvider>(context, listen: false)
+            .fetchTransactions(authProvider.userId!);
+        Provider.of<FavoriteMerchantProvider>(context, listen: false)
+            .fetchFavoriteMerchants(authProvider.userId!);
+      }
+    });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          Consumer<AuthProvider>(
-            builder: (context, authProvider, child) {
+          Consumer3<AuthProvider, TransactionProvider, FavoriteMerchantProvider>(
+            builder: (context, authProvider, transactionProvider,
+                favoriteMerchantProvider, child) {
               final user = authProvider.appUserProfile;
 
               if (authProvider.isLoading && user == null) {
@@ -184,29 +166,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     // Statistiques
                     _buildSection(
                       title: 'Mes statistiques',
-                      trailing: Text(
-                        '(Données illustratives)',
-                        style: AppTextStyles.caption.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
                       children: [
                         _buildStatTile(
                           icon: Icons.location_on_outlined,
                           title: 'Locations effectuées',
-                          value: '12',
+                          value: transactionProvider.transactions.length.toString(),
                           color: AppColors.primary,
                         ),
                         _buildStatTile(
                           icon: Icons.star_outline,
                           title: 'Note moyenne',
-                          value: '4.8/5',
+                          value: 'N/A', // TODO: Implement rating system
                           color: AppColors.secondary,
                         ),
                         _buildStatTile(
                           icon: Icons.favorite_border_outlined,
                           title: 'Favoris',
-                          value: '8',
+                          value: favoriteMerchantProvider.favoriteMerchants.length.toString(),
                           color: AppColors.success,
                         ),
                       ],
@@ -238,60 +214,28 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           icon: Icons.notifications_outlined,
                           title: 'Notifications',
                           onTap: () {
-                            // TODO: Implement navigation to AppRoutes.notifications if it exists
-                            // Navigator.pushNamed(context, AppRoutes.notifications);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Navigation vers Notifications non implémentée.',
-                                ),
-                              ),
-                            );
+                            Navigator.pushNamed(context, AppRoutes.notifications);
                           },
                         ),
                         _buildActionTile(
                           icon: Icons.help_outline,
                           title: 'Aide et support',
                           onTap: () {
-                            // TODO: Implement navigation to AppRoutes.help if it exists
-                            // Navigator.pushNamed(context, AppRoutes.help);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Navigation vers Aide et Support non implémentée.',
-                                ),
-                              ),
-                            );
+                            Navigator.pushNamed(context, AppRoutes.help);
                           },
                         ),
                         _buildActionTile(
                           icon: Icons.privacy_tip_outlined,
                           title: 'Confidentialité',
                           onTap: () {
-                            // TODO: Implement navigation to AppRoutes.privacy if it exists
-                            // Navigator.pushNamed(context, AppRoutes.privacy);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Navigation vers Confidentialité non implémentée.',
-                                ),
-                              ),
-                            );
+                            Navigator.pushNamed(context, AppRoutes.privacy);
                           },
                         ),
                         _buildActionTile(
                           icon: Icons.info_outline,
                           title: 'À propos',
                           onTap: () {
-                            // TODO: Implement navigation to AppRoutes.about if it exists
-                            // Navigator.pushNamed(context, AppRoutes.about);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Navigation vers À Propos non implémentée.',
-                                ),
-                              ),
-                            );
+                            Navigator.pushNamed(context, AppRoutes.about);
                           },
                         ),
                       ],

@@ -36,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     _screens = [
       MapViewContent(
         isFilterBarVisible: _isFilterBarVisible,
@@ -43,7 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       const ListViewScreen(),
       const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
-      const UserProfileScreen(),
+      authProvider.userType == UserType.merchant
+          ? const MerchantProfileScreen()
+          : const UserProfileScreen(),
     ];
   }
 

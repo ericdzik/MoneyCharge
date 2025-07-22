@@ -33,4 +33,9 @@ class AppRoutes {
   static const String adminAnalytics = '/admin/analytics';
   static const String adminSettings = '/admin/settings';
   static const String adminPendingVerifications = '/admin/pending-verifications';
+  static const String merchantProfile = '/merchant-profile';
+  static const String notifications = '/notifications';
+  static const String help = '/help';
+  static const String privacy = '/privacy';
+  static const String about = '/about';
 }

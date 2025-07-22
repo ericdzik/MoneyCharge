@@ -33,6 +33,11 @@ import 'features/merchant/screens/balance_management_screen.dart';
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
 import 'features/admin/screens/pending_verifications_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+import 'package:locacharge/features/user/screens/notifications_screen.dart';
+import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
+import 'package:locacharge/features/user/screens/privacy_screen.dart';
+import 'package:locacharge/features/user/screens/about_screen.dart';
 import 'features/merchant/models/merchant_auth_model.dart';
 
 class LocaChargeApp extends StatelessWidget {
@@ -130,6 +135,32 @@ class LocaChargeApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(const BalanceManagementScreen(), UserType.merchant),
         );
+
+      case AppRoutes.editMerchantProfile:
+        final merchant = settings.arguments as MerchantAuthModel;
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            EditMerchantProfileScreen(merchant: merchant),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.merchantProfile:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(const MerchantProfileScreen(), UserType.merchant),
+        );
+
+      case AppRoutes.notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
+
+      case AppRoutes.help:
+        return MaterialPageRoute(builder: (_) => const HelpAndSupportScreen());
+
+      case AppRoutes.privacy:
+        return MaterialPageRoute(builder: (_) => const PrivacyScreen());
+
+      case AppRoutes.about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
 
       // Routes admin
       case AppRoutes.adminDashboard:
