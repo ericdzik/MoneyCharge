@@ -59,7 +59,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       _openingHours = widget.merchant.openingHours!;
     }
     if (widget.merchant.imageUrls != null) {
-      _imageUrls = List<String>.from(widget.merchant.imageUrls!);
+      _imageUrls = (widget.merchant.imageUrls as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
     }
     _otherServiceController = TextEditingController();
 

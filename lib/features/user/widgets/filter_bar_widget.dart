@@ -21,10 +21,16 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
   @override
   void initState() {
     super.initState();
-    // Potentiellement initialiser _searchController.text si on veut qu'il reflète un filtre de recherche existant
-    // final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-    // _searchController.text = merchantProvider.searchQuery;
-    // _searchController.addListener(_onSearchChanged); // Pour recherche dynamique
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+      final allServices = merchantProvider.merchants
+          .expand((merchant) => merchant.services ?? [])
+          .toSet()
+          .toList();
+      setState(() {
+        _availableServices = allServices;
+      });
+    });
   }
 
   // void _onSearchChanged() {
@@ -44,13 +50,6 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
     // Utiliser Consumer pour reconstruire lorsque les filtres changent dans le provider
     return Consumer<MerchantProvider>(
       builder: (context, merchantProvider, child) {
-        // Get all unique services from all merchants
-        final allServices = merchantProvider.merchants
-            .expand((merchant) => merchant.services ?? [])
-            .toSet()
-            .toList();
-        _availableServices = allServices;
-
         return Container(
           padding: const EdgeInsets.all(AppDimensions.paddingM),
           decoration: const BoxDecoration(
