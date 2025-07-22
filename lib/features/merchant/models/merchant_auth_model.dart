@@ -17,6 +17,7 @@ class MerchantAuthModel {
   final String? profileType;
   final Map<String, String>? serviceStockStatus; // Ajouté
   final List<String>? imageUrls;
+  final String? profileImageUrl;
   final bool isSuspended;
 
   MerchantAuthModel({
@@ -37,6 +38,7 @@ class MerchantAuthModel {
     this.profileType,
     this.serviceStockStatus, // Ajouté
     this.imageUrls,
+    this.profileImageUrl,
   });
 
   factory MerchantAuthModel.fromFirestore(
@@ -88,6 +90,7 @@ class MerchantAuthModel {
       profileType: data['profileType'] as String?,
       serviceStockStatus: stockStatus, // Ajouté
       imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      profileImageUrl: data['profileImageUrl'] as String?,
     );
   }
 
@@ -111,6 +114,7 @@ class MerchantAuthModel {
       'profileType': profileType,
       'serviceStockStatus': serviceStockStatus, // Ajouté
       'imageUrls': imageUrls,
+      'profileImageUrl': profileImageUrl,
     };
   }
 
@@ -132,6 +136,7 @@ class MerchantAuthModel {
     String? profileType,
     Map<String, String>? serviceStockStatus, // Ajouté
     List<String>? imageUrls,
+    String? profileImageUrl,
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -151,6 +156,7 @@ class MerchantAuthModel {
       profileType: profileType ?? this.profileType,
       serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus,
       imageUrls: imageUrls ?? this.imageUrls,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
 }

@@ -264,6 +264,7 @@ class AuthProvider with ChangeNotifier {
     required List<String> services,
     required Map<String, String> serviceStockStatus,
     required List<String> imageUrls,
+    XFile? profileImageFile,
   }) async {
     _setLoading(true);
     _error = null;
@@ -287,6 +288,16 @@ class AuthProvider with ChangeNotifier {
     };
 
     try {
+      if (profileImageFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('merchant_profile_images')
+            .child('$uid.jpg');
+        await ref.putFile(File(profileImageFile.path));
+        final imageUrl = await ref.getDownloadURL();
+        dataToUpdate['profileImageUrl'] = imageUrl;
+      }
+
       await _firestore.collection('users').doc(uid).update(dataToUpdate);
       await _fetchUserProfile(uid); // Recharger pour la cohérence
 
