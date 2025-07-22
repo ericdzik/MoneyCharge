@@ -16,6 +16,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
   final TextEditingController _searchController = TextEditingController();
   // Liste des services disponibles pour le dialogue de filtre
   List<String> _availableServices = [];
+  final List<String> _stockStatusOptions = ['Disponible', 'Faible', 'Épuisé'];
 
   @override
   void initState() {

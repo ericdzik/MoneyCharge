@@ -89,7 +89,7 @@ class MerchantAuthModel {
       merchantType: data['merchantType'] as String? ?? 'boutique', // Ajouté avec défaut
       profileType: data['profileType'] as String?,
       serviceStockStatus: stockStatus, // Ajouté
-      imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      imageUrls: (data['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       profileImageUrl: data['profileImageUrl'] as String?,
     );
   }

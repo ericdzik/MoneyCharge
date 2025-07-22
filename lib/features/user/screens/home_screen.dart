@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_app_bar.dart';
@@ -31,27 +33,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  late final List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    _screens = [
-      MapViewContent(
-        isFilterBarVisible: _isFilterBarVisible,
-        onToggleFilterBar: _toggleFilterBar,
-      ),
-      const ListViewScreen(),
-      const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
-      authProvider.userType == UserType.merchant
-          ? const MerchantProfileScreen()
-          : const UserProfileScreen(),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     // Rebuild _screens list if the visibility state changes
     final List<Widget> currentScreens = [
       MapViewContent(
@@ -60,7 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       const ListViewScreen(),
       const FavoritesScreen(),
-      const UserProfileScreen(),
+      authProvider.userType == UserType.merchant
+          ? const MerchantProfileScreen()
+          : const UserProfileScreen(),
     ];
 
     return Scaffold(
