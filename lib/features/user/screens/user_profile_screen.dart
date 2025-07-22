@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:locacharge/features/user/models/user_model.dart';
+import 'package:locacharge/features/user/models/user_model.dart';
 //intl is not used yet, but good for future date formatting
 // import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
