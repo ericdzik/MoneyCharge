@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/features/user/models/user_model.dart';
@@ -19,6 +21,8 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
+  XFile? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -37,12 +41,22 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = pickedFile;
+      });
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final success = await authProvider.updateUserProfile(
         name: _nameController.text,
         phone: _phoneController.text,
+        imageFile: _imageFile,
       );
 
       if (mounted) {
@@ -89,6 +103,32 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    Center(
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundImage: _imageFile != null
+                                ? FileImage(File(_imageFile!.path))
+                                : (user?.profileImageUrl != null
+                                    ? NetworkImage(user!.profileImageUrl!)
+                                    : null) as ImageProvider?,
+                            child: _imageFile == null && user?.profileImageUrl == null
+                                ? const Icon(Icons.person, size: 60)
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: const Icon(Icons.camera_alt),
+                              onPressed: _pickImage,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.paddingXL),
                     CustomTextField(
                       controller: _nameController,
                       labelText: 'Nom complet',

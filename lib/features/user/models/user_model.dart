@@ -5,6 +5,7 @@ class User {
   final String name;
   final String email;
   final String phone;
+  final String? profileImageUrl;
   final DateTime? createdAt;
   final bool isSuspended;
 
@@ -13,6 +14,7 @@ class User {
     required this.name,
     required this.email,
     required this.phone,
+    this.profileImageUrl,
     this.createdAt,
     this.isSuspended = false,
   });
@@ -24,6 +26,7 @@ class User {
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       phone: data['phone'] ?? '',
+      profileImageUrl: data['profileImageUrl'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       isSuspended: data['isSuspended'] ?? false,
     );
