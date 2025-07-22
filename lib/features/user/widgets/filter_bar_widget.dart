@@ -21,16 +21,10 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-      final allServices = merchantProvider.merchants
-          .expand((merchant) => merchant.services ?? [])
-          .toSet()
-          .toList();
-      setState(() {
-        _availableServices = allServices;
-      });
-    });
+    // Potentiellement initialiser _searchController.text si on veut qu'il reflète un filtre de recherche existant
+    // final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+    // _searchController.text = merchantProvider.searchQuery;
+    // _searchController.addListener(_onSearchChanged); // Pour recherche dynamique
   }
 
   // void _onSearchChanged() {
@@ -237,6 +231,13 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
     BuildContext context,
     MerchantProvider merchantProvider,
   ) {
+    // Use a Consumer here to get the latest list of available services
+    final allServices = merchantProvider.merchants
+        .expand((merchant) => merchant.services ?? [])
+        .toSet()
+        .toList();
+    _availableServices = allServices;
+
     // État local pour le dialogue, initialisé avec les filtres actifs du provider
     Map<String, bool> dialogSelectedServices = {};
     for (var service in _availableServices) {
