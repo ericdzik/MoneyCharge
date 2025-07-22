@@ -1,7 +1,10 @@
 import 'dart:async'; // Pour StreamSubscription
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Pour l'objet User de Firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
 import '../features/user/models/user_model.dart';
@@ -297,7 +300,11 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateUserProfile({required String name, String? phone}) async {
+  Future<bool> updateUserProfile({
+    required String name,
+    String? phone,
+    XFile? imageFile,
+  }) async {
     _setLoading(true);
     _error = null;
 
@@ -314,6 +321,16 @@ class AuthProvider with ChangeNotifier {
     };
 
     try {
+      if (imageFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('user_profile_images')
+            .child('$uid.jpg');
+        await ref.putFile(File(imageFile.path));
+        final imageUrl = await ref.getDownloadURL();
+        dataToUpdate['profileImageUrl'] = imageUrl;
+      }
+
       await _firestore.collection('users').doc(uid).update(dataToUpdate);
       await _fetchUserProfile(uid); // Recharger pour la cohérence
       _setLoading(false);
