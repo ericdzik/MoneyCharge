@@ -4,10 +4,39 @@ import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Pour l'objet Us
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
-import '../features/user/models/user_model.dart';
 import '../services/auth_service.dart';
 
 enum UserType { user, merchant, admin, unknown }
+
+class User {
+  final String id;
+  final String name;
+  final String email;
+  final String? phone;
+  final DateTime? createdAt;
+  final DateTime? lastLoginAt;
+
+  User({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.phone,
+    this.createdAt,
+    this.lastLoginAt,
+  });
+
+  factory User.fromFirestore(DocumentSnapshot<Map<String, dynamic>> snapshot) {
+    final data = snapshot.data()!;
+    return User(
+      id: snapshot.id,
+      name: data['name'] as String? ?? '',
+      email: data['email'] as String? ?? '',
+      phone: data['phone'] as String?,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
+      lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
+    );
+  }
+}
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -78,10 +107,8 @@ class AuthProvider with ChangeNotifier {
             _appUserProfile = null; _adminProfile = null;
             break;
           case UserType.user:
-            _appUserProfile =
-                User.fromFirestore(docSnapshot as DocumentSnapshot<Map<String, dynamic>>);
-            _merchantProfile = null;
-            _adminProfile = null;
+            _appUserProfile = User.fromFirestore(docSnapshot);
+            _merchantProfile = null; _adminProfile = null;
             break;
           default:
             _error = "Rôle utilisateur non reconnu: $role";
@@ -297,8 +324,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateUserProfile(
-      {required String name, String? phone, String? photoURL}) async {
+  Future<bool> updateUserProfile({required String name, String? phone}) async {
     _setLoading(true);
     _error = null;
 
@@ -313,10 +339,6 @@ class AuthProvider with ChangeNotifier {
       'name': name,
       'phone': phone,
     };
-
-    if (photoURL != null) {
-      dataToUpdate['photoURL'] = photoURL;
-    }
 
     try {
       await _firestore.collection('users').doc(uid).update(dataToUpdate);

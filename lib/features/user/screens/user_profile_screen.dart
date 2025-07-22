@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:locacharge/features/user/models/user_model.dart';
-import 'package:locacharge/features/user/models/user_model.dart';
 //intl is not used yet, but good for future date formatting
 // import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
@@ -109,22 +107,16 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 50,
-                            backgroundImage: user.photoURL != null &&
-                                    user.photoURL!.isNotEmpty
-                                ? NetworkImage(user.photoURL!)
-                                : null,
-                            child: user.photoURL == null ||
-                                    user.photoURL!.isEmpty
-                                ? Text(
-                                    user.name.isNotEmpty
-                                        ? user.name[0].toUpperCase()
-                                        : 'U',
-                                    style: AppTextStyles.h1.copyWith(
-                                      fontSize: 36,
-                                      color: AppColors.primary,
-                                    ),
-                                  )
-                                : null,
+                            backgroundColor: Colors.white,
+                            child: Text(
+                              user.name.isNotEmpty
+                                  ? user.name[0].toUpperCase()
+                                  : 'U',
+                              style: AppTextStyles.h1.copyWith(
+                                fontSize: 36,
+                                color: AppColors.primary,
+                              ),
+                            ),
                           ),
                           const SizedBox(height: AppDimensions.paddingM),
                           Text(
@@ -174,11 +166,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           title: 'Téléphone',
                           value: user.phone ?? 'Non renseigné',
                         ),
-                        _buildInfoTile(
-                          icon: Icons.calendar_today_outlined,
-                          title: 'Membre depuis',
-                          value: _formatDate(user.createdAt),
-                        ),
+                        // _buildInfoTile(
+                        //   icon: Icons.calendar_today_outlined,
+                        //   title: 'Membre depuis',
+                        //   value: _formatDate(user.createdAt),
+                        // ),
                       ],
                     ),
                     const SizedBox(height: AppDimensions.paddingXL),

@@ -1,16 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
-import 'package:locacharge/features/user/models/user_model.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
-import 'package:locacharge/features/user/models/user_model.dart';
-import 'package:locacharge/services/storage_service.dart';
 
 class EditUserProfileScreen extends StatefulWidget {
   const EditUserProfileScreen({Key? key}) : super(key: key);
@@ -23,7 +18,6 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  File? _image;
 
   @override
   void initState() {
@@ -42,32 +36,12 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
-
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final storageService = StorageService();
-      String? photoURL;
-
-      if (_image != null) {
-        photoURL = await storageService.uploadProfilePicture(
-            _image!, authProvider.appUserProfile!.id);
-      }
-
       final success = await authProvider.updateUserProfile(
         name: _nameController.text,
         phone: _phoneController.text,
-        photoURL: photoURL,
       );
 
       if (mounted) {
@@ -114,35 +88,6 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Center(
-                      child: Stack(
-                        children: [
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundImage: _image != null
-                                ? FileImage(_image!)
-                                : (user.photoURL != null &&
-                                        user.photoURL!.isNotEmpty
-                                    ? NetworkImage(user.photoURL!)
-                                    : null) as ImageProvider?,
-                            child: _image == null &&
-                                    (user.photoURL == null ||
-                                        user.photoURL!.isEmpty)
-                                ? const Icon(Icons.person, size: 50)
-                                : null,
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: IconButton(
-                              icon: const Icon(Icons.camera_alt),
-                              onPressed: _pickImage,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.paddingXL),
                     CustomTextField(
                       controller: _nameController,
                       labelText: 'Nom complet',
@@ -158,6 +103,8 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                       controller: _phoneController,
                       labelText: 'Numéro de téléphone',
                       keyboardType: TextInputType.phone,
+                      // Le validateur pour le téléphone peut être plus complexe,
+                      // mais pour l'instant on le laisse simple.
                     ),
                     const SizedBox(height: AppDimensions.paddingM),
                     CustomTextField(
