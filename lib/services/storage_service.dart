@@ -21,6 +21,21 @@ class StorageService {
     }
   }
 
+  Future<String?> uploadProfilePicture(File image, String userId) async {
+    try {
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${p.basename(image.path)}';
+      final Reference ref =
+          _storage.ref().child('users/$userId/profile/$fileName');
+      final UploadTask uploadTask = ref.putFile(image);
+      final TaskSnapshot snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      print("Erreur lors de l'upload de la photo de profil: $e");
+      return null;
+    }
+  }
+
   static const String _tokenKey = 'auth_token';
   static const String _userTypeKey = 'user_type';
   static const String _userDataKey = 'user_data';
