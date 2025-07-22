@@ -29,6 +29,7 @@ import 'features/user/screens/edit_user_profile_screen.dart';
 import 'features/merchant/screens/merchant_register_screen.dart';
 import 'features/merchant/screens/merchant_dashboard_screen.dart';
 import 'features/merchant/screens/balance_management_screen.dart';
+import 'features/merchant/screens/edit_merchant_profile_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
