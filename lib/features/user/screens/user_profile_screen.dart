@@ -107,16 +107,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         children: [
                           CircleAvatar(
                             radius: 50,
-                            backgroundColor: Colors.white,
-                            child: Text(
-                              user.name.isNotEmpty
-                                  ? user.name[0].toUpperCase()
-                                  : 'U',
-                              style: AppTextStyles.h1.copyWith(
-                                fontSize: 36,
-                                color: AppColors.primary,
-                              ),
-                            ),
+                            backgroundImage: user.photoURL != null &&
+                                    user.photoURL!.isNotEmpty
+                                ? NetworkImage(user.photoURL!)
+                                : null,
+                            child: user.photoURL == null ||
+                                    user.photoURL!.isEmpty
+                                ? Text(
+                                    user.name.isNotEmpty
+                                        ? user.name[0].toUpperCase()
+                                        : 'U',
+                                    style: AppTextStyles.h1.copyWith(
+                                      fontSize: 36,
+                                      color: AppColors.primary,
+                                    ),
+                                  )
+                                : null,
                           ),
                           const SizedBox(height: AppDimensions.paddingM),
                           Text(

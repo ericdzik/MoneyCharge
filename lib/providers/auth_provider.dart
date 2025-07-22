@@ -324,7 +324,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateUserProfile({required String name, String? phone}) async {
+  Future<bool> updateUserProfile(
+      {required String name, String? phone, String? photoURL}) async {
     _setLoading(true);
     _error = null;
 
@@ -339,6 +340,10 @@ class AuthProvider with ChangeNotifier {
       'name': name,
       'phone': phone,
     };
+
+    if (photoURL != null) {
+      dataToUpdate['photoURL'] = photoURL;
+    }
 
     try {
       await _firestore.collection('users').doc(uid).update(dataToUpdate);
