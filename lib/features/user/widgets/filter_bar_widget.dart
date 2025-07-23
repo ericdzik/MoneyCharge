@@ -236,7 +236,7 @@ class _FilterBarWidgetState extends State<FilterBarWidget> {
         .expand((merchant) => merchant.services ?? [])
         .toSet()
         .toList();
-    _availableServices = allServices;
+    _availableServices = List<String>.from(allServices);
 
     // État local pour le dialogue, initialisé avec les filtres actifs du provider
     Map<String, bool> dialogSelectedServices = {};
