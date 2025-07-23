@@ -399,6 +399,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               color: Colors.orange,
               onTap: _showPendingVerifications,
             ),
+            _buildActionCard(
+              title: 'Publicités',
+              subtitle: 'Gérer les publicités',
+              icon: Icons.campaign,
+              color: Colors.purple,
+              onTap: () => Navigator.pushNamed(context, AppRoutes.adminAds),
+            ),
             // _buildActionCard(
             //   title: 'Rapports',
             //   subtitle: 'Générer des rapports',

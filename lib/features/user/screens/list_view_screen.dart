@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/merchant_card.dart';
@@ -11,7 +12,8 @@ import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
 import '../../../core/constants/app_routes.dart'; // Ajout de l'import pour AppRoutes
 
 class ListViewScreen extends StatefulWidget {
-  const ListViewScreen({Key? key}) : super(key: key);
+  final GoogleMapController? mapController;
+  const ListViewScreen({Key? key, this.mapController}) : super(key: key);
 
   @override
   State<ListViewScreen> createState() => _ListViewScreenState();
@@ -62,6 +64,14 @@ class _ListViewScreenState extends State<ListViewScreen> {
                           return MerchantCard(
                             merchant: merchant,
                             onTap: () {
+                              if (widget.mapController != null) {
+                                widget.mapController!.animateCamera(
+                                  CameraUpdate.newLatLngZoom(
+                                    LatLng(merchant.latitude, merchant.longitude),
+                                    16.0,
+                                  ),
+                                );
+                              }
                               Navigator.pushNamed(
                                 context,
                                 AppRoutes.merchantDetail,

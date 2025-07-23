@@ -15,6 +15,7 @@ import 'list_view_screen.dart';
 import 'user_profile_screen.dart';
 import '../../../providers/merchant_provider.dart';
 import '../../../providers/location_provider.dart';
+import '../../../providers/ad_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +27,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   bool _isFilterBarVisible = false;
+  GoogleMapController? _mapController;
 
   void _toggleFilterBar() {
     setState(() {
@@ -41,8 +43,11 @@ class _HomeScreenState extends State<HomeScreen> {
       MapViewContent(
         isFilterBarVisible: _isFilterBarVisible,
         onToggleFilterBar: _toggleFilterBar,
+        onMapCreated: (controller) {
+          _mapController = controller;
+        },
       ),
-      const ListViewScreen(),
+      ListViewScreen(mapController: _mapController),
       const FavoritesScreen(),
       authProvider.userType == UserType.merchant
           ? const MerchantProfileScreen()
@@ -73,13 +78,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
-          ),
-          currentScreens[_currentIndex],
-        ],
+      body: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingS),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+            ),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+              ),
+              child: currentScreens[_currentIndex],
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -100,11 +114,13 @@ class _HomeScreenState extends State<HomeScreen> {
 class MapViewContent extends StatefulWidget {
   final bool isFilterBarVisible;
   final VoidCallback onToggleFilterBar;
+  final Function(GoogleMapController)? onMapCreated;
 
   const MapViewContent({
     Key? key,
     required this.isFilterBarVisible,
     required this.onToggleFilterBar,
+    this.onMapCreated,
   }) : super(key: key);
 
   @override
@@ -119,6 +135,7 @@ class _MapViewContentState extends State<MapViewContent> {
       if (mounted) {
         Provider.of<MerchantProvider>(context, listen: false).listenToMerchants();
         Provider.of<LocationProvider>(context, listen: false).initialize();
+        Provider.of<AdProvider>(context, listen: false).fetchAds();
       }
     });
   }
@@ -175,6 +192,7 @@ class _MapViewContentState extends State<MapViewContent> {
                       },
                       showUserLocation: true,
                       initialZoom: 13.0,
+                      onMapCreated: widget.onMapCreated,
                     ),
                   if (!merchantProvider.isLoading &&
                       merchantProvider.error == null &&
@@ -315,6 +333,46 @@ class _MapViewContentState extends State<MapViewContent> {
                             );
                           }
                         },
+                      ),
+                    ),
+                  if (context.watch<AdProvider>().ads.isNotEmpty)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        height: 120,
+                        color: Colors.black.withOpacity(0.5),
+                        child: Consumer<AdProvider>(
+                          builder: (context, adProvider, child) {
+                            if (adProvider.isLoading) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            if (adProvider.error != null) {
+                              return Center(child: Text(adProvider.error!));
+                            }
+                            return ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: adProvider.ads.length,
+                              itemBuilder: (context, index) {
+                                final ad = adProvider.ads[index];
+                                return GestureDetector(
+                                  onTap: () {
+                                    // TODO: Handle ad tap
+                                  },
+                                  child: Card(
+                                    margin: const EdgeInsets.all(8.0),
+                                    child: Image.network(
+                                      ad.imageUrl,
+                                      fit: BoxFit.cover,
+                                      width: 200,
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
                       ),
                     ),
                 ],

@@ -10,6 +10,7 @@ import 'providers/location_provider.dart';
 import 'providers/merchant_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
+import 'providers/ad_provider.dart';
 
 // Import des écrans utilisateur
 import 'features/user/screens/home_screen.dart';
@@ -34,6 +35,7 @@ import 'features/merchant/screens/edit_merchant_profile_screen.dart';
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
 import 'features/admin/screens/pending_verifications_screen.dart';
+import 'features/admin/screens/ad_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/screens/notifications_screen.dart';
 import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
@@ -53,6 +55,7 @@ class LocaChargeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => MerchantProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()), // Ajout ici
+        ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
       child: MaterialApp(
         title: 'Geo Money&Charge',
@@ -177,6 +180,11 @@ class LocaChargeApp extends StatelessWidget {
             PendingVerificationsScreen(pendingMerchants: pendingMerchants),
             UserType.admin,
           ),
+        );
+
+      case AppRoutes.adminAds:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(const AdScreen(), UserType.admin),
         );
 
       default:
