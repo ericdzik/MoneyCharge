@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
@@ -71,9 +72,33 @@ class _AdScreenState extends State<AdScreen> {
     final pickedFile = await ImagePicker().pickImage(source: source);
 
     if (pickedFile != null) {
-      setState(() {
-        _image = pickedFile;
-      });
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: pickedFile.path,
+        aspectRatioPresets: [
+          CropAspectRatioPreset.square,
+          CropAspectRatioPreset.ratio3x2,
+          CropAspectRatioPreset.original,
+          CropAspectRatioPreset.ratio4x3,
+          CropAspectRatioPreset.ratio16x9
+        ],
+        uiSettings: [
+          AndroidUiSettings(
+              toolbarTitle: 'Recadrer l\'image',
+              toolbarColor: Colors.deepOrange,
+              toolbarWidgetColor: Colors.white,
+              initAspectRatio: CropAspectRatioPreset.original,
+              lockAspectRatio: false),
+          IOSUiSettings(
+            title: 'Recadrer l\'image',
+          ),
+        ],
+      );
+
+      if (croppedFile != null) {
+        setState(() {
+          _image = XFile(croppedFile.path);
+        });
+      }
     }
   }
 
