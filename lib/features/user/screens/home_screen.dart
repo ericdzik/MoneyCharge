@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/providers/auth_provider.dart';
