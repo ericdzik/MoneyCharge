@@ -130,7 +130,7 @@ class AdCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           child: Image.network(
             ad.imageUrl,
-            fit: BoxFit.cover,
+            fit: BoxFit.contain,
             width: 250,
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
