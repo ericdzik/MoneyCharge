@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+import 'package:locacharge/features/user/widgets/ad_carousel_widget.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -86,12 +87,19 @@ class _HomeScreenState extends State<HomeScreen> {
             Positioned.fill(
               child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
             ),
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-              ),
-              child: currentScreens[_currentIndex],
+            Column(
+              children: [
+                Expanded(
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                    ),
+                    child: currentScreens[_currentIndex],
+                  ),
+                ),
+                const AdCarouselWidget(),
+              ],
             ),
           ],
         ),
@@ -334,46 +342,6 @@ class _MapViewContentState extends State<MapViewContent> {
                             );
                           }
                         },
-                      ),
-                    ),
-                  if (context.watch<AdProvider>().ads.isNotEmpty)
-                    Positioned(
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 120,
-                        color: Colors.black.withOpacity(0.5),
-                        child: Consumer<AdProvider>(
-                          builder: (context, adProvider, child) {
-                            if (adProvider.isLoading) {
-                              return const Center(child: CircularProgressIndicator());
-                            }
-                            if (adProvider.error != null) {
-                              return Center(child: Text(adProvider.error!));
-                            }
-                            return ListView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: adProvider.ads.length,
-                              itemBuilder: (context, index) {
-                                final ad = adProvider.ads[index];
-                                return GestureDetector(
-                                  onTap: () {
-                                    // TODO: Handle ad tap
-                                  },
-                                  child: Card(
-                                    margin: const EdgeInsets.all(8.0),
-                                    child: Image.network(
-                                      ad.imageUrl,
-                                      fit: BoxFit.cover,
-                                      width: 200,
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        ),
                       ),
                     ),
                 ],
