@@ -1,9 +1,13 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:locacharge/services/storage_service.dart';
 import '../models/ad_model.dart';
 
 class AdProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final StorageService _storageService = StorageService();
 
   List<Ad> _ads = [];
   bool _isLoading = false;
@@ -39,7 +43,7 @@ class AdProvider with ChangeNotifier {
   Future<bool> addAd({
     required String title,
     required String description,
-    required String imageUrl,
+    required XFile image,
     required String url,
   }) async {
     _isLoading = true;
@@ -47,6 +51,12 @@ class AdProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      final imageUrl = await _storageService.uploadAdImage(image);
+      if (imageUrl == null) {
+        _error = "Erreur lors de l'upload de l'image.";
+        return false;
+      }
+
       final newAd = Ad(
         id: '',
         title: title,
