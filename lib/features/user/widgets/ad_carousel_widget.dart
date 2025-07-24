@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/providers/ad_provider.dart';
@@ -12,11 +13,41 @@ class AdCarouselWidget extends StatefulWidget {
 }
 
 class _AdCarouselWidgetState extends State<AdCarouselWidget> {
+  late final PageController _pageController;
+  Timer? _timer;
+  int _currentPage = 0;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<AdProvider>(context, listen: false).fetchAds();
+      Provider.of<AdProvider>(context, listen: false).fetchAds().then((_) {
+        if (mounted && Provider.of<AdProvider>(context, listen: false).ads.isNotEmpty) {
+          _startTimer();
+        }
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      final adProvider = Provider.of<AdProvider>(context, listen: false);
+      if (adProvider.ads.isNotEmpty) {
+        final nextPage = (_currentPage + 1) % adProvider.ads.length;
+        _pageController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 400),
+          curve: Curves.easeInOut,
+        );
+      }
     });
   }
 
@@ -48,9 +79,14 @@ class _AdCarouselWidgetState extends State<AdCarouselWidget> {
             ),
             SizedBox(
               height: 150,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
+              child: PageView.builder(
+                controller: _pageController,
                 itemCount: adProvider.ads.length,
+                onPageChanged: (index) {
+                  setState(() {
+                    _currentPage = index;
+                  });
+                },
                 itemBuilder: (context, index) {
                   final ad = adProvider.ads[index];
                   return AdCard(ad: ad);

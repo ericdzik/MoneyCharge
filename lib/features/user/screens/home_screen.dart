@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: currentScreens[_currentIndex],
                   ),
                 ),
-                const AdCarouselWidget(),
+                if (_currentIndex == 0) const AdCarouselWidget(),
               ],
             ),
           ],
