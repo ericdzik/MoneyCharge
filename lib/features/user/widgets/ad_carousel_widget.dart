@@ -93,6 +93,22 @@ class _AdCarouselWidgetState extends State<AdCarouselWidget> {
                 },
               ),
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(adProvider.ads.length, (index) {
+                return Container(
+                  width: 8.0,
+                  height: 8.0,
+                  margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 2.0),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _currentPage == index
+                        ? const Color.fromRGBO(0, 0, 0, 0.9)
+                        : const Color.fromRGBO(0, 0, 0, 0.4),
+                  ),
+                );
+              }),
+            ),
           ],
         );
       },
