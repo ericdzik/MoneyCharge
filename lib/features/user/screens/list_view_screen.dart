@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/merchant_card.dart';
 import '../../../providers/merchant_provider.dart';
-import '../widgets/filter_bar_widget.dart';
 import 'merchant_detail_screen.dart';
 import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
 import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
@@ -38,7 +37,6 @@ class _ListViewScreenState extends State<ListViewScreen> {
           ),
           Column(
             children: [
-              const FilterBarWidget(),
               Expanded(
                 child: Consumer<MerchantProvider>(
                   builder: (context, merchantProvider, child) {

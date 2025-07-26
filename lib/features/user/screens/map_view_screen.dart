@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/constants/app_colors.dart';
 import '../widgets/map_widget.dart';
-import '../widgets/filter_bar_widget.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
@@ -754,7 +753,6 @@ class _MapViewScreenState extends State<MapViewScreen> {
         builder: (context, merchantProvider, child) {
           return Column(
             children: [
-              const FilterBarWidget(),
               // Afficher les informations sur l'itinéraire si disponibles
               if (locationProvider.polylineCoordinates.isNotEmpty &&
                   !locationProvider.isLoadingRoute)

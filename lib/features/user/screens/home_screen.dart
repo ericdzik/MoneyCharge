@@ -37,8 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
     // Rebuild _screens list if the visibility state changes
     final List<Widget> currentScreens = [
       MapViewContent(
-        isFilterBarVisible: _isFilterBarVisible,
-        onToggleFilterBar: _toggleFilterBar,
         onMapCreated: (controller) {
           _mapController = controller;
         },
