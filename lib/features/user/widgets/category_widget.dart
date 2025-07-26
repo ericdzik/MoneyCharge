@@ -22,22 +22,23 @@ class CategoryWidget extends StatelessWidget {
         color: isSelected ? Theme.of(context).primaryColor : Colors.white,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: isSelected ? Colors.white : Theme.of(context).primaryColor,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                category,
-                style: TextStyle(
+          child: Center(
+            child: Column(
+              children: [
+                Icon(
+                  icon,
                   color: isSelected ? Colors.white : Theme.of(context).primaryColor,
-                  fontWeight: FontWeight.bold,
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  category,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
