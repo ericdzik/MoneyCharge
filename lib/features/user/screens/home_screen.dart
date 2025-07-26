@@ -14,7 +14,6 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_text_styles.dart';
 // import '../../../core/utils/color_utils.dart'; // Retiré car non utilisé après suppression de blackWithAlpha
 import '../widgets/map_widget.dart';
-import '../widgets/filter_bar_widget.dart';
 import 'list_view_screen.dart';
 import 'user_profile_screen.dart';
 import '../../../providers/merchant_provider.dart';
@@ -30,14 +29,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  bool _isFilterBarVisible = false;
   GoogleMapController? _mapController;
-
-  void _toggleFilterBar() {
-    setState(() {
-      _isFilterBarVisible = !_isFilterBarVisible;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,13 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: 'Geo Money&Charge',
         backgroundColor: AppColors.primary,
         actions: [
-          // Affiche l'icône de filtre uniquement sur l'onglet Carte (index 0)
-          if (_currentIndex == 0)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: _toggleFilterBar,
-              tooltip: 'Afficher/Masquer les filtres',
-            ),
           Padding(
             padding: const EdgeInsets.only(right: AppDimensions.paddingS),
             child: CircleAvatar(
@@ -125,14 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class MapViewContent extends StatefulWidget {
-  final bool isFilterBarVisible;
-  final VoidCallback onToggleFilterBar;
   final Function(GoogleMapController)? onMapCreated;
 
   const MapViewContent({
     Key? key,
-    required this.isFilterBarVisible,
-    required this.onToggleFilterBar,
     this.onMapCreated,
   }) : super(key: key);
 
@@ -159,13 +140,6 @@ class _MapViewContentState extends State<MapViewContent> {
       builder: (context, merchantProvider, child) {
         return Column(
           children: [
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: widget.isFilterBarVisible
-                  ? const FilterBarWidget()
-                  : const SizedBox.shrink(),
-            ),
             Expanded(
               child: Stack(
                 children: [
