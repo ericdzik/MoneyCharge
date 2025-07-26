@@ -50,6 +50,11 @@ class MerchantProvider with ChangeNotifier {
   String? get activeStockStatusFilter => _activeStockStatusFilter;
   String get searchQuery => _searchQuery;
 
+  List<String> get uniqueServiceCategories {
+    final allServices = _allLoadedMerchants.expand((merchant) => merchant.services).toSet();
+    return allServices.toList();
+  }
+
   void listenToMerchants() {
     _setLoading(true);
     _merchantsSubscription?.cancel();
