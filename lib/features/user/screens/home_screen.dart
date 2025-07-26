@@ -4,6 +4,7 @@ import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/widgets/ad_carousel_widget.dart';
 import 'package:locacharge/features/user/widgets/category_list_widget.dart';
+import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_dimensions.dart';
@@ -90,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Column(
               children: [
+                if (_currentIndex == 0) const SearchBarWidget(),
                 if (_currentIndex == 0) const CategoryListWidget(),
                 Expanded(
                   child: Card(
