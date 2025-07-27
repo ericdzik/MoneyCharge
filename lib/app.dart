@@ -41,6 +41,7 @@ import 'package:locacharge/features/user/screens/notifications_screen.dart';
 import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
 import 'package:locacharge/features/user/screens/privacy_screen.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
+import 'package:locacharge/providers/theme_provider.dart';
 import 'features/merchant/models/merchant_auth_model.dart';
 
 class LocaChargeApp extends StatelessWidget {
@@ -48,6 +49,7 @@ class LocaChargeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -60,6 +62,8 @@ class LocaChargeApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Geo Money&Charge',
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeProvider.themeMode,
         debugShowCheckedModeBanner: false,
         initialRoute: '/',
         onGenerateRoute: _generateRoute,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/features/user/models/user_model.dart';
 import 'package:locacharge/providers/favorite_merchant_provider.dart';
+import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
 //intl is not used yet, but good for future date formatting
 // import 'package:intl/intl.dart';
@@ -193,6 +194,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     _buildSection(
                       title: 'Actions',
                       children: [
+                        SwitchListTile(
+                          title: const Text('Mode sombre'),
+                          value: Provider.of<ThemeProvider>(context).themeMode == ThemeMode.dark,
+                          onChanged: (value) {
+                            Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                          },
+                        ),
                         _buildActionTile(
                           icon: Icons.history_outlined,
                           title: 'Historique des locations',
