@@ -28,6 +28,8 @@ class MerchantProvider with ChangeNotifier {
   bool _onlyShowAvailableStockForService = false;
   String? _activeStockStatusFilter;
   String _searchQuery = '';
+  String? _selectedCategory;
+  bool _filterOpen = false;
 
   // Getters publics
   List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
@@ -49,6 +51,8 @@ class MerchantProvider with ChangeNotifier {
   bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
   String? get activeStockStatusFilter => _activeStockStatusFilter;
   String get searchQuery => _searchQuery;
+  String? get selectedCategory => _selectedCategory;
+  bool get filterOpen => _filterOpen;
 
   List<String> get uniqueServiceCategories {
     final allServices = _allLoadedMerchants.expand((merchant) => merchant.services).toSet();
@@ -170,7 +174,28 @@ class MerchantProvider with ChangeNotifier {
           m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           (m.address.toLowerCase().contains(_searchQuery.toLowerCase())));
     }
+
+    if (_selectedCategory != null) {
+      tempList.retainWhere((m) => m.services.contains(_selectedCategory));
+    }
+
+    if (_filterOpen) {
+      tempList.retainWhere((m) => m.isOpen);
+    }
+
     _filteredMerchants = tempList;
+  }
+
+  void filterByCategory(String? category) {
+    _selectedCategory = category;
+    _applyInternalFilters();
+    notifyListeners();
+  }
+
+  void toggleFilterOpen() {
+    _filterOpen = !_filterOpen;
+    _applyInternalFilters();
+    notifyListeners();
   }
 
   void applyFilters({ // This applies to user-facing filters for the List<Merchant>

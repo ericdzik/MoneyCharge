@@ -9,6 +9,8 @@ import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:locacharge/features/user/screens/add_review_screen.dart';
+import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import '../../../providers/location_provider.dart';
 import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
 
@@ -325,6 +327,10 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                 }
                               },
                             ),
+                            const SizedBox(height: AppDimensions.paddingL),
+                            _buildRatingSection(),
+                            const SizedBox(height: AppDimensions.paddingL),
+                            ReviewListWidget(merchantId: widget.merchant.id),
                     ],
                   ),
                 ),
@@ -424,6 +430,47 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           },
         ),
       ),
+    );
+  }
+
+  Widget _buildRatingSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Avis et notes', style: AppTextStyles.h3),
+            Row(
+              children: [
+                Text(
+                  widget.merchant.averageRating.toStringAsFixed(1),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.star, color: Colors.amber),
+                const SizedBox(width: 8),
+                Text('(${widget.merchant.reviewCount} avis)'),
+              ],
+            ),
+          ],
+        ),
+        TextButton(
+          onPressed: () async {
+            final result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) => AddReviewScreen(merchantId: widget.merchant.id),
+              ),
+            );
+            if (result == true) {
+              // Rafraîchir les données si un avis a été ajouté
+              setState(() {});
+            }
+          },
+          child: const Text('Laisser un avis'),
+        ),
+      ],
     );
   }
 
