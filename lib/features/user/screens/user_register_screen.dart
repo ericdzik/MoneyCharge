@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
@@ -8,6 +9,7 @@ import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import 'cgu_screen.dart';
 
 class UserRegisterScreen extends StatefulWidget {
   const UserRegisterScreen({super.key});
@@ -221,17 +223,42 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                         },
                       ),
                       Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _acceptTerms = !_acceptTerms;
-                            });
-                          },
-                          child: Text(
-                            'J\'accepte les conditions d\'utilisation et la politique de confidentialité',
+                        child: RichText(
+                          text: TextSpan(
+                            text: 'J\'accepte les ',
                             style: AppTextStyles.body2.copyWith(
                               color: Colors.white,
                             ),
+                            children: [
+                              TextSpan(
+                                text: 'Conditions Générales d\'Utilisation',
+                                style: AppTextStyles.body2.copyWith(
+                                  color: AppColors.secondary,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => const CguScreen(),
+                                      ),
+                                    );
+                                  },
+                              ),
+                              const TextSpan(text: ' et la '),
+                              TextSpan(
+                                text: 'Politique de Confidentialité',
+                                style: AppTextStyles.body2.copyWith(
+                                  color: AppColors.secondary,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    Navigator.pushNamed(context, AppRoutes.privacy);
+                                  },
+                              ),
+                            ],
                           ),
                         ),
                       ),

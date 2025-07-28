@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/features/user/models/user_model.dart';
+import 'package:locacharge/features/user/screens/cgu_screen.dart';
 import 'package:locacharge/providers/favorite_merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
@@ -244,6 +245,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           title: 'À propos',
                           onTap: () {
                             Navigator.pushNamed(context, AppRoutes.about);
+                          },
+                        ),
+                        _buildActionTile(
+                          icon: Icons.article_outlined,
+                          title: 'Conditions d\'Utilisation',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CguScreen(),
+                              ),
+                            );
                           },
                         ),
                       ],
