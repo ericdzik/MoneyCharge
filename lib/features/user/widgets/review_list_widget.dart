@@ -48,7 +48,7 @@ class ReviewListWidget extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(review.userName, style: AppTextStyles.h4),
+                        Text(review.userName, style: AppTextStyles.h3),
                         Row(
                           children: List.generate(5, (i) {
                             return Icon(

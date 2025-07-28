@@ -49,7 +49,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
       final review = Review(
         id: '', // L'ID sera généré par Firestore
-        userId: user.uid,
+        userId: user.id,
         userName: user.name,
         rating: _rating,
         comment: _commentController.text,
