@@ -307,18 +307,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.fromRGBO(
-                      30,
-                      58,
-                      138,
-                      0.7,
-                    ), // #1E3A8A avec opacité 0.7
-                    Color.fromRGBO(
-                      29,
-                      78,
-                      216,
-                      0.7,
-                    ), // #1D4ED8 avec opacité 0.7
+                    Color.fromRGBO(30, 58, 138, 0.7), // #1E3A8A avec opacité 0.7
+                    Color.fromRGBO(29, 78, 216, 0.7), // #1D4ED8 avec opacité 0.7
                   ],
                 ),
               ),
@@ -390,60 +380,60 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       controller: _businessNameController,
                       labelText: 'Nom du business',
                       hintText: 'Ex: Boutique Express',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer le nom de votre business';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer le nom de votre business';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  CustomTextField(
-                    controller: _emailController,
-                    labelText: 'Email professionnel',
-                    hintText: 'business@example.com',
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer votre email';
-                      }
-                      if (!RegExp(
-                        r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                      ).hasMatch(value)) {
-                        return 'Veuillez entrer un email valide';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _emailController,
+                      labelText: 'Email professionnel',
+                      hintText: 'business@example.com',
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre email';
+                        }
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
+                          return 'Veuillez entrer un email valide';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  CustomTextField(
-                    controller: _phoneController,
-                    labelText: 'Téléphone',
-                    hintText: '+225 0123456789',
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer votre numéro de téléphone';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
+                    CustomTextField(
+                      controller: _phoneController,
+                      labelText: 'Téléphone',
+                      hintText: '+225 0123456789',
+                      keyboardType: TextInputType.phone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre numéro de téléphone';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
-                  CustomTextField(
-                    controller: _addressController,
-                    labelText: 'Adresse complète',
-                    hintText: '123 Rue du Commerce, Ville',
-                    maxLines: 2,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer votre adresse';
-                      }
-                      return null;
-                    },
-                  ),
+                    CustomTextField(
+                      controller: _addressController,
+                      labelText: 'Adresse complète',
+                      hintText: '123 Rue du Commerce, Ville',
+                      maxLines: 2,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Veuillez entrer votre adresse';
+                        }
+                        return null;
+                      },
+                    ),
                   const SizedBox(height: 24),
 
                   // Map Section
