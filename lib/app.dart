@@ -2,47 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/constants/app_routes.dart';
-import 'core/constants/app_colors.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/route_guards.dart';
+import 'core/widgets/auth_wrapper.dart';
 import 'providers/auth_provider.dart';
 import 'providers/location_provider.dart';
 import 'providers/merchant_provider.dart';
 import 'providers/transaction_provider.dart';
-import 'providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
+import 'providers/favorite_merchant_provider.dart';
 import 'providers/ad_provider.dart';
+import 'providers/theme_provider.dart';
 
-// Import des écrans utilisateur
-import 'features/user/screens/home_screen.dart';
-import 'features/user/screens/list_view_screen.dart';
-import 'features/user/screens/map_view_screen.dart' hide Container;
-import 'features/user/screens/merchant_detail_screen.dart';
-import 'features/user/screens/user_login_screen.dart';
-import 'features/user/screens/user_register_screen.dart';
-import 'features/user/screens/forgot_password_screen.dart';
-import 'core/widgets/auth_wrapper.dart';
-import 'features/user/screens/user_profile_screen.dart';
-import 'features/user/screens/rental_history_screen.dart';
-import 'features/user/screens/favorites_screen.dart';
-import 'features/user/screens/edit_user_profile_screen.dart';
-import 'features/user/screens/splash_screen.dart';
-
-// Import des écrans marchand
-import 'features/merchant/screens/merchant_register_screen.dart';
-import 'features/merchant/screens/merchant_dashboard_screen.dart';
-import 'features/merchant/screens/balance_management_screen.dart';
-import 'features/merchant/screens/edit_merchant_profile_screen.dart';
-
-// Import des écrans admin
-import 'features/admin/screens/admin_dashboard_screen.dart';
-import 'features/admin/screens/pending_verifications_screen.dart';
-import 'features/admin/screens/ad_screen.dart';
-import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
-import 'package:locacharge/features/user/screens/notifications_screen.dart';
-import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
-import 'package:locacharge/features/user/screens/privacy_screen.dart';
-import 'package:locacharge/features/user/screens/about_screen.dart';
-import 'package:locacharge/providers/theme_provider.dart';
+import 'features/user/screens/screens.dart';
+import 'features/merchant/screens/screens.dart';
+import 'features/admin/screens/screens.dart';
 import 'features/merchant/models/merchant_auth_model.dart';
 
 class LocaChargeApp extends StatelessWidget {
@@ -57,9 +30,7 @@ class LocaChargeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => MerchantProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(
-          create: (_) => FavoriteMerchantProvider(),
-        ), // Ajout ici
+        ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()),
         ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
       child: MaterialApp(
@@ -75,161 +46,123 @@ class LocaChargeApp extends StatelessWidget {
   }
 
   Route<dynamic> _generateRoute(RouteSettings settings) {
+    final userRoute = _generateUserRoute(settings);
+    if (userRoute != null) return userRoute;
+
+    final merchantRoute = _generateMerchantRoute(settings);
+    if (merchantRoute != null) return merchantRoute;
+
+    final adminRoute = _generateAdminRoute(settings);
+    if (adminRoute != null) return adminRoute;
+
+    final publicRoute = _generatePublicRoute(settings);
+    if (publicRoute != null) return publicRoute;
+
+    return MaterialPageRoute(builder: (_) => const NotFoundScreen());
+  }
+
+  Route<dynamic>? _generateUserRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case AppRoutes.home:
+        return _buildProtectedRoute(const HomeScreen(), UserType.user);
+      case AppRoutes.listView:
+        return _buildProtectedRoute(const ListViewScreen(), UserType.user);
+      case AppRoutes.mapView:
+        return _buildProtectedRoute(const MapViewScreen(), UserType.user);
+      case AppRoutes.merchantDetail:
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          return _buildProtectedRoute(
+              MerchantDetailScreen(merchant: args['merchant']), UserType.user);
+        }
+        return _buildErrorRoute();
+      case AppRoutes.userProfile:
+        return _buildProtectedRoute(const UserProfileScreen(), UserType.user);
+      case AppRoutes.rentalHistory:
+        return _buildProtectedRoute(const RentalHistoryScreen(), UserType.user);
+      case AppRoutes.favorites:
+        return _buildProtectedRoute(const FavoritesScreen(), UserType.user);
+      case AppRoutes.editProfile:
+        return _buildProtectedRoute(const EditUserProfileScreen(), UserType.user);
+      case AppRoutes.notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
+      case AppRoutes.help:
+        return MaterialPageRoute(builder: (_) => const HelpAndSupportScreen());
+      case AppRoutes.privacy:
+        return MaterialPageRoute(builder: (_) => const PrivacyScreen());
+      case AppRoutes.about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
+      default:
+        return null;
+    }
+  }
+
+  Route<dynamic>? _generateMerchantRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case AppRoutes.merchantDashboard:
+        return _buildProtectedRoute(const MerchantDashboardScreen(), UserType.merchant);
+      case AppRoutes.balanceManagement:
+        return _buildProtectedRoute(const BalanceManagementScreen(), UserType.merchant);
+      case AppRoutes.editMerchantProfile:
+        final args = settings.arguments;
+        if (args is MerchantAuthModel) {
+          return _buildProtectedRoute(
+              EditMerchantProfileScreen(merchant: args), UserType.merchant);
+        }
+        return _buildErrorRoute();
+      case AppRoutes.merchantProfile:
+        return _buildProtectedRoute(const MerchantProfileScreen(), UserType.merchant);
+      default:
+        return null;
+    }
+  }
+
+  Route<dynamic>? _generateAdminRoute(RouteSettings settings) {
+    switch (settings.name) {
+      case AppRoutes.adminDashboard:
+        return _buildProtectedRoute(const AdminDashboardScreen(), UserType.admin);
+      case AppRoutes.adminPendingVerifications:
+        final args = settings.arguments;
+        if (args is Map<String, dynamic>) {
+          final pendingMerchants =
+              args['merchants'] as List<MerchantAuthModel>? ?? [];
+          return _buildProtectedRoute(
+              PendingVerificationsScreen(pendingMerchants: pendingMerchants),
+              UserType.admin);
+        }
+        return _buildErrorRoute();
+      case AppRoutes.adminAds:
+        return _buildProtectedRoute(const AdScreen(), UserType.admin);
+      default:
+        return null;
+    }
+  }
+
+  Route<dynamic>? _generatePublicRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const _SplashScreenLauncher());
-      // Routes publiques
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());
-
       case AppRoutes.register:
         return MaterialPageRoute(builder: (_) => const UserRegisterScreen());
-
       case AppRoutes.merchantRegister:
-        return MaterialPageRoute(
-          builder: (_) => const MerchantRegisterScreen(),
-        );
-
+        return MaterialPageRoute(builder: (_) => const MerchantRegisterScreen());
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
-
-      // Routes utilisateur protégées
-      case AppRoutes.home:
-        return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const HomeScreen(), UserType.user),
-        );
-
-      case AppRoutes.listView:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const ListViewScreen(),
-            UserType.user,
-          ),
-        );
-
-      case AppRoutes.mapView:
-        return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const MapViewScreen(), UserType.user),
-        );
-
-      case AppRoutes.merchantDetail:
-        final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            MerchantDetailScreen(merchant: args?['merchant']),
-            UserType.user,
-          ),
-        );
-
-      case AppRoutes.userProfile:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const UserProfileScreen(),
-            UserType.user,
-          ),
-        );
-
-      case AppRoutes.rentalHistory:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const RentalHistoryScreen(),
-            UserType.user,
-          ),
-        );
-
-      case AppRoutes.favorites:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const FavoritesScreen(),
-            UserType.user,
-          ),
-        );
-
-      case AppRoutes.editProfile:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const EditUserProfileScreen(),
-            UserType.user,
-          ),
-        );
-
-      // Routes marchand
-      case AppRoutes.merchantDashboard:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const MerchantDashboardScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.balanceManagement:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const BalanceManagementScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.editMerchantProfile:
-        final merchant = settings.arguments as MerchantAuthModel;
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            EditMerchantProfileScreen(merchant: merchant),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.merchantProfile:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const MerchantProfileScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.notifications:
-        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
-
-      case AppRoutes.help:
-        return MaterialPageRoute(builder: (_) => const HelpAndSupportScreen());
-
-      case AppRoutes.privacy:
-        return MaterialPageRoute(builder: (_) => const PrivacyScreen());
-
-      case AppRoutes.about:
-        return MaterialPageRoute(builder: (_) => const AboutScreen());
-
-      // Routes admin
-      case AppRoutes.adminDashboard:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const AdminDashboardScreen(),
-            UserType.admin,
-          ),
-        );
-
-      case AppRoutes.adminPendingVerifications:
-        final args = settings.arguments as Map<String, dynamic>?;
-        final pendingMerchants =
-            args?['merchants'] as List<MerchantAuthModel>? ?? [];
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            PendingVerificationsScreen(pendingMerchants: pendingMerchants),
-            UserType.admin,
-          ),
-        );
-
-      case AppRoutes.adminAds:
-        return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const AdScreen(), UserType.admin),
-        );
-
       default:
-        return MaterialPageRoute(builder: (_) => const NotFoundScreen());
+        return null;
     }
+  }
+
+  MaterialPageRoute _buildProtectedRoute(Widget child, UserType userType) {
+    return MaterialPageRoute(
+      builder: (_) => RouteGuards.requireUserType(child, userType),
+    );
+  }
+
+  MaterialPageRoute _buildErrorRoute() {
+    return MaterialPageRoute(builder: (_) => const NotFoundScreen());
   }
 }
 
@@ -245,9 +178,8 @@ class _SplashScreenLauncherState extends State<_SplashScreenLauncher> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthWrapper()));
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => const AuthWrapper()));
     });
   }
 
@@ -257,7 +189,6 @@ class _SplashScreenLauncherState extends State<_SplashScreenLauncher> {
   }
 }
 
-// Écran 404
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});
 
@@ -269,7 +200,7 @@ class NotFoundScreen extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.error_outline, size: 80, color: AppColors.textSecondary),
+            const Icon(Icons.error_outline, size: 80),
             const SizedBox(height: 16),
             Text(
               'Page non trouvée',
@@ -278,9 +209,7 @@ class NotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'La page que vous recherchez n\'existe pas.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+              style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 32),
             ElevatedButton(
