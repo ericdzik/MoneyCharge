@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_colors.dart';
 import '../../../providers/merchant_provider.dart';
+import 'category_list_widget.dart';
 
 class FilterWidget extends StatelessWidget {
   const FilterWidget({super.key});
@@ -35,7 +35,7 @@ class FilterWidget extends StatelessWidget {
                   },
                 ),
                 const SizedBox(width: 8),
-                // Ajoutez d'autres filtres ici, par exemple par catégorie
+                const CategoryListWidget(),
               ],
             ),
           ),

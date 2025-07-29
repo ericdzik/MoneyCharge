@@ -77,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 if (_currentIndex == 0) const SearchBarWidget(),
                 if (_currentIndex == 0) const FilterWidget(),
-                if (_currentIndex == 0) const CategoryListWidget(),
                 Expanded(
                   child: Card(
                     elevation: 4,
