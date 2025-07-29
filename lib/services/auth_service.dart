@@ -5,25 +5,6 @@ class AuthService {
   final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Instance de Firestore
 
-  // La détection du type d'utilisateur basée sur l'email peut rester si elle est utilisée
-  // avant l'inscription pour déterminer une logique spécifique, mais le rôle final
-  // proviendra de Firestore après la connexion/inscription.
-  String detectUserTypeFromEmail(String email) {
-    final emailLower = email.toLowerCase();
-    if (emailLower.contains('admin') ||
-        emailLower.contains('@locacharge.com') ||
-        emailLower.contains('administrator')) {
-      return 'admin';
-    } else if (emailLower.contains('merchant') ||
-        emailLower.contains('boutique') ||
-        emailLower.contains('shop') ||
-        emailLower.contains('store') ||
-        emailLower.contains('business')) {
-      return 'merchant';
-    } else {
-      return 'user';
-    }
-  }
 
   // Connexion unifiée
   // Retourne l'UID de l'utilisateur en cas de succès, sinon null
@@ -35,13 +16,17 @@ class AuthService {
       );
       return userCredential.user?.uid;
     } on fb_auth.FirebaseAuthException catch (e) {
-      // Gérer les erreurs spécifiques de Firebase Auth (e.g., user-not-found, wrong-password)
       print('Firebase Auth Exception (Login): ${e.code} - ${e.message}');
-      // On pourrait lancer une exception personnalisée ici pour être gérée par AuthProvider
-      throw Exception('Erreur de connexion: ${e.message}');
+      if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+        throw Exception('Email ou mot de passe incorrect.');
+      } else if (e.code == 'invalid-email') {
+        throw Exception('L\'adresse e-mail n\'est pas valide.');
+      } else {
+        throw Exception('Erreur de connexion. Veuillez réessayer.');
+      }
     } catch (e) {
       print('Login Error: $e');
-      throw Exception('Erreur de connexion inconnue.');
+      throw Exception('Une erreur inconnue est survenue.');
     }
   }
 
@@ -60,18 +45,25 @@ class AuthService {
           uid: user.uid,
           email: email,
           name: name,
-          // Le rôle initial peut être déterminé par la logique de l'email ou être 'user' par défaut
-          role: detectUserTypeFromEmail(email),
+          role: 'user', // Le rôle est 'user' par défaut pour l'inscription standard
         );
         return user.uid;
       }
       return null; // Ne devrait pas arriver si createUserWithEmailAndPassword réussit
     } on fb_auth.FirebaseAuthException catch (e) {
       print('Firebase Auth Exception (Register): ${e.code} - ${e.message}');
-      throw Exception('Erreur d\'inscription: ${e.message}');
+      if (e.code == 'weak-password') {
+        throw Exception('Le mot de passe est trop faible.');
+      } else if (e.code == 'email-already-in-use') {
+        throw Exception('Cette adresse e-mail est déjà utilisée.');
+      } else if (e.code == 'invalid-email') {
+        throw Exception('L\'adresse e-mail n\'est pas valide.');
+      } else {
+        throw Exception('Erreur d\'inscription. Veuillez réessayer.');
+      }
     } catch (e) {
       print('Register Error: $e');
-      throw Exception('Erreur d\'inscription inconnue: $e');
+      throw Exception('Une erreur inconnue est survenue.');
     }
   }
 
@@ -137,15 +129,17 @@ class AuthService {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
     } on fb_auth.FirebaseAuthException catch (e) {
       print('Firebase Auth Exception (Reset Password): ${e.code} - ${e.message}');
-      throw Exception('Erreur de réinitialisation du mot de passe: ${e.message}');
+      if (e.code == 'user-not-found') {
+        throw Exception('Aucun utilisateur trouvé pour cet e-mail.');
+      } else if (e.code == 'invalid-email') {
+        throw Exception('L\'adresse e-mail n\'est pas valide.');
+      } else {
+        throw Exception('Erreur lors de l\'envoi de l\'e-mail de réinitialisation.');
+      }
     } catch (e) {
       print('Reset Password Error: $e');
-      throw Exception('Erreur de réinitialisation du mot de passe inconnue.');
+      throw Exception('Une erreur inconnue est survenue.');
     }
   }
 
-  // Les méthodes loginUser, loginMerchant, loginAdmin ne sont plus nécessaires si on utilise loginUnified
-  // et que la distinction se fait via Firestore après la connexion.
-  // La méthode getUserType() via SharedPreferences n'est plus pertinente pour le rôle Firebase.
-  // Le rôle sera récupéré depuis Firestore.
 }
