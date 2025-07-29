@@ -24,6 +24,7 @@ import 'features/user/screens/user_profile_screen.dart';
 import 'features/user/screens/rental_history_screen.dart';
 import 'features/user/screens/favorites_screen.dart';
 import 'features/user/screens/edit_user_profile_screen.dart';
+import 'features/user/screens/splash_screen.dart';
 
 // Import des écrans marchand
 import 'features/merchant/screens/merchant_register_screen.dart';
@@ -46,7 +47,9 @@ class LocaChargeApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => MerchantProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()), // Ajout ici
+        ChangeNotifierProvider(
+          create: (_) => FavoriteMerchantProvider(),
+        ), // Ajout ici
       ],
       child: MaterialApp(
         title: 'Geo Money&Charge',
@@ -61,7 +64,7 @@ class LocaChargeApp extends StatelessWidget {
   Route<dynamic> _generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case '/':
-        return MaterialPageRoute(builder: (_) => const AuthWrapper());
+        return MaterialPageRoute(builder: (_) => const _SplashScreenLauncher());
       // Routes publiques
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());
@@ -70,7 +73,9 @@ class LocaChargeApp extends StatelessWidget {
         return MaterialPageRoute(builder: (_) => const UserRegisterScreen());
 
       case AppRoutes.merchantRegister:
-        return MaterialPageRoute(builder: (_) => const MerchantRegisterScreen());
+        return MaterialPageRoute(
+          builder: (_) => const MerchantRegisterScreen(),
+        );
 
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
@@ -78,17 +83,22 @@ class LocaChargeApp extends StatelessWidget {
       // Routes utilisateur protégées
       case AppRoutes.home:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const HomeScreen(), UserType.user),
+          builder: (_) =>
+              RouteGuards.requireUserType(const HomeScreen(), UserType.user),
         );
 
       case AppRoutes.listView:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const ListViewScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(
+            const ListViewScreen(),
+            UserType.user,
+          ),
         );
 
       case AppRoutes.mapView:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const MapViewScreen(), UserType.user),
+          builder: (_) =>
+              RouteGuards.requireUserType(const MapViewScreen(), UserType.user),
         );
 
       case AppRoutes.merchantDetail:
@@ -102,44 +112,66 @@ class LocaChargeApp extends StatelessWidget {
 
       case AppRoutes.userProfile:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const UserProfileScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(
+            const UserProfileScreen(),
+            UserType.user,
+          ),
         );
 
       case AppRoutes.rentalHistory:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const RentalHistoryScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(
+            const RentalHistoryScreen(),
+            UserType.user,
+          ),
         );
 
       case AppRoutes.favorites:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const FavoritesScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(
+            const FavoritesScreen(),
+            UserType.user,
+          ),
         );
 
       case AppRoutes.editProfile:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const EditUserProfileScreen(), UserType.user),
+          builder: (_) => RouteGuards.requireUserType(
+            const EditUserProfileScreen(),
+            UserType.user,
+          ),
         );
 
       // Routes marchand
       case AppRoutes.merchantDashboard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const MerchantDashboardScreen(), UserType.merchant),
+          builder: (_) => RouteGuards.requireUserType(
+            const MerchantDashboardScreen(),
+            UserType.merchant,
+          ),
         );
 
       case AppRoutes.balanceManagement:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const BalanceManagementScreen(), UserType.merchant),
+          builder: (_) => RouteGuards.requireUserType(
+            const BalanceManagementScreen(),
+            UserType.merchant,
+          ),
         );
 
       // Routes admin
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(const AdminDashboardScreen(), UserType.admin),
+          builder: (_) => RouteGuards.requireUserType(
+            const AdminDashboardScreen(),
+            UserType.admin,
+          ),
         );
 
       case AppRoutes.adminPendingVerifications:
         final args = settings.arguments as Map<String, dynamic>?;
-        final pendingMerchants = args?['merchants'] as List<MerchantAuthModel>? ?? [];
+        final pendingMerchants =
+            args?['merchants'] as List<MerchantAuthModel>? ?? [];
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             PendingVerificationsScreen(pendingMerchants: pendingMerchants),
@@ -150,6 +182,30 @@ class LocaChargeApp extends StatelessWidget {
       default:
         return MaterialPageRoute(builder: (_) => const NotFoundScreen());
     }
+  }
+}
+
+class _SplashScreenLauncher extends StatefulWidget {
+  const _SplashScreenLauncher({Key? key}) : super(key: key);
+
+  @override
+  State<_SplashScreenLauncher> createState() => _SplashScreenLauncherState();
+}
+
+class _SplashScreenLauncherState extends State<_SplashScreenLauncher> {
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthWrapper()));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const SplashScreen();
   }
 }
 
@@ -174,9 +230,9 @@ class NotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'La page que vous recherchez n\'existe pas.',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppColors.textSecondary,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 32),
             ElevatedButton(

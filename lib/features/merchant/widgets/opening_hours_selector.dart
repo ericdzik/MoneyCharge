@@ -18,7 +18,13 @@ class OpeningHoursSelector extends StatefulWidget {
 class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
   late Map<String, dynamic> _openingHours;
   final List<String> _days = [
-    'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'
+    'Lundi',
+    'Mardi',
+    'Mercredi',
+    'Jeudi',
+    'Vendredi',
+    'Samedi',
+    'Dimanche',
   ];
 
   @override
@@ -27,7 +33,11 @@ class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
     _openingHours = Map.from(widget.initialHours);
   }
 
-  Future<void> _selectTime(BuildContext context, String day, String type) async {
+  Future<void> _selectTime(
+    BuildContext context,
+    String day,
+    String type,
+  ) async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -37,7 +47,9 @@ class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
         if (_openingHours[day] == null) {
           _openingHours[day] = {'open': '09:00', 'close': '18:00'};
         }
-        (_openingHours[day] as Map<String, String>)[type] = picked.format(context);
+        (_openingHours[day] as Map<String, String>)[type] = picked.format(
+          context,
+        );
         widget.onHoursChanged(_openingHours);
       });
     }
@@ -52,8 +64,12 @@ class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
           mainAxisSize: MainAxisSize.min,
           children: _days.map((day) {
             final bool isDaySelected = _openingHours.containsKey(day);
-            final openTime = isDaySelected ? _openingHours[day]['open'] : '--:--';
-            final closeTime = isDaySelected ? _openingHours[day]['close'] : '--:--';
+            final openTime = isDaySelected
+                ? _openingHours[day]['open']
+                : '--:--';
+            final closeTime = isDaySelected
+                ? _openingHours[day]['close']
+                : '--:--';
 
             return Column(
               children: [
@@ -64,7 +80,10 @@ class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
                       onChanged: (bool? value) {
                         setState(() {
                           if (value == true) {
-                            _openingHours[day] = {'open': '09:00', 'close': '18:00'};
+                            _openingHours[day] = {
+                              'open': '09:00',
+                              'close': '18:00',
+                            };
                           } else {
                             _openingHours.remove(day);
                           }
@@ -82,12 +101,18 @@ class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
                     children: [
                       GestureDetector(
                         onTap: () => _selectTime(context, day, 'open'),
-                        child: Text(openTime, style: const TextStyle(color: AppColors.secondary)),
+                        child: Text(
+                          openTime,
+                          style: const TextStyle(color: AppColors.secondary),
+                        ),
                       ),
                       const Text(' - '),
                       GestureDetector(
                         onTap: () => _selectTime(context, day, 'close'),
-                        child: Text(closeTime, style: const TextStyle(color: AppColors.secondary)),
+                        child: Text(
+                          closeTime,
+                          style: const TextStyle(color: AppColors.secondary),
+                        ),
                       ),
                     ],
                   ),
@@ -98,11 +123,42 @@ class _OpeningHoursSelectorState extends State<OpeningHoursSelector> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: const Text('OK'),
+        Container(
+          height: 48,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.yellow, AppColors.orange],
+            ),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.orange.withOpacity(0.2),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+            ),
+            child: const Text(
+              'OK',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+              ),
+            ),
+          ),
         ),
       ],
     );

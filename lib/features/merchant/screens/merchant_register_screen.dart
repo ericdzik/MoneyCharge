@@ -110,10 +110,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
               true; // Supposer true si la position est obtenue
           final userLocation = LatLng(position.latitude, position.longitude);
           setState(() {
-            _cameraPosition = CameraPosition(
-              target: userLocation,
-              zoom: 15,
-            );
+            _cameraPosition = CameraPosition(target: userLocation, zoom: 15);
             // Placer automatiquement le marqueur
             _onMapTapped(userLocation);
           });
@@ -156,7 +153,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
               "[MerchantRegisterScreen] Mobile - Position fetched: Lat: ${position.latitude}, Lng: ${position.longitude}",
             );
             if (mounted) {
-              final userLocation = LatLng(position.latitude, position.longitude);
+              final userLocation = LatLng(
+                position.latitude,
+                position.longitude,
+              );
               setState(() {
                 _cameraPosition = CameraPosition(
                   target: userLocation,
@@ -204,18 +204,32 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     if (_openingHours.isEmpty) {
       return const Padding(
         padding: EdgeInsets.only(top: 8.0),
-        child: Text('Aucun horaire défini.', style: TextStyle(color: Colors.white70)),
+        child: Text(
+          'Aucun horaire défini.',
+          style: TextStyle(color: Colors.white70),
+        ),
       );
     }
 
-    List<String> days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+    List<String> days = [
+      'Lundi',
+      'Mardi',
+      'Mercredi',
+      'Jeudi',
+      'Vendredi',
+      'Samedi',
+      'Dimanche',
+    ];
     List<Widget> summary = [];
 
     for (var day in days) {
       if (_openingHours.containsKey(day)) {
         final hoursMap = _openingHours[day] as Map<String, dynamic>;
         summary.add(
-          Text('$day: ${hoursMap['open']} - ${hoursMap['close']}', style: const TextStyle(color: Colors.white)),
+          Text(
+            '$day: ${hoursMap['open']} - ${hoursMap['close']}',
+            style: const TextStyle(color: Colors.white),
+          ),
         );
       }
     }
@@ -271,26 +285,49 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: true,
-      appBar: CustomAppBar(
-        title: 'Inscription Marchand',
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        showLogo: false,
       ),
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/splash/25.png'),
-            fit: BoxFit.cover,
+      body: Stack(
+        children: [
+          // Image de fond
+          Positioned.fill(
+            child: Image.asset('assets/splash/25.png', fit: BoxFit.cover),
           ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimensions.paddingL),
-            child: Form(
-              key: _formKey,
+          // Overlay bleu avec opacité
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.fromRGBO(
+                      30,
+                      58,
+                      138,
+                      0.7,
+                    ), // #1E3A8A avec opacité 0.7
+                    Color.fromRGBO(
+                      29,
+                      78,
+                      216,
+                      0.7,
+                    ), // #1D4ED8 avec opacité 0.7
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // Contenu du formulaire
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -301,12 +338,19 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                         width: 80,
                         height: 80,
                         decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.9),
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.shadow,
+                              blurRadius: 20,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.store,
-                          color: Color.fromARGB(255, 250, 246, 246),
+                          color: AppColors.primary,
                           size: 40,
                         ),
                       ),
@@ -517,7 +561,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   // Merchant Profile Type Selection
                   Text(
                     'Quel type de marchand êtes-vous ?',
-                    style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.body1.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
                   Row(
@@ -556,25 +602,61 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   // End of Merchant Type Dropdown
                   Text(
                     'Horaires d\'ouverture',
-                    style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+                    style: AppTextStyles.body1.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.timer_outlined),
-                    label: const Text('Définir les horaires'),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => OpeningHoursSelector(
-                          initialHours: _openingHours,
-                          onHoursChanged: (newHours) {
-                            setState(() {
-                              _openingHours = newHours;
-                            });
-                          },
+                  Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [AppColors.yellow, AppColors.orange],
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.orange.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
                         ),
-                      );
-                    },
+                      ],
+                    ),
+                    child: ElevatedButton.icon(
+                      icon: const Icon(
+                        Icons.timer_outlined,
+                        color: Colors.white,
+                      ),
+                      label: const Text(
+                        'Définir les horaires',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                      ),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => OpeningHoursSelector(
+                            initialHours: _openingHours,
+                            onHoursChanged: (newHours) {
+                              setState(() {
+                                _openingHours = newHours;
+                              });
+                            },
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                      ),
+                    ),
                   ),
                   _buildOpeningHoursSummary(),
                   const SizedBox(height: 24),
@@ -786,16 +868,44 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   // Bouton d'inscription
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, child) {
-                      return CustomButton(
-                        text: authProvider.isLoading
-                            ? 'Création...'
-                            : 'Créer mon compte marchand',
-                        onPressed:
-                            (authProvider.isLoading ||
-                                !_acceptTerms ||
-                                !_isBusinessOwner)
-                            ? null
-                            : _handleRegister,
+                      return Container(
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [AppColors.yellow, AppColors.orange],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.orange.withOpacity(0.3),
+                              blurRadius: 15,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton(
+                          onPressed:
+                              (authProvider.isLoading ||
+                                  !_acceptTerms ||
+                                  !_isBusinessOwner)
+                              ? null
+                              : _handleRegister,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: Text(
+                            "S'inscrire",
+                            style: AppTextStyles.button.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
@@ -884,7 +994,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

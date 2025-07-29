@@ -29,96 +29,120 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/splash/25.png'),
-            fit: BoxFit.cover,
-          ),
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.white),
+          onPressed: () => Navigator.pop(context),
         ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header avec bouton retour
-              Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(
-                        Icons.arrow_back,
-                        color: Colors.white,
-                        size: 28,
-                      ),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    const SizedBox(width: 16),
-                    const Text(
-                      'Mot de passe oublié',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+      ),
+      body: Stack(
+        children: [
+          // Image de fond
+          Positioned.fill(
+            child: Image.asset('assets/splash/25.png', fit: BoxFit.cover),
+          ),
+          // Overlay bleu avec opacité
+          Positioned.fill(
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color.fromRGBO(
+                      30,
+                      58,
+                      138,
+                      0.7,
+                    ), // #1E3A8A avec opacité 0.7
+                    Color.fromRGBO(
+                      29,
+                      78,
+                      216,
+                      0.7,
+                    ), // #1D4ED8 avec opacité 0.7
                   ],
                 ),
               ),
-              // Contenu principal
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Form(
-                    key: _formKey,
-                    child: SingleChildScrollView(
+            ),
+          ),
+          // Contenu du formulaire
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppDimensions.paddingL),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    // Header avec logo et titre
+                    const SizedBox(height: 40),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.shadow,
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        _isEmailSent
+                            ? Icons.email_rounded
+                            : Icons.lock_reset_rounded,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      _isEmailSent ? 'Email envoyé !' : 'Mot de passe oublié ?',
+                      style: AppTextStyles.h1.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _isEmailSent
+                          ? 'Nous avons envoyé un lien de réinitialisation à votre adresse email.'
+                          : 'Entrez votre adresse email pour recevoir un lien de réinitialisation.',
+                      style: AppTextStyles.body2.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 48),
+
+                    // Carte principale
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.shadow,
+                            blurRadius: 30,
+                            offset: const Offset(0, 15),
+                          ),
+                        ],
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.05,
-                          ),
-                          Column(
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: AppColors.secondary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Icon(
-                                  _isEmailSent ? Icons.email : Icons.lock_reset,
-                                  color: AppColors.secondary,
-                                  size: 40,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                _isEmailSent
-                                    ? 'Email envoyé !'
-                                    : 'Mot de passe oublié ?',
-                                style: AppTextStyles.h1.copyWith(
-                                  fontSize: 28,
-                                  color: Colors.white,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                _isEmailSent
-                                    ? 'Nous avons envoyé un lien de réinitialisation à votre adresse email.'
-                                    : 'Entrez votre adresse email pour recevoir un lien de réinitialisation.',
-                                style: AppTextStyles.body2.copyWith(
-                                  color: Colors.white70,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 48),
-
                           if (!_isEmailSent) ...[
+                            // Champs Email
                             CustomTextField(
                               controller: _emailController,
                               labelText: 'Email',
@@ -138,40 +162,86 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             ),
                             const SizedBox(height: 32),
 
+                            // Bouton Envoyer
                             Consumer<AuthProvider>(
                               builder: (context, authProvider, child) {
-                                return CustomButton(
-                                  text: authProvider.isLoading
-                                      ? 'Envoi...'
-                                      : 'Envoyer le lien',
-                                  onPressed: authProvider.isLoading
-                                      ? null
-                                      : _handleResetPassword,
+                                return Container(
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        AppColors.yellow,
+                                        AppColors.orange,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.orange.withOpacity(
+                                          0.3,
+                                        ),
+                                        blurRadius: 15,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: authProvider.isLoading
+                                        ? null
+                                        : _handleResetPassword,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                    ),
+                                    child: authProvider.isLoading
+                                        ? const SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: CircularProgressIndicator(
+                                              color: AppColors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : Text(
+                                            'Envoyer le lien',
+                                            style: AppTextStyles.button
+                                                .copyWith(
+                                                  color: AppColors.white,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16,
+                                                ),
+                                          ),
+                                  ),
                                 );
                               },
                             ),
                           ] else ...[
+                            // Message de succès
                             Container(
-                              padding: const EdgeInsets.all(20),
+                              padding: const EdgeInsets.all(24),
                               decoration: BoxDecoration(
-                                color: Colors.green.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                color: AppColors.success.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: Colors.green.withOpacity(0.3),
+                                  color: AppColors.success.withOpacity(0.3),
                                 ),
                               ),
                               child: Column(
                                 children: [
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: Colors.green,
+                                  Icon(
+                                    Icons.check_circle_rounded,
+                                    color: AppColors.success,
                                     size: 48,
                                   ),
                                   const SizedBox(height: 16),
                                   Text(
                                     'Vérifiez votre boîte email',
                                     style: AppTextStyles.h3.copyWith(
-                                      color: Colors.green,
+                                      color: AppColors.success,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
@@ -179,90 +249,142 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   Text(
                                     'Si vous ne recevez pas l\'email dans les 5 minutes, vérifiez vos spams.',
                                     style: AppTextStyles.body2.copyWith(
-                                      color: Colors.white70,
+                                      color: AppColors.textSecondary,
+                                      fontSize: 14,
                                     ),
                                     textAlign: TextAlign.center,
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 32),
+                            const SizedBox(height: 24),
 
-                            CustomButton(
-                              text: 'Renvoyer l\'email',
-                              onPressed: _handleResendEmail,
+                            // Bouton Renvoyer
+                            Container(
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [AppColors.yellow, AppColors.orange],
+                                ),
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.orange.withOpacity(0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: ElevatedButton(
+                                onPressed: _handleResendEmail,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Renvoyer l\'email',
+                                  style: AppTextStyles.button.copyWith(
+                                    color: AppColors.white,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ),
                             const SizedBox(height: 16),
+
+                            // Bouton Changer d'email
                             OutlinedButton(
                               onPressed: () {
                                 setState(() {
                                   _isEmailSent = false;
                                 });
                               },
-                              child: const Text('Changer d\'email'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                side: const BorderSide(
+                                  color: AppColors.primary,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                              ),
+                              child: Text(
+                                'Changer d\'email',
+                                style: AppTextStyles.button.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
                             ),
                           ],
+                        ],
+                      ),
+                    ),
 
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.1,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  'Retour à la ',
-                                  style: AppTextStyles.body2.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                  textAlign: TextAlign.end,
-                                ),
-                              ),
-                              const SizedBox(width: AppDimensions.paddingXS),
-                              GestureDetector(
-                                onTap: () {
-                                  Navigator.pushReplacementNamed(
-                                    context,
-                                    AppRoutes.login,
-                                  );
-                                },
-                                child: Flexible(
-                                  child: Text(
-                                    'connexion',
-                                    style: AppTextStyles.body2.copyWith(
-                                      color: AppColors.secondary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
+                    const SizedBox(height: 32),
 
-                          // Logo en bas
-                          Image.asset(
-                            'assets/splash/24.png',
-                            height: 200,
-                            width: 200,
-                          ),
-                          const SizedBox(height: 16),
+                    // Lien retour connexion
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: AppColors.white.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
                           Text(
-                            '© 2024 LocaCharge - Tous droits réservés',
-                            style: AppTextStyles.caption.copyWith(
-                              color: Colors.white70,
+                            'Retour à la ',
+                            style: AppTextStyles.body2.copyWith(
+                              color: AppColors.white.withOpacity(0.9),
                             ),
-                            textAlign: TextAlign.center,
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacementNamed(
+                                context,
+                                AppRoutes.login,
+                              );
+                            },
+                            child: Text(
+                              'connexion',
+                              style: AppTextStyles.body2.copyWith(
+                                color: AppColors.yellow,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
+
+                    const SizedBox(height: 40),
+
+                    // Logo en bas
+                    Center(
+                      child: Image.asset(
+                        'assets/splash/24.png',
+                        height: 120,
+                        width: 120,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -286,7 +408,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Email de réinitialisation envoyé avec succès.'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
       } else {
@@ -295,7 +417,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             content: Text(
               authProvider.error ?? 'Erreur lors de l\'envoi de l\'email.',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -304,7 +426,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.error ?? e.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -322,7 +444,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Email de réinitialisation renvoyé avec succès.'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppColors.success,
           ),
         );
       } else {
@@ -331,7 +453,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             content: Text(
               authProvider.error ?? 'Erreur lors du renvoi de l\'email.',
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -340,7 +462,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authProvider.error ?? e.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppColors.error,
         ),
       );
     }
