@@ -190,7 +190,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       }
 
 
-      bool success = await authProvider.updateMerchantProfile(
+      bool success = await authProvider.updateProfile(
         businessName: _businessNameController.text,
         phone: _phoneController.text,
         address: _addressController.text,

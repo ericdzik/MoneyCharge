@@ -88,7 +88,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final success = await authProvider.updateUserProfile(
+      final success = await authProvider.updateProfile(
         name: _nameController.text,
         phone: _phoneController.text,
         imageFile: _imageFile,

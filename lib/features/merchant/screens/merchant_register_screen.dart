@@ -434,7 +434,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                         return null;
                       },
                     ),
-                  const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                   // Map Section
                   Text(
