@@ -868,44 +868,16 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   // Bouton d'inscription
                   Consumer<AuthProvider>(
                     builder: (context, authProvider, child) {
-                      return Container(
-                        height: 56,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.yellow, AppColors.orange],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.orange.withOpacity(0.3),
-                              blurRadius: 15,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton(
-                          onPressed:
-                              (authProvider.isLoading ||
-                                  !_acceptTerms ||
-                                  !_isBusinessOwner)
-                              ? null
-                              : _handleRegister,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: Text(
-                            "S'inscrire",
-                            style: AppTextStyles.button.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
+                      return CustomButton(
+                        text: authProvider.isLoading
+                            ? 'Création...'
+                            : 'Créer mon compte marchand',
+                        onPressed:
+                            (authProvider.isLoading ||
+                                !_acceptTerms ||
+                                !_isBusinessOwner)
+                            ? null
+                            : _handleRegister,
                       );
                     },
                   ),
@@ -1036,11 +1008,21 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   }
 
   Future<void> _handleRegister() async {
+    print("[RegisterAttempt] Trying to register...");
     if (!_formKey.currentState!.validate()) {
+      print("[RegisterAttempt] FAILED: Form validation failed.");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Veuillez corriger les erreurs dans le formulaire.'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
+    print("[RegisterAttempt] PASSED: Form validation.");
 
     if (!_acceptTerms) {
+      print("[RegisterAttempt] FAILED: Terms not accepted.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez accepter les conditions d\'utilisation'),
@@ -1049,8 +1031,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       );
       return;
     }
+    print("[RegisterAttempt] PASSED: Terms accepted.");
 
     if (_openingHours.isEmpty) {
+      print("[RegisterAttempt] FAILED: Opening hours are empty.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez définir au moins un jour d\'ouverture.'),
@@ -1059,8 +1043,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       );
       return;
     }
+    print("[RegisterAttempt] PASSED: Opening hours defined.");
 
     if (!_isBusinessOwner) {
+      print("[RegisterAttempt] FAILED: Not confirmed as business owner.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez confirmer être le propriétaire du business'),
@@ -1069,10 +1055,12 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       );
       return;
     }
+    print("[RegisterAttempt] PASSED: Confirmed as business owner.");
 
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     if (_selectedLocation == null) {
+      print("[RegisterAttempt] FAILED: Location not selected.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez sélectionner un emplacement sur la carte.'),
@@ -1081,6 +1069,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       );
       return;
     }
+    print("[RegisterAttempt] PASSED: Location selected.");
 
     // Construire la liste finale des services
     List<String> finalServices = [];
