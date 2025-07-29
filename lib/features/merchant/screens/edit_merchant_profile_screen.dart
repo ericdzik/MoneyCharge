@@ -198,7 +198,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         services: finalServices,
         serviceStockStatus: finalServiceStockStatus,
         imageUrls: _imageUrls,
-        profileImageFile: _profileImageFile,
+        imageFile: _profileImageFile,
       );
 
       if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
