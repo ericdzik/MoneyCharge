@@ -140,21 +140,20 @@ class AuthProvider with ChangeNotifier {
     try {
       final uid = await _authService.loginUnified(email, password);
       if (uid != null) {
-        if (_firebaseAuth.currentUser != null &&
-            _firebaseAuth.currentUser!.uid == uid) {
-          _firebaseUser = _firebaseAuth.currentUser;
-          await _fetchUserProfile(uid);
-          if (_userType != UserType.unknown) {
-            await _updateLastLogin(uid);
-          }
+        // Mettre à jour _firebaseUser manuellement après la connexion réussie
+        _firebaseUser = _firebaseAuth.currentUser;
+        // Récupérer le profil utilisateur immédiatement
+        await _fetchUserProfile(uid);
+        if (_userType != UserType.unknown) {
+          await _updateLastLogin(uid);
         } else {
-          await _fetchUserProfile(uid!); // uid is not null here
-          if (_userType != UserType.unknown) {
-            await _updateLastLogin(uid!); // uid is not null here
-          }
+          // Si le type d'utilisateur est inconnu après fetch, c'est une erreur de profil
+          _error = "Impossible de déterminer le rôle de l'utilisateur.";
+          _clearProfiles();
         }
       } else {
-        _error = "Erreur de connexion: UID non retourné par AuthService.";
+        // Cette partie est théoriquement redondante si AuthService lève toujours une exception
+        _error = "Erreur de connexion: UID non retourné.";
         _userType = UserType.unknown;
         _clearProfiles();
       }
