@@ -328,66 +328,68 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Logo et titre
-                  Column(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.shadow,
-                              blurRadius: 20,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Logo et titre
+                    Column(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.shadow,
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.store,
+                            color: AppColors.primary,
+                            size: 40,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.store,
-                          color: AppColors.primary,
-                          size: 40,
+                        const SizedBox(height: 24),
+                        Text(
+                          'Devenez Partenaire',
+                          style: AppTextStyles.h1.copyWith(
+                            fontSize: 28,
+                            color:
+                                Colors.white, // Changer couleur pour visibilité
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Devenez Partenaire',
-                        style: AppTextStyles.h1.copyWith(
-                          fontSize: 28,
-                          color:
-                              Colors.white, // Changer couleur pour visibilité
+                        const SizedBox(height: 8),
+                        Text(
+                          'Rejoignez notre réseau de points de service',
+                          style: AppTextStyles.body2.copyWith(
+                            color: Colors
+                                .white70, // texte secondaire en blanc pâle
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Rejoignez notre réseau de points de service',
-                        style: AppTextStyles.body2.copyWith(
-                          color:
-                              Colors.white70, // texte secondaire en blanc pâle
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
 
-                  // Informations du business
-                  Text(
-                    'Informations du Business',
-                    style: AppTextStyles.h2.copyWith(fontSize: 18),
-                  ),
-                  const SizedBox(height: 16),
+                    // Informations du business
+                    Text(
+                      'Informations du Business',
+                      style: AppTextStyles.h2.copyWith(fontSize: 18),
+                    ),
+                    const SizedBox(height: 16),
 
-                  CustomTextField(
-                    controller: _businessNameController,
-                    labelText: 'Nom du business',
-                    hintText: 'Ex: Boutique Express',
+                    CustomTextField(
+                      controller: _businessNameController,
+                      labelText: 'Nom du business',
+                      hintText: 'Ex: Boutique Express',
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez entrer le nom de votre business';
@@ -1009,8 +1011,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
   Future<void> _handleRegister() async {
     print("[RegisterAttempt] Trying to register...");
-    if (!_formKey.currentState!.validate()) {
-      print("[RegisterAttempt] FAILED: Form validation failed.");
+    // Ajout d'une vérification de nullité pour le currentState du formulaire
+    if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
+      print("[RegisterAttempt] FAILED: Form validation failed or form key is null.");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez corriger les erreurs dans le formulaire.'),
