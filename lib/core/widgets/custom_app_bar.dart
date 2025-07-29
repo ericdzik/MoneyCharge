@@ -33,32 +33,41 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: AppBar(
-          backgroundColor: backgroundColor ?? Colors.white.withOpacity(0.15), // Glassmorphisme or custom color
+          backgroundColor:
+              backgroundColor ??
+              Colors.white.withOpacity(0.15), // Glassmorphisme or custom color
           elevation: 0,
           leading: leading,
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showLogo) ...[
-                const SimIcon(),
-                const SizedBox(width: AppDimensions.paddingS),
+          title: Flexible(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (showLogo) ...[
+                  const SimIcon(),
+                  const SizedBox(width: AppDimensions.paddingS),
+                ],
+                Flexible(
+                  child: Text(
+                    title,
+                    overflow: TextOverflow.ellipsis,
+                    style:
+                        Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ) ??
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                  ),
+                ),
               ],
-              Text(
-                title,
-                style:
-                    Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ) ??
-                    const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-              ),
-            ],
+            ),
           ),
-          actions: actions,
+          actions: actions != null
+              ? actions!.take(3).toList()
+              : null, // Limiter à 3 actions max
           // Optionnel : fine bordure blanche translucide en bas
           shape: const Border(
             bottom: BorderSide(color: Color(0x33FFFFFF), width: 1),

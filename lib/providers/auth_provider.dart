@@ -1,7 +1,11 @@
 import 'dart:async'; // Pour StreamSubscription
+import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth; // Pour l'objet User de Firebase
+import 'package:firebase_auth/firebase_auth.dart'
+    as fb_auth; // Pour l'objet User de Firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
 import '../features/user/models/user_model.dart';
@@ -24,7 +28,8 @@ class AuthProvider with ChangeNotifier {
   MerchantAuthModel? _merchantProfile;
   AdminModel? _adminProfile;
 
-  bool get isAuthenticated => _firebaseUser != null && _userType != UserType.unknown;
+  bool get isAuthenticated =>
+      _firebaseUser != null && _userType != UserType.unknown;
   bool get isLoading => _isLoading;
   String? get error => _error;
   UserType get userType => _userType;
@@ -38,7 +43,9 @@ class AuthProvider with ChangeNotifier {
   }
 
   void _listenToAuthChanges() {
-    _authStateSubscription = _authService.authStateChanges.listen((fb_auth.User? user) async {
+    _authStateSubscription = _authService.authStateChanges.listen((
+      fb_auth.User? user,
+    ) async {
       _setLoading(true);
       _firebaseUser = user;
       if (_firebaseUser != null) {
@@ -71,15 +78,18 @@ class AuthProvider with ChangeNotifier {
         switch (_userType) {
           case UserType.admin:
             _adminProfile = AdminModel.fromFirestore(docSnapshot);
-            _appUserProfile = null; _merchantProfile = null;
+            _appUserProfile = null;
+            _merchantProfile = null;
             break;
           case UserType.merchant:
             _merchantProfile = MerchantAuthModel.fromFirestore(docSnapshot);
-            _appUserProfile = null; _adminProfile = null;
+            _appUserProfile = null;
+            _adminProfile = null;
             break;
           case UserType.user:
-            _appUserProfile =
-                User.fromFirestore(docSnapshot as DocumentSnapshot<Map<String, dynamic>>);
+            _appUserProfile = User.fromFirestore(
+              docSnapshot as DocumentSnapshot<Map<String, dynamic>>,
+            );
             _merchantProfile = null;
             _adminProfile = null;
             break;
@@ -94,7 +104,8 @@ class AuthProvider with ChangeNotifier {
         _clearProfiles();
       }
     } catch (e) {
-      _error = "Erreur Firestore lors de la récupération du profil: ${e.toString()}";
+      _error =
+          "Erreur Firestore lors de la récupération du profil: ${e.toString()}";
       _userType = UserType.unknown;
       _clearProfiles();
       rethrow;
@@ -129,7 +140,8 @@ class AuthProvider with ChangeNotifier {
     try {
       final uid = await _authService.loginUnified(email, password);
       if (uid != null) {
-        if (_firebaseAuth.currentUser != null && _firebaseAuth.currentUser!.uid == uid) {
+        if (_firebaseAuth.currentUser != null &&
+            _firebaseAuth.currentUser!.uid == uid) {
           _firebaseUser = _firebaseAuth.currentUser;
           await _fetchUserProfile(uid);
           if (_userType != UserType.unknown) {
@@ -137,7 +149,7 @@ class AuthProvider with ChangeNotifier {
           }
         } else {
           await _fetchUserProfile(uid!); // uid is not null here
-           if (_userType != UserType.unknown) {
+          if (_userType != UserType.unknown) {
             await _updateLastLogin(uid!); // uid is not null here
           }
         }
@@ -161,8 +173,8 @@ class AuthProvider with ChangeNotifier {
     try {
       final uid = await _authService.registerUser(name, email, password);
       if (uid == null) {
-         _error = "Erreur d'inscription: UID non retourné.";
-         _userType = UserType.unknown;
+        _error = "Erreur d'inscription: UID non retourné.";
+        _userType = UserType.unknown;
         _clearProfiles();
       }
       // _listenToAuthChanges s'occupera de fetch le profil
@@ -221,35 +233,53 @@ class AuthProvider with ChangeNotifier {
   }) async {
     _setLoading(true);
     _error = null;
+
+    print("[AuthProvider] Début de l'inscription marchand pour: $email");
+
     try {
-      final uid = await _authService.registerUser(businessName, email, password);
+      // Créer le compte Firebase Auth directement sans passer par AuthService
+      print("[AuthProvider] Création du compte Firebase Auth...");
+      final userCredential = await fb_auth.FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      final uid = userCredential.user?.uid;
+      print("[AuthProvider] Compte Firebase Auth créé avec UID: $uid");
+
       if (uid != null) {
+        // Créer directement le profil marchand dans Firestore
+        print("[AuthProvider] Création du profil marchand dans Firestore...");
         await _firestore.collection('users').doc(uid).set({
           'uid': uid,
           'email': email,
           'name': businessName,
-          'role': 'merchant',
-          'merchantType': merchantType, // Type de commerce (Alimentation, etc.)
-          'profileType': profileType, // Type de profil (fixed ou mobile)
+          'role': 'merchant', // Forcer le rôle marchand
+          'merchantType': merchantType,
+          'profileType': profileType,
           'createdAt': FieldValue.serverTimestamp(),
           'phone': phone,
           'address': address,
           'openingHours': openingHours,
-          'services': services, // CHANGED to List<String>
+          'services': services,
           'isVerified': false,
           'isActive': true,
           'lastLoginAt': FieldValue.serverTimestamp(),
           'latitude': latitude,
           'longitude': longitude,
-          // serviceStockStatus sera initialisé/géré par EditMerchantProfileScreen
-        }, SetOptions(merge: true));
+        });
+
+        print("[AuthProvider] Profil marchand créé avec succès dans Firestore");
       } else {
         _error = "Erreur lors de la création du compte marchand.";
+        print(
+          "[AuthProvider] Erreur: UID null après création du compte Firebase Auth",
+        );
       }
     } catch (e) {
       _error = e.toString();
+      print("[AuthProvider] Erreur lors de l'inscription marchand: $e");
     } finally {
       _setLoading(false);
+      print("[AuthProvider] Fin de l'inscription marchand");
     }
   }
 
@@ -261,6 +291,7 @@ class AuthProvider with ChangeNotifier {
     required List<String> services,
     required Map<String, String> serviceStockStatus,
     required List<String> imageUrls,
+    XFile? profileImageFile,
   }) async {
     _setLoading(true);
     _error = null;
@@ -284,6 +315,16 @@ class AuthProvider with ChangeNotifier {
     };
 
     try {
+      if (profileImageFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('merchant_profile_images')
+            .child('$uid.jpg');
+        await ref.putFile(File(profileImageFile.path));
+        final imageUrl = await ref.getDownloadURL();
+        dataToUpdate['profileImageUrl'] = imageUrl;
+      }
+
       await _firestore.collection('users').doc(uid).update(dataToUpdate);
       await _fetchUserProfile(uid); // Recharger pour la cohérence
 
@@ -297,7 +338,11 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateUserProfile({required String name, String? phone}) async {
+  Future<bool> updateUserProfile({
+    required String name,
+    String? phone,
+    XFile? imageFile,
+  }) async {
     _setLoading(true);
     _error = null;
 
@@ -308,12 +353,19 @@ class AuthProvider with ChangeNotifier {
     }
     final uid = _firebaseUser!.uid;
 
-    Map<String, dynamic> dataToUpdate = {
-      'name': name,
-      'phone': phone,
-    };
+    Map<String, dynamic> dataToUpdate = {'name': name, 'phone': phone};
 
     try {
+      if (imageFile != null) {
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('user_profile_images')
+            .child('$uid.jpg');
+        await ref.putFile(File(imageFile.path));
+        final imageUrl = await ref.getDownloadURL();
+        dataToUpdate['profileImageUrl'] = imageUrl;
+      }
+
       await _firestore.collection('users').doc(uid).update(dataToUpdate);
       await _fetchUserProfile(uid); // Recharger pour la cohérence
       _setLoading(false);
@@ -326,7 +378,7 @@ class AuthProvider with ChangeNotifier {
   }
 
   void _setLoading(bool loading) {
-    if(_isLoading == loading) return;
+    if (_isLoading == loading) return;
     _isLoading = loading;
     notifyListeners();
   }

@@ -9,6 +9,8 @@ import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
 import 'package:card_swiper/card_swiper.dart';
+import 'package:locacharge/features/user/screens/add_review_screen.dart';
+import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import '../../../providers/location_provider.dart';
 import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
 
@@ -72,6 +74,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: widget.merchant.name,
         showLogo: false,
@@ -114,110 +117,101 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
       ),
       body: Stack(
         children: [
+          // Image de fond qui s'étend sous l'AppBar
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints constraints) {
-                    double headerHeight = constraints.maxWidth * 0.5;
-                    if (headerHeight < 150) headerHeight = 50;
-                    if (headerHeight > 300) headerHeight = 300;
+          // Contenu principal avec padding pour l'AppBar
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  LayoutBuilder(
+                    builder:
+                        (BuildContext context, BoxConstraints constraints) {
+                          double headerHeight = constraints.maxWidth * 0.5;
+                          if (headerHeight < 150) headerHeight = 50;
+                          if (headerHeight > 300) headerHeight = 300;
 
-                    return Container(
-                      width: double.infinity,
-                      height: headerHeight,
-                      decoration: const BoxDecoration(
-                        color: Color.fromARGB(190, 255, 255, 255),
-                      ),
-                      child: Stack(
-                        children: [
-                          if (widget.merchant.imageUrls != null && widget.merchant.imageUrls!.isNotEmpty)
-                            Swiper(
-                              itemBuilder: (BuildContext context, int index) {
-                                return Image.network(
-                                  widget.merchant.imageUrls![index],
-                                  fit: BoxFit.cover,
-                                );
-                              },
-                              itemCount: widget.merchant.imageUrls!.length,
-                              pagination: const SwiperPagination(),
-                              control: const SwiperControl(),
-                            )
-                          else
-                            const Center(
-                              child: Icon(
-                                Icons.store,
-                                size: 40,
-                                color: Color.fromARGB(255, 0, 0, 0)
-                              ),
+                          return Container(
+                            width: double.infinity,
+                            height: headerHeight,
+                            decoration: const BoxDecoration(
+                              color: Color.fromARGB(190, 255, 255, 255),
                             ),
-                          Positioned(
-                            top: AppDimensions.paddingM,
-                            right: AppDimensions.paddingM,
-                            child: StatusBadge(status: _getStatusType()),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                  ),
-                  margin: const EdgeInsets.all(AppDimensions.paddingM),
-                  padding: const EdgeInsets.all(AppDimensions.paddingM),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildInfoCard(
-                        icon: Icons.storefront,
-                        title: 'Nom du commerce',
-                        content: widget.merchant.name,
-                      ),
-                      _buildInfoCard(
-                        icon: Icons.location_on,
-                        title: 'Adresse',
-                        content: widget.merchant.address,
-                      ),
-                      _buildInfoCard(
-                        icon: Icons.phone,
-                        title: 'Téléphone',
-                        content: widget.merchant.phone,
-                      ),
-                      _buildInfoCard(
-                        icon: Icons.access_time,
-                        title: 'Horaires',
-                        content:
-                            '${_formatHours(widget.merchant.hours)}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
-                      ),
-                      const SizedBox(height: AppDimensions.paddingM),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          if (constraints.maxWidth < 350) {
-                            // Disposition en colonne pour les petits écrans
-                            return Column(
+                            child: Stack(
                               children: [
-                                _buildTimeCard(
-                                  Icons.directions_walk,
-                                  'À pied',
-                                  _walkingTime,
-                                ),
-                                const SizedBox(height: AppDimensions.paddingS),
-                                _buildTimeCard(
-                                  Icons.directions_car,
-                                  'En voiture',
-                                  _drivingTime,
+                                if (widget.merchant.imageUrls != null &&
+                                    widget.merchant.imageUrls!.isNotEmpty)
+                                  Swiper(
+                                    itemBuilder:
+                                        (BuildContext context, int index) {
+                                          return Image.network(
+                                            widget.merchant.imageUrls![index],
+                                            fit: BoxFit.cover,
+                                          );
+                                        },
+                                    itemCount:
+                                        widget.merchant.imageUrls!.length,
+                                    pagination: const SwiperPagination(),
+                                    control: const SwiperControl(),
+                                  )
+                                else
+                                  const Center(
+                                    child: Icon(
+                                      Icons.store,
+                                      size: 40,
+                                      color: Color.fromARGB(255, 0, 0, 0),
+                                    ),
+                                  ),
+                                Positioned(
+                                  top: AppDimensions.paddingM,
+                                  right: AppDimensions.paddingM,
+                                  child: StatusBadge(status: _getStatusType()),
                                 ),
                               ],
-                            );
-                          } else {
-                            // Disposition horizontale pour les écrans plus larges
+                            ),
+                          );
+                        },
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusL,
+                      ),
+                    ),
+                    margin: const EdgeInsets.all(AppDimensions.paddingM),
+                    padding: const EdgeInsets.all(AppDimensions.paddingM),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildInfoCard(
+                          icon: Icons.storefront,
+                          title: 'Nom du commerce',
+                          content: widget.merchant.name,
+                        ),
+                        _buildInfoCard(
+                          icon: Icons.location_on,
+                          title: 'Adresse',
+                          content: widget.merchant.address,
+                        ),
+                        _buildInfoCard(
+                          icon: Icons.phone,
+                          title: 'Téléphone',
+                          content: widget.merchant.phone,
+                        ),
+                        _buildInfoCard(
+                          icon: Icons.access_time,
+                          title: 'Horaires',
+                          content:
+                              '${_formatHours(widget.merchant.hours)}\n${widget.merchant.isOpen ? "🟢 Ouvert maintenant" : "🔴 Fermé"}',
+                        ),
+                        const SizedBox(height: AppDimensions.paddingM),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            // Disposition horizontale pour tous les écrans
                             return Row(
                               children: [
                                 Expanded(
@@ -227,7 +221,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                     _walkingTime,
                                   ),
                                 ),
-                                const SizedBox(width: AppDimensions.paddingM),
+                                const SizedBox(width: AppDimensions.paddingS),
                                 Expanded(
                                   child: _buildTimeCard(
                                     Icons.directions_car,
@@ -237,67 +231,29 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                 ),
                               ],
                             );
-                          }
-                        },
-                      ),
-                      const SizedBox(height: AppDimensions.paddingL),
-                      Text('Services disponibles', style: AppTextStyles.h3),
-                      const SizedBox(height: AppDimensions.paddingM),
-                      widget.merchant.services.isEmpty
-                          ? const Text('Aucun service disponible.')
-                          : LayoutBuilder(
-                              builder: (context, constraints) {
-                                // Si l'écran est trop petit, afficher les services en colonne
-                                if (constraints.maxWidth < 350) {
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: widget.merchant.services.map((
-                                      service,
-                                    ) {
-                                      return Container(
-                                        key: ValueKey(service),
-                                        width: double.infinity,
-                                        margin: const EdgeInsets.only(
-                                          bottom: AppDimensions.paddingS,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: AppDimensions.paddingM,
-                                          vertical: AppDimensions.paddingS,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.background,
-                                          borderRadius: BorderRadius.circular(
-                                            AppDimensions.radiusS,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.border,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          service,
-                                          style: AppTextStyles.body2,
-                                          textAlign: TextAlign.center,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                } else {
-                                  // Disposition Wrap pour les écrans plus larges
-                                  return Wrap(
-                                    spacing: AppDimensions.paddingS,
-                                    runSpacing: AppDimensions.paddingS,
-                                    children: widget.merchant.services.map((
-                                      service,
-                                    ) {
-                                      return ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxWidth: constraints.maxWidth * 0.45,
-                                        ),
-                                        child: Container(
+                          },
+                        ),
+                        const SizedBox(height: AppDimensions.paddingL),
+                        Text('Services disponibles', style: AppTextStyles.h3),
+                        const SizedBox(height: AppDimensions.paddingM),
+                        widget.merchant.services.isEmpty
+                            ? const Text('Aucun service disponible.')
+                            : LayoutBuilder(
+                                builder: (context, constraints) {
+                                  // Si l'écran est trop petit, afficher les services en colonne
+                                  if (constraints.maxWidth < 350) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: widget.merchant.services.map((
+                                        service,
+                                      ) {
+                                        return Container(
                                           key: ValueKey(service),
+                                          width: double.infinity,
+                                          margin: const EdgeInsets.only(
+                                            bottom: AppDimensions.paddingS,
+                                          ),
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: AppDimensions.paddingM,
                                             vertical: AppDimensions.paddingS,
@@ -314,21 +270,66 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                           child: Text(
                                             service,
                                             style: AppTextStyles.body2,
+                                            textAlign: TextAlign.center,
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
-                                            textAlign: TextAlign.center,
                                           ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                  );
-                                }
-                              },
-                            ),
-                    ],
+                                        );
+                                      }).toList(),
+                                    );
+                                  } else {
+                                    // Disposition Wrap pour les écrans plus larges
+                                    return Wrap(
+                                      spacing: AppDimensions.paddingS,
+                                      runSpacing: AppDimensions.paddingS,
+                                      children: widget.merchant.services.map((
+                                        service,
+                                      ) {
+                                        return ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxWidth:
+                                                constraints.maxWidth * 0.45,
+                                          ),
+                                          child: Container(
+                                            key: ValueKey(service),
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal:
+                                                  AppDimensions.paddingM,
+                                              vertical: AppDimensions.paddingS,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.background,
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    AppDimensions.radiusS,
+                                                  ),
+                                              border: Border.all(
+                                                color: AppColors.border,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              service,
+                                              style: AppTextStyles.body2,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        );
+                                      }).toList(),
+                                    );
+                                  }
+                                },
+                              ),
+                        const SizedBox(height: AppDimensions.paddingL),
+                        _buildRatingSection(),
+                        const SizedBox(height: AppDimensions.paddingL),
+                        ReviewListWidget(merchantId: widget.merchant.id),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -427,10 +428,56 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
     );
   }
 
-  Widget _buildInfoCard(
-      {required IconData icon,
-      required String title,
-      required String content}) {
+  Widget _buildRatingSection() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Avis et notes', style: AppTextStyles.h3),
+            Row(
+              children: [
+                Text(
+                  widget.merchant.averageRating.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.star, color: Colors.amber),
+                const SizedBox(width: 8),
+                Text('(${widget.merchant.reviewCount} avis)'),
+              ],
+            ),
+          ],
+        ),
+        TextButton(
+          onPressed: () async {
+            final result = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    AddReviewScreen(merchantId: widget.merchant.id),
+              ),
+            );
+            if (result == true) {
+              // Rafraîchir les données si un avis a été ajouté
+              setState(() {});
+            }
+          },
+          child: const Text('Laisser un avis'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInfoCard({
+    required IconData icon,
+    required String title,
+    required String content,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: AppDimensions.paddingS),
       padding: const EdgeInsets.all(AppDimensions.paddingM),

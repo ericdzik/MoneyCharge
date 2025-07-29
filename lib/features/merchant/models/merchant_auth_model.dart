@@ -17,6 +17,7 @@ class MerchantAuthModel {
   final String? profileType;
   final Map<String, String>? serviceStockStatus; // Ajouté
   final List<String>? imageUrls;
+  final String? profileImageUrl;
   final bool isSuspended;
 
   MerchantAuthModel({
@@ -37,6 +38,7 @@ class MerchantAuthModel {
     this.profileType,
     this.serviceStockStatus, // Ajouté
     this.imageUrls,
+    this.profileImageUrl,
   });
 
   factory MerchantAuthModel.fromFirestore(
@@ -56,7 +58,7 @@ class MerchantAuthModel {
         // On pourrait la splitter par un délimiteur ou la mettre dans une liste d'un seul élément
         servicesList = [data['services'] as String];
       } else if (data['services'] is List) {
-        servicesList = List<String>.from(data['services'] as List);
+        servicesList = (data['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
       }
     }
 
@@ -87,7 +89,8 @@ class MerchantAuthModel {
       merchantType: data['merchantType'] as String? ?? 'boutique', // Ajouté avec défaut
       profileType: data['profileType'] as String?,
       serviceStockStatus: stockStatus, // Ajouté
-      imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      imageUrls: (data['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      profileImageUrl: data['profileImageUrl'] as String?,
     );
   }
 
@@ -111,6 +114,7 @@ class MerchantAuthModel {
       'profileType': profileType,
       'serviceStockStatus': serviceStockStatus, // Ajouté
       'imageUrls': imageUrls,
+      'profileImageUrl': profileImageUrl,
     };
   }
 
@@ -132,6 +136,7 @@ class MerchantAuthModel {
     String? profileType,
     Map<String, String>? serviceStockStatus, // Ajouté
     List<String>? imageUrls,
+    String? profileImageUrl,
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -151,6 +156,7 @@ class MerchantAuthModel {
       profileType: profileType ?? this.profileType,
       serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus,
       imageUrls: imageUrls ?? this.imageUrls,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
 }

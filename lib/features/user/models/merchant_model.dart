@@ -21,6 +21,8 @@ class Merchant {
   final String? merchantType; // Ajout du type de marchand
   final Map<String, String>? serviceStockStatus; // Ajout du statut du stock des services
   final List<String>? imageUrls;
+  final double averageRating;
+  final int reviewCount;
 
   // Nouveaux champs pour correspondre à MerchantAuthModel et aux besoins de l'admin
   final String? email;
@@ -56,6 +58,8 @@ class Merchant {
     this.distance = 0.0,
     this.walkingTime,
     this.drivingTime,
+    this.averageRating = 0.0,
+    this.reviewCount = 0,
   }) : clientCalculatedIsOpen = false, clientCalculatedStatus = MerchantStatus.available {
      _updateOpenStatusBasedOnHours();
   }
@@ -79,17 +83,19 @@ class Merchant {
       distance: (json['distance'] as num?)?.toDouble() ?? 0.0,
       walkingTime: json['walkingTime'] as String?,
       drivingTime: json['drivingTime'] as String?,
-      services: List<String>.from(json['services'] as List? ?? []),
+      services: (json['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       merchantType: json['merchantType'] as String?,
       serviceStockStatus: json['serviceStockStatus'] != null
           ? (json['serviceStockStatus'] as Map).map((key, value) => MapEntry(key.toString(), value.toString()))
           : null,
-      imageUrls: List<String>.from(json['imageUrls'] as List? ?? []),
+      imageUrls: (json['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       // Les champs comme email, isVerified, createdAt, lastLoginAt devraient aussi être lus ici si présents dans le JSON
       email: json['email'] as String?,
       isVerified: json['isVerified'] as bool?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) : null,
       lastLoginAt: json['lastLoginAt'] != null ? DateTime.tryParse(json['lastLoginAt'] as String) : null,
+      averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: json['reviewCount'] as int? ?? 0,
     );
     // Note: _updateOpenStatusBasedOnHours() est déjà appelé par le constructeur principal de Merchant
     // donc pas besoin de le rappeler ici si Merchant() est bien le constructeur utilisé.
@@ -139,13 +145,15 @@ class Merchant {
       profileType: data['profileType'] as String?,
       latitude: latitude,
       longitude: longitude,
-      services: List<String>.from(data['servicesOffered'] as List? ?? data['services'] as List? ?? []),
+      services: (data['servicesOffered'] as List<dynamic>? ?? data['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       merchantType: data['merchantType'] as String?,
       serviceStockStatus: serviceStockStatusMap,
-      imageUrls: List<String>.from(data['imageUrls'] as List? ?? []),
+      imageUrls: (data['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       isVerified: data['isVerified'] as bool?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
+      averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: data['reviewCount'] as int? ?? 0,
       // isOpen: false, // Sera calculé par _updateOpenStatusBasedOnHours via le constructeur
       // status: MerchantStatus.available, // Déjà géré par le constructeur principal
     );
@@ -185,6 +193,8 @@ class Merchant {
       'isVerified': isVerified,
       'createdAt': createdAt?.toIso8601String(),
       'lastLoginAt': lastLoginAt?.toIso8601String(),
+      'averageRating': averageRating,
+      'reviewCount': reviewCount,
     };
   }
 }

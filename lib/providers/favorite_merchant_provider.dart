@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../features/user/models/merchant_model.dart';
 
 class FavoriteMerchantProvider with ChangeNotifier {
   static const String _favoritesKey = 'favorite_merchant_ids';
   List<String> _favoriteMerchantIds = [];
+  List<Merchant> _favoriteMerchants = [];
   bool _isLoading = false;
 
   List<String> get favoriteMerchantIds => _favoriteMerchantIds;
+  List<Merchant> get favoriteMerchants => _favoriteMerchants;
   bool get isLoading => _isLoading;
 
   FavoriteMerchantProvider() {
@@ -42,6 +46,34 @@ class FavoriteMerchantProvider with ChangeNotifier {
 
   bool isFavorite(String merchantId) {
     return _favoriteMerchantIds.contains(merchantId);
+  }
+
+  Future<void> fetchFavoriteMerchants(String userId) async {
+    await loadFavorites();
+    if (_favoriteMerchantIds.isEmpty) {
+      _favoriteMerchants = [];
+      notifyListeners();
+      return;
+    }
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final merchantsSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: _favoriteMerchantIds)
+          .get();
+      _favoriteMerchants = merchantsSnapshot.docs
+          .map((doc) => Merchant.fromFirestoreUserDoc(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .toList();
+    } catch (e) {
+      print("Error in fetchFavoriteMerchants: $e");
+      _favoriteMerchants = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> _saveFavorites() async {

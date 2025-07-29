@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/merchant_card.dart';
 import '../../../providers/merchant_provider.dart';
-import '../widgets/filter_bar_widget.dart';
+import '../../../core/constants/app_colors.dart';
 import 'merchant_detail_screen.dart';
 import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
 import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
@@ -11,7 +12,8 @@ import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
 import '../../../core/constants/app_routes.dart'; // Ajout de l'import pour AppRoutes
 
 class ListViewScreen extends StatefulWidget {
-  const ListViewScreen({Key? key}) : super(key: key);
+  final GoogleMapController? mapController;
+  const ListViewScreen({Key? key, this.mapController}) : super(key: key);
 
   @override
   State<ListViewScreen> createState() => _ListViewScreenState();
@@ -29,56 +31,76 @@ class _ListViewScreenState extends State<ListViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(
+        title: 'Liste des services',
+        backgroundColor: AppColors.primary,
+        showLogo: false,
+      ),
       body: Stack(
         children: [
+          // Image de fond qui s'étend sous l'AppBar
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          Column(
-            children: [
-              const FilterBarWidget(),
-              Expanded(
-                child: Consumer<MerchantProvider>(
-                  builder: (context, merchantProvider, child) {
-                    if (merchantProvider.isLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+          // Contenu principal avec padding pour l'AppBar
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: Consumer<MerchantProvider>(
+                    builder: (context, merchantProvider, child) {
+                      if (merchantProvider.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                    if (merchantProvider.merchants.isEmpty) {
-                      return const Center(
-                        child: Text('Aucun point de service trouvé'),
-                      );
-                    }
+                      if (merchantProvider.merchants.isEmpty) {
+                        return const Center(
+                          child: Text('Aucun point de service trouvé'),
+                        );
+                      }
 
-                    return RefreshIndicator(
-                  onRefresh: () {
-                    merchantProvider.refreshMerchants();
-                    return Future.value();
-                  },
-                      child: ListView.builder(
-                        itemCount: merchantProvider.merchants.length,
-                        itemBuilder: (context, index) {
-                          final merchant = merchantProvider.merchants[index];
-                          return MerchantCard(
-                            merchant: merchant,
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.merchantDetail,
-                                arguments: {'merchant': merchant},
-                              );
-                            },
-                            onDirectionsPressed: () {
-                              _openDirections(merchant);
-                            },
-                          );
+                      return RefreshIndicator(
+                        onRefresh: () {
+                          merchantProvider.refreshMerchants();
+                          return Future.value();
                         },
-                      ),
-                    );
-                  },
+                        child: ListView.builder(
+                          itemCount: merchantProvider.merchants.length,
+                          itemBuilder: (context, index) {
+                            final merchant = merchantProvider.merchants[index];
+                            return MerchantCard(
+                              merchant: merchant,
+                              onTap: () {
+                                if (widget.mapController != null) {
+                                  widget.mapController!.animateCamera(
+                                    CameraUpdate.newLatLngZoom(
+                                      LatLng(
+                                        merchant.latitude,
+                                        merchant.longitude,
+                                      ),
+                                      16.0,
+                                    ),
+                                  );
+                                }
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.merchantDetail,
+                                  arguments: {'merchant': merchant},
+                                );
+                              },
+                              onDirectionsPressed: () {
+                                _openDirections(merchant);
+                              },
+                            );
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

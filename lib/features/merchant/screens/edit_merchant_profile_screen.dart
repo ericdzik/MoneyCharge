@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
@@ -44,6 +45,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
   List<String> _imageUrls = [];
+  XFile? _profileImageFile;
   bool _isUploading = false;
 
   @override
@@ -57,7 +59,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       _openingHours = widget.merchant.openingHours!;
     }
     if (widget.merchant.imageUrls != null) {
-      _imageUrls = List<String>.from(widget.merchant.imageUrls!);
+      _imageUrls = (widget.merchant.imageUrls as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
     }
     _otherServiceController = TextEditingController();
 
@@ -196,6 +198,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         services: finalServices,
         serviceStockStatus: finalServiceStockStatus,
         imageUrls: _imageUrls,
+        profileImageFile: _profileImageFile,
       );
 
       if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
@@ -288,6 +291,50 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     );
   }
 
+  Future<void> _pickAndUploadProfileImage() async {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galerie'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final pickedFile =
+                      await _picker.pickImage(source: ImageSource.gallery);
+                  if (pickedFile != null) {
+                    _uploadProfileImage(pickedFile);
+                  }
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera),
+                title: const Text('Appareil photo'),
+                onTap: () async {
+                  Navigator.of(context).pop();
+                  final pickedFile =
+                      await _picker.pickImage(source: ImageSource.camera);
+                  if (pickedFile != null) {
+                    _uploadProfileImage(pickedFile);
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _uploadProfileImage(XFile file) async {
+    setState(() {
+      _profileImageFile = file;
+    });
+  }
+
   Future<void> _pickAndUploadImages() async {
     setState(() {
       _isUploading = true;
@@ -334,6 +381,32 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundImage: _profileImageFile != null
+                          ? FileImage(File(_profileImageFile!.path))
+                          : (widget.merchant.profileImageUrl != null
+                              ? NetworkImage(widget.merchant.profileImageUrl!)
+                              : null) as ImageProvider?,
+                      child: _profileImageFile == null && widget.merchant.profileImageUrl == null
+                          ? const Icon(Icons.business, size: 60)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: IconButton(
+                        icon: const Icon(Icons.camera_alt),
+                        onPressed: _pickAndUploadProfileImage,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppDimensions.paddingXL),
               Text(
                 'Informations du Commerce',
                 style: AppTextStyles.h2.copyWith(fontSize: 20),

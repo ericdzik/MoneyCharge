@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 import '../features/user/models/merchant_model.dart';
+import '../features/user/models/review_model.dart';
 import 'cache_service.dart';
 import '../core/utils/error_handler.dart';
 
 class ApiService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String baseUrl = 'https://api.locacharge.com/v1';
   static const Duration _timeout = Duration(seconds: 30);
 
@@ -288,5 +291,27 @@ class ApiService {
       ErrorHandler.logError(e, context: 'getStats');
       rethrow;
     }
+  }
+
+  Future<void> addReview(String merchantId, Review review) async {
+    final merchantRef = _firestore.collection('users').doc(merchantId);
+    final reviewRef = merchantRef.collection('reviews').doc();
+
+    return _firestore.runTransaction((transaction) async {
+      final merchantSnapshot = await transaction.get(merchantRef);
+      if (!merchantSnapshot.exists) {
+        throw Exception("Le marchand n'existe pas !");
+      }
+
+      final newReviewCount = (merchantSnapshot.data()!['reviewCount'] ?? 0) + 1;
+      final oldRatingTotal = (merchantSnapshot.data()!['averageRating'] ?? 0.0) * (newReviewCount - 1);
+      final newAverageRating = (oldRatingTotal + review.rating) / newReviewCount;
+
+      transaction.set(reviewRef, review.toFirestore());
+      transaction.update(merchantRef, {
+        'averageRating': newAverageRating,
+        'reviewCount': newReviewCount,
+      });
+    });
   }
 }

@@ -138,7 +138,7 @@ class LocationProvider with ChangeNotifier {
       final directionsInfo = await _directionsService.getDirections(origin, destination);
 
       if (directionsInfo != null) {
-        List<PointLatLng> result = PolylinePoints().decodePolyline(directionsInfo['polyline_encoded']);
+        List<PointLatLng> result = PolylinePoints.decodePolyline(directionsInfo['polyline_encoded']);
         if (result.isNotEmpty) {
           _polylineCoordinates = result.map((point) => LatLng(point.latitude, point.longitude)).toList();
         }

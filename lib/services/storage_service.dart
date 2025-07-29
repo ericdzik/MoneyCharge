@@ -21,6 +21,20 @@ class StorageService {
     }
   }
 
+  Future<String?> uploadAdImage(XFile image) async {
+    try {
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${p.basename(image.path)}';
+      final Reference ref = _storage.ref().child('ads/$fileName');
+      final UploadTask uploadTask = ref.putFile(File(image.path));
+      final TaskSnapshot snapshot = await uploadTask;
+      return await snapshot.ref.getDownloadURL();
+    } catch (e) {
+      print("Erreur lors de l'upload de l'image de la publicité: $e");
+      return null;
+    }
+  }
+
   static const String _tokenKey = 'auth_token';
   static const String _userTypeKey = 'user_type';
   static const String _userDataKey = 'user_data';

@@ -9,12 +9,14 @@ class TransactionProvider with ChangeNotifier {
 
   BalanceModel? _balance;
   List<TransactionModel> _merchantTransactions = [];
+  List<TransactionModel> _userTransactions = [];
   bool _isLoadingTransactions = false;
   String? _transactionsError;
 
   // Getters
   BalanceModel? get balance => _balance;
   List<TransactionModel> get merchantTransactions => _merchantTransactions;
+  List<TransactionModel> get transactions => _userTransactions;
   bool get isLoadingTransactions => _isLoadingTransactions;
   String? get transactionsError => _transactionsError;
 
@@ -141,6 +143,32 @@ class TransactionProvider with ChangeNotifier {
       _isLoadingTransactions = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> fetchTransactions(String userId) async {
+    _isLoadingTransactions = true;
+    _transactionsError = null;
+    notifyListeners();
+
+    try {
+      final transactionsSnapshot = await _firestore
+          .collection('transactions')
+          .where('userId', isEqualTo: userId)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      _userTransactions = transactionsSnapshot.docs
+          .map((doc) => TransactionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .toList();
+
+    } catch (e) {
+      print("Error in fetchTransactions: $e");
+      _transactionsError = "Erreur lors de la récupération des transactions: ${e.toString()}";
+      _userTransactions = [];
+    } finally {
+      _isLoadingTransactions = false;
+      notifyListeners();
     }
   }
 

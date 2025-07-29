@@ -128,20 +128,24 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
-        title: 'Dashboard Administrateur',
+        title: 'Dashboard Admin',
+        backgroundColor: AppColors.primary,
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Rafraîchir les données',
+            icon: const Icon(Icons.refresh, color: AppColors.white),
+            tooltip: 'Rafraîchir',
             onPressed: _loadAllAdminData,
           ),
           IconButton(
-            icon: const Icon(Icons.notifications),
+            icon: const Icon(Icons.notifications, color: AppColors.white),
+            tooltip: 'Notifications',
             onPressed: _showNotifications,
           ),
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: const Icon(Icons.logout, color: AppColors.white),
+            tooltip: 'Déconnexion',
             onPressed: () => _handleLogout(context),
           ),
         ],
@@ -149,10 +153,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       ),
       body: Stack(
         children: [
+          // Image de fond qui s'étend sous l'AppBar
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          _buildBody(),
+          // Contenu principal avec padding pour l'AppBar
+          SafeArea(child: _buildBody()),
         ],
       ),
     );
@@ -195,7 +201,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 24),
           Text(
             'Statistiques de la plateforme',
-            style: AppTextStyles.h2.copyWith(fontSize: 20),
+            style: AppTextStyles.h2.copyWith(
+              fontSize: 20,
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           // Décommentons AdminStatsWidget
@@ -213,14 +223,22 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           const SizedBox(height: 32),
           Text(
             'Actions rapides',
-            style: AppTextStyles.h2.copyWith(fontSize: 20),
+            style: AppTextStyles.h2.copyWith(
+              fontSize: 20,
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           _buildQuickActions(),
           const SizedBox(height: 32),
           Text(
             'Gestion des marchands',
-            style: AppTextStyles.h2.copyWith(fontSize: 20),
+            style: AppTextStyles.h2.copyWith(
+              fontSize: 20,
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           // Décommentons MerchantTableWidget
@@ -400,26 +418,33 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               onTap: _showPendingVerifications,
             ),
             _buildActionCard(
-              title: 'Rapports',
-              subtitle: 'Générer des rapports',
-              icon: Icons.assessment,
-              color: Colors.blue,
-              onTap: _generateReports,
+              title: 'Publicités',
+              subtitle: 'Gérer les publicités',
+              icon: Icons.campaign,
+              color: Colors.purple,
+              onTap: () => Navigator.pushNamed(context, AppRoutes.adminAds),
             ),
-            _buildActionCard(
-              title: 'Utilisateurs',
-              subtitle: 'Gérer les utilisateurs',
-              icon: Icons.people,
-              color: AppColors.primary,
-              onTap: _manageUsers,
-            ),
-            _buildActionCard(
-              title: 'Support',
-              subtitle: 'Tickets support',
-              icon: Icons.support_agent,
-              color: Colors.green,
-              onTap: _showSupportTickets,
-            ),
+            // _buildActionCard(
+            //   title: 'Rapports',
+            //   subtitle: 'Générer des rapports',
+            //   icon: Icons.assessment,
+            //   color: Colors.blue,
+            //   onTap: _generateReports,
+            // ),
+            // _buildActionCard(
+            //   title: 'Utilisateurs',
+            //   subtitle: 'Gérer les utilisateurs',
+            //   icon: Icons.people,
+            //   color: AppColors.primary,
+            //   onTap: _manageUsers,
+            // ),
+            // _buildActionCard(
+            //   title: 'Support',
+            //   subtitle: 'Tickets support',
+            //   icon: Icons.support_agent,
+            //   color: Colors.green,
+            //   onTap: _showSupportTickets,
+            // ),
           ],
         );
       },
@@ -508,8 +533,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?'),
-        content: Text('Voulez-vous vraiment changer le statut de ${merchant.businessName} ?'),
+        title: Text(
+          '${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?',
+        ),
+        content: Text(
+          'Voulez-vous vraiment changer le statut de ${merchant.businessName} ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -518,8 +547,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-              await merchantProvider.updateMerchantVerification(merchant.id, newStatus);
+              final merchantProvider = Provider.of<MerchantProvider>(
+                context,
+                listen: false,
+              );
+              await merchantProvider.updateMerchantVerification(
+                merchant.id,
+                newStatus,
+              );
             },
             child: Text(newStatus ? 'Vérifier' : 'Confirmer'),
           ),
@@ -536,7 +571,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('$actionText le marchand ?'),
-        content: Text('Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?'),
+        content: Text(
+          'Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -545,13 +582,21 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
+              final merchantProvider = Provider.of<MerchantProvider>(
+                context,
+                listen: false,
+              );
               try {
-                await merchantProvider.updateMerchantSuspension(merchant.id, newStatus);
+                await merchantProvider.updateMerchantSuspension(
+                  merchant.id,
+                  newStatus,
+                );
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('${merchant.businessName} a été ${newStatus ? "suspendu" : "réactivé"}.'),
+                      content: Text(
+                        '${merchant.businessName} a été ${newStatus ? "suspendu" : "réactivé"}.',
+                      ),
                       backgroundColor: AppColors.success,
                     ),
                   );

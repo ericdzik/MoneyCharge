@@ -30,20 +30,19 @@ class AdminStatsWidget extends StatelessWidget {
     if (isSmallScreen) {
       // Small screens (most phones portrait)
       crossAxisCount = 1;
-      childAspectRatio =
-          5.0; // Keep it tall for now, can be adjusted if overflow is fixed
+      childAspectRatio = 3.5; // Augmenté pour éviter le débordement
     } else if (screenWidth < 900) {
       // Medium screens
       crossAxisCount = 2;
-      childAspectRatio = 1.3;
+      childAspectRatio = 2.0; // Augmenté pour plus d'espace
     } else if (screenWidth < 1200) {
       // Large screens
       crossAxisCount = 3;
-      childAspectRatio = 1.4;
+      childAspectRatio = 2.2; // Augmenté pour plus d'espace
     } else {
       // Extra large screens
       crossAxisCount = 4;
-      childAspectRatio = 1.5;
+      childAspectRatio = 2.5; // Augmenté pour plus d'espace
     }
 
     return GridView.count(
@@ -115,10 +114,10 @@ class AdminStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -129,26 +128,28 @@ class AdminStatsWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
+          // Header avec icône et titre
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 5 : 7),
+                padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18),
+                child: Icon(icon, color: color, size: isSmallScreen ? 18 : 22),
               ),
-              Flexible(
+              Expanded(
                 child: Text(
                   title,
                   textAlign: TextAlign.right,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: isSmallScreen ? 9 : 11,
+                    fontSize: isSmallScreen ? 13 : 15,
+                    fontWeight: FontWeight.w600,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -156,36 +157,35 @@ class AdminStatsWidget extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
+
+          // Valeur principale
+          Expanded(
+            child: Center(
               child: Text(
                 value,
                 style: AppTextStyles.h2.copyWith(
-                  fontSize: isSmallScreen ? 14 : 18,
+                  fontSize: isSmallScreen ? 20 : 26,
                   fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
                 maxLines: 1,
                 textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
-          const SizedBox(height: 2),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                subtitle,
-                style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
-                  fontSize: isSmallScreen ? 9 : 10,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-              ),
+
+          // Sous-titre
+          Text(
+            subtitle,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: isSmallScreen ? 11 : 13,
+              fontWeight: FontWeight.w500,
             ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            textAlign: TextAlign.center,
           ),
         ],
       ),

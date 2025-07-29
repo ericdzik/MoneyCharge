@@ -66,7 +66,7 @@ class AdminModel {
       isActive: data['isActive'] as bool? ?? true,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
-      permissions: List<String>.from(data['permissions'] as List? ?? []),
+      permissions: (data['permissions'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 

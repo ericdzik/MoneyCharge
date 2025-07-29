@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+import 'package:locacharge/features/user/widgets/ad_carousel_widget.dart';
+import 'package:locacharge/features/user/widgets/category_list_widget.dart';
+import 'package:locacharge/features/user/widgets/filter_widget.dart';
+import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_app_bar.dart';
@@ -8,11 +15,11 @@ import '../../../core/constants/app_routes.dart';
 import '../../../core/constants/app_text_styles.dart';
 // import '../../../core/utils/color_utils.dart'; // Retiré car non utilisé après suppression de blackWithAlpha
 import '../widgets/map_widget.dart';
-import '../widgets/filter_bar_widget.dart';
 import 'list_view_screen.dart';
 import 'user_profile_screen.dart';
 import '../../../providers/merchant_provider.dart';
 import '../../../providers/location_provider.dart';
+import '../../../providers/ad_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -23,73 +30,80 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  bool _isFilterBarVisible = false;
-
-  void _toggleFilterBar() {
-    setState(() {
-      _isFilterBarVisible = !_isFilterBarVisible;
-    });
-  }
-
-  late final List<Widget> _screens;
-
-  @override
-  void initState() {
-    super.initState();
-    _screens = [
-      MapViewContent(
-        isFilterBarVisible: _isFilterBarVisible,
-        onToggleFilterBar: _toggleFilterBar,
-      ),
-      const ListViewScreen(),
-      const FavoritesScreen(), // Remplacer le placeholder par FavoritesScreen
-      const UserProfileScreen(),
-    ];
-  }
+  GoogleMapController? _mapController;
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
     // Rebuild _screens list if the visibility state changes
     final List<Widget> currentScreens = [
       MapViewContent(
-        isFilterBarVisible: _isFilterBarVisible,
-        onToggleFilterBar: _toggleFilterBar,
+        onMapCreated: (controller) {
+          _mapController = controller;
+        },
       ),
-      const ListViewScreen(),
+      ListViewScreen(mapController: _mapController),
       const FavoritesScreen(),
-      const UserProfileScreen(),
+      authProvider.userType == UserType.merchant
+          ? const MerchantProfileScreen()
+          : const UserProfileScreen(),
     ];
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Geo Money&Charge',
         backgroundColor: AppColors.primary,
         actions: [
-          // Affiche l'icône de filtre uniquement sur l'onglet Carte (index 0)
-          if (_currentIndex == 0)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: _toggleFilterBar,
-              tooltip: 'Afficher/Masquer les filtres',
-            ),
           Padding(
             padding: const EdgeInsets.only(right: AppDimensions.paddingS),
-            child: CircleAvatar(
-              backgroundColor: AppColors.onPrimary,
-              child: Icon(
-                Icons.person,
-                color: AppColors.primary,
-              ),
+            child: Consumer<AuthProvider>(
+              builder: (context, authProvider, child) {
+                final user = authProvider.appUserProfile;
+                return CircleAvatar(
+                  backgroundColor: AppColors.onPrimary,
+                  backgroundImage: user?.profileImageUrl != null
+                      ? NetworkImage(user!.profileImageUrl!)
+                      : null,
+                  child: user?.profileImageUrl == null
+                      ? Icon(Icons.person, color: AppColors.primary)
+                      : null,
+                );
+              },
             ),
           ),
         ],
       ),
       body: Stack(
         children: [
+          // Image de fond qui s'étend sous l'AppBar
           Positioned.fill(
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
-          currentScreens[_currentIndex],
+          // Contenu principal avec padding pour l'AppBar
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppDimensions.paddingS),
+              child: Column(
+                children: [
+                  if (_currentIndex == 0) const SearchBarWidget(),
+                  if (_currentIndex == 0) const FilterWidget(),
+                  Expanded(
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                      ),
+                      child: currentScreens[_currentIndex],
+                    ),
+                  ),
+                  if (_currentIndex == 0) const AdCarouselWidget(),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -109,14 +123,9 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class MapViewContent extends StatefulWidget {
-  final bool isFilterBarVisible;
-  final VoidCallback onToggleFilterBar;
+  final Function(GoogleMapController)? onMapCreated;
 
-  const MapViewContent({
-    Key? key,
-    required this.isFilterBarVisible,
-    required this.onToggleFilterBar,
-  }) : super(key: key);
+  const MapViewContent({Key? key, this.onMapCreated}) : super(key: key);
 
   @override
   State<MapViewContent> createState() => _MapViewContentState();
@@ -128,8 +137,12 @@ class _MapViewContentState extends State<MapViewContent> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        Provider.of<MerchantProvider>(context, listen: false).listenToMerchants();
+        Provider.of<MerchantProvider>(
+          context,
+          listen: false,
+        ).listenToMerchants();
         Provider.of<LocationProvider>(context, listen: false).initialize();
+        Provider.of<AdProvider>(context, listen: false).fetchAds();
       }
     });
   }
@@ -140,13 +153,6 @@ class _MapViewContentState extends State<MapViewContent> {
       builder: (context, merchantProvider, child) {
         return Column(
           children: [
-            AnimatedSize(
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-              child: widget.isFilterBarVisible
-                  ? const FilterBarWidget()
-                  : const SizedBox.shrink(),
-            ),
             Expanded(
               child: Stack(
                 children: [
@@ -186,6 +192,7 @@ class _MapViewContentState extends State<MapViewContent> {
                       },
                       showUserLocation: true,
                       initialZoom: 13.0,
+                      onMapCreated: widget.onMapCreated,
                     ),
                   if (!merchantProvider.isLoading &&
                       merchantProvider.error == null &&

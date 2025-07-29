@@ -26,7 +26,10 @@ class MerchantProvider with ChangeNotifier {
   List<String> _activeServiceFilters = [];
   String? _activeStockServiceFilter;
   bool _onlyShowAvailableStockForService = false;
+  String? _activeStockStatusFilter;
   String _searchQuery = '';
+  String? _selectedCategory;
+  bool _filterOpen = false;
 
   // Getters publics
   List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
@@ -46,7 +49,15 @@ class MerchantProvider with ChangeNotifier {
   List<String> get activeServiceFilters => List.unmodifiable(_activeServiceFilters);
   String? get activeStockServiceFilter => _activeStockServiceFilter;
   bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
+  String? get activeStockStatusFilter => _activeStockStatusFilter;
   String get searchQuery => _searchQuery;
+  String? get selectedCategory => _selectedCategory;
+  bool get filterOpen => _filterOpen;
+
+  List<String> get uniqueServiceCategories {
+    final allServices = _allLoadedMerchants.expand((merchant) => merchant.services).toSet();
+    return allServices.toList();
+  }
 
   void listenToMerchants() {
     _setLoading(true);
@@ -150,12 +161,41 @@ class MerchantProvider with ChangeNotifier {
           m.serviceStockStatus![_activeStockServiceFilter!]?.toLowerCase() == 'disponible');
     }
 
+    if (_activeStockStatusFilter != null && _activeStockStatusFilter!.isNotEmpty) {
+      tempList.retainWhere((m) {
+        if (m.serviceStockStatus == null) return false;
+        // Check if any of the services has the desired stock status
+        return m.serviceStockStatus!.values.any((status) => status.toLowerCase() == _activeStockStatusFilter!.toLowerCase());
+      });
+    }
+
     if (_searchQuery.isNotEmpty) {
       tempList.retainWhere((m) =>
           m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           (m.address.toLowerCase().contains(_searchQuery.toLowerCase())));
     }
+
+    if (_selectedCategory != null) {
+      tempList.retainWhere((m) => m.services.contains(_selectedCategory));
+    }
+
+    if (_filterOpen) {
+      tempList.retainWhere((m) => m.isOpen);
+    }
+
     _filteredMerchants = tempList;
+  }
+
+  void filterByCategory(String? category) {
+    _selectedCategory = category;
+    _applyInternalFilters();
+    notifyListeners();
+  }
+
+  void toggleFilterOpen() {
+    _filterOpen = !_filterOpen;
+    _applyInternalFilters();
+    notifyListeners();
   }
 
   void applyFilters({ // This applies to user-facing filters for the List<Merchant>
@@ -163,6 +203,7 @@ class MerchantProvider with ChangeNotifier {
     List<String>? services,
     String? stockService,
     bool? onlyAvailableStock,
+    String? stockStatus,
     String? searchQuery,
     bool clearAll = false,
     bool clearServiceAndStockFilters = false,
@@ -170,6 +211,7 @@ class MerchantProvider with ChangeNotifier {
     bool servicesIsSet = false,
     bool stockServiceIsSet = false,
     bool onlyAvailableStockIsSet = false,
+    bool stockStatusIsSet = false,
     bool searchQueryIsSet = false,
   }) {
     if (clearAll) {
@@ -177,11 +219,13 @@ class MerchantProvider with ChangeNotifier {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
+      _activeStockStatusFilter = null;
       _searchQuery = '';
     } else if (clearServiceAndStockFilters) {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
       _onlyShowAvailableStockForService = false;
+      _activeStockStatusFilter = null;
     } else {
       if (merchantTypeIsSet) {
         _activeMerchantTypeFilter = merchantType;
@@ -209,6 +253,10 @@ class MerchantProvider with ChangeNotifier {
         _searchQuery = searchQuery;
       } else if (searchQueryIsSet && searchQuery == null) {
         _searchQuery = '';
+      }
+
+      if (stockStatusIsSet) {
+        _activeStockStatusFilter = stockStatus;
       }
     }
 

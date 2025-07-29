@@ -10,6 +10,7 @@ import 'providers/location_provider.dart';
 import 'providers/merchant_provider.dart';
 import 'providers/transaction_provider.dart';
 import 'providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
+import 'providers/ad_provider.dart';
 
 // Import des écrans utilisateur
 import 'features/user/screens/home_screen.dart';
@@ -30,10 +31,18 @@ import 'features/user/screens/splash_screen.dart';
 import 'features/merchant/screens/merchant_register_screen.dart';
 import 'features/merchant/screens/merchant_dashboard_screen.dart';
 import 'features/merchant/screens/balance_management_screen.dart';
+import 'features/merchant/screens/edit_merchant_profile_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
 import 'features/admin/screens/pending_verifications_screen.dart';
+import 'features/admin/screens/ad_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+import 'package:locacharge/features/user/screens/notifications_screen.dart';
+import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
+import 'package:locacharge/features/user/screens/privacy_screen.dart';
+import 'package:locacharge/features/user/screens/about_screen.dart';
+import 'package:locacharge/providers/theme_provider.dart';
 import 'features/merchant/models/merchant_auth_model.dart';
 
 class LocaChargeApp extends StatelessWidget {
@@ -41,6 +50,7 @@ class LocaChargeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -50,10 +60,13 @@ class LocaChargeApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => FavoriteMerchantProvider(),
         ), // Ajout ici
+        ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
       child: MaterialApp(
         title: 'Geo Money&Charge',
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeProvider.themeMode,
         debugShowCheckedModeBanner: false,
         initialRoute: '/',
         onGenerateRoute: _generateRoute,
@@ -159,6 +172,35 @@ class LocaChargeApp extends StatelessWidget {
           ),
         );
 
+      case AppRoutes.editMerchantProfile:
+        final merchant = settings.arguments as MerchantAuthModel;
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            EditMerchantProfileScreen(merchant: merchant),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.merchantProfile:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const MerchantProfileScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.notifications:
+        return MaterialPageRoute(builder: (_) => const NotificationsScreen());
+
+      case AppRoutes.help:
+        return MaterialPageRoute(builder: (_) => const HelpAndSupportScreen());
+
+      case AppRoutes.privacy:
+        return MaterialPageRoute(builder: (_) => const PrivacyScreen());
+
+      case AppRoutes.about:
+        return MaterialPageRoute(builder: (_) => const AboutScreen());
+
       // Routes admin
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
@@ -177,6 +219,12 @@ class LocaChargeApp extends StatelessWidget {
             PendingVerificationsScreen(pendingMerchants: pendingMerchants),
             UserType.admin,
           ),
+        );
+
+      case AppRoutes.adminAds:
+        return MaterialPageRoute(
+          builder: (_) =>
+              RouteGuards.requireUserType(const AdScreen(), UserType.admin),
         );
 
       default:

@@ -13,6 +13,7 @@ class MapWidget extends StatefulWidget {
   final bool showUserLocation;
   final double initialZoom;
   final LatLng? initialPosition;
+  final Function(GoogleMapController)? onMapCreated;
 
   const MapWidget({
     super.key,
@@ -21,6 +22,7 @@ class MapWidget extends StatefulWidget {
     this.showUserLocation = true,
     this.initialZoom = 12.0,
     this.initialPosition,
+    this.onMapCreated,
   });
 
   @override
@@ -152,6 +154,7 @@ class _MapWidgetState extends State<MapWidget> {
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
+    widget.onMapCreated?.call(controller);
 
     // Centrer la carte sur la position initiale ou la position actuelle
     if (widget.initialPosition != null) {
