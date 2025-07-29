@@ -4,34 +4,14 @@ import '../../providers/auth_provider.dart';
 import '../constants/app_routes.dart';
 
 class RouteGuards {
-  // Vérifier si l'utilisateur est authentifié
-  static bool isAuthenticated(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.isAuthenticated;
+  static bool _isAuthenticated(BuildContext context) {
+    return Provider.of<AuthProvider>(context, listen: false).isAuthenticated;
   }
 
-  // Vérifier si l'utilisateur est un marchand
-  static bool isMerchant(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.isAuthenticated &&
-        authProvider.userType == UserType.merchant;
+  static UserType _getUserType(BuildContext context) {
+    return Provider.of<AuthProvider>(context, listen: false).userType;
   }
 
-  // Vérifier si l'utilisateur est un admin
-  static bool isAdmin(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.isAuthenticated &&
-        authProvider.userType == UserType.admin;
-  }
-
-  // Vérifier si l'utilisateur est un utilisateur normal
-  static bool isUser(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    return authProvider.isAuthenticated &&
-        authProvider.userType == UserType.user;
-  }
-
-  // Rediriger selon le type d'utilisateur
   static String getDefaultRouteForUserType(UserType? userType) {
     switch (userType) {
       case UserType.merchant:
@@ -44,72 +24,49 @@ class RouteGuards {
     }
   }
 
-  // Vérifier les permissions pour une route
-  static bool hasPermissionForRoute(BuildContext context, String route) {
-    if (route.startsWith('/merchant/')) {
-      return isMerchant(context);
-    } else if (route.startsWith('/admin/')) {
-      return isAdmin(context);
-    } else if (route.startsWith('/user/')) {
-      return isUser(context);
-    }
-    return true; // Routes publiques
-  }
-
-  // Middleware pour vérifier l'authentification
-  static Widget requireAuth(Widget child, {String? redirectTo}) {
+  static Widget requireUserType(Widget child, UserType requiredType) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, _) {
         if (!authProvider.isAuthenticated) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(
-              context,
-              redirectTo ?? AppRoutes.login,
-            );
-          });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-        return child;
-      },
-    );
-  }
-
-  // Middleware pour vérifier le type d'utilisateur
-  static Widget requireUserType(
-    Widget child,
-    UserType requiredType, {
-    String? redirectTo,
-  }) {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, _) {
-        if (!authProvider.isAuthenticated) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(
-              context,
-              redirectTo ?? AppRoutes.login,
-            );
-          });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+          return _Redirect(
+            routeName: AppRoutes.login,
           );
         }
 
         if (authProvider.userType != requiredType) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(
-              context,
-              redirectTo ?? getDefaultRouteForUserType(authProvider.userType),
-            );
-          });
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+          return _Redirect(
+            routeName: getDefaultRouteForUserType(authProvider.userType),
           );
         }
 
         return child;
       },
+    );
+  }
+}
+
+class _Redirect extends StatefulWidget {
+  final String routeName;
+
+  const _Redirect({Key? key, required this.routeName}) : super(key: key);
+
+  @override
+  State<_Redirect> createState() => _RedirectState();
+}
+
+class _RedirectState extends State<_Redirect> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.of(context).pushReplacementNamed(widget.routeName);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }
