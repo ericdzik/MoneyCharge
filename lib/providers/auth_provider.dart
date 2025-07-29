@@ -274,12 +274,21 @@ class AuthProvider with ChangeNotifier {
           "[AuthProvider] Erreur: UID null après création du compte Firebase Auth",
         );
       }
+    } on fb_auth.FirebaseAuthException catch (e) {
+      print("[AuthProvider] Erreur Firebase Auth lors de l'inscription marchand: ${e.code}");
+      if (e.code == 'weak-password') {
+        _error = 'Le mot de passe est trop faible.';
+      } else if (e.code == 'email-already-in-use') {
+        _error = 'Cette adresse e-mail est déjà utilisée.';
+      } else {
+        _error = 'Erreur d\'inscription: ${e.message}';
+      }
     } catch (e) {
-      _error = e.toString();
-      print("[AuthProvider] Erreur lors de l'inscription marchand: $e");
+      _error = "Une erreur inconnue est survenue: ${e.toString()}";
+      print("[AuthProvider] Erreur générique lors de l'inscription marchand: $e");
     } finally {
       _setLoading(false);
-      print("[AuthProvider] Fin de l'inscription marchand");
+      print("[AuthProvider] Fin de l'inscription marchand. Erreur: $_error");
     }
   }
 
