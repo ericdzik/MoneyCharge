@@ -30,66 +30,15 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     super.dispose();
   }
 
-  Future<void> _handleLogin() async {
+  void _handleLogin() {
     if (!_formKey.currentState!.validate()) {
       return;
     }
-
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    print('-----------------------------------------------------');
-    print(
-      '[UnifiedLoginScreen._handleLogin] Attempting login for ${_emailController.text}',
+    authProvider.loginUnified(
+      _emailController.text,
+      _passwordController.text,
     );
-
-    try {
-      print(
-        '[UnifiedLoginScreen._handleLogin] Calling await authProvider.loginUnified...',
-      );
-      final success = await authProvider.loginUnified(
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      if (success) {
-        final userType = authProvider.userType;
-        final defaultRoute = RouteGuards.getDefaultRouteForUserType(userType);
-        Navigator.pushReplacementNamed(context, defaultRoute);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Connexion réussie en tant que ${_getRoleDisplayName(userType)}'),
-            backgroundColor: AppColors.success,
-          ),
-        );
-      } else {
-        print(
-          '[UnifiedLoginScreen._handleLogin] User IS NOT Authenticated. Error: ${authProvider.error}',
-        );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.error ?? 'Email ou mot de passe incorrect.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } catch (e) {
-      print(
-        '[UnifiedLoginScreen._handleLogin] Caught exception during _handleLogin: ${e.toString()}',
-      );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            authProvider.error ?? "Erreur inattendue: ${e.toString()}",
-          ),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
-    print('-----------------------------------------------------');
   }
 
   String _getRoleDisplayName(UserType? userType) {

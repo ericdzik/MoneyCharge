@@ -12,29 +12,43 @@ class AuthWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<AuthProvider>(
       builder: (context, authProvider, child) {
+        // Affiche un écran de chargement global si l'authentification est en cours.
         if (authProvider.isLoading) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
+        // Si l'utilisateur est authentifié, le rediriger.
         if (authProvider.isAuthenticated) {
-          final userType = authProvider.userType;
-          String route = RouteGuards.getDefaultRouteForUserType(userType);
-
-          // Using WidgetsBinding.instance.addPostFrameCallback to avoid errors
-          // related to navigation during a build.
+          // Utilise addPostFrameCallback pour éviter les erreurs de build.
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pushReplacementNamed(context, route);
+            final userType = authProvider.userType;
+            final route = RouteGuards.getDefaultRouteForUserType(userType);
+            // pushAndRemoveUntil est plus robuste pour vider la pile de navigation.
+            Navigator.of(context).pushNamedAndRemoveUntil(route, (Route<dynamic> route) => false);
           });
-
-          // Return a placeholder while navigation is happening
+          // Affiche un écran de chargement pendant la redirection.
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
-        } else {
-          return const UnifiedLoginScreen();
         }
+
+        // Sinon, afficher l'écran de connexion.
+        // Si une erreur est survenue lors de la dernière tentative, l'afficher.
+        if (authProvider.error != null && !authProvider.isLoading) {
+          // Utilise addPostFrameCallback pour afficher la SnackBar après le build.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(authProvider.error!),
+                backgroundColor: Colors.red,
+              ),
+            );
+            // Effacer l'erreur pour ne pas l'afficher à nouveau.
+            authProvider.clearError();
+          });
+        }
+
+        return const UnifiedLoginScreen();
       },
     );
   }
