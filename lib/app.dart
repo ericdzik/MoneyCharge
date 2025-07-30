@@ -14,6 +14,7 @@ import 'providers/ad_provider.dart';
 import 'providers/theme_provider.dart';
 
 import 'features/user/screens/screens.dart';
+import 'features/user/screens/unified_login_screen.dart';
 import 'features/merchant/screens/screens.dart';
 import 'features/admin/screens/screens.dart';
 import 'features/merchant/models/merchant_auth_model.dart';

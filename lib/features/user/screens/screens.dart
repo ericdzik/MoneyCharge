@@ -2,7 +2,7 @@ export 'home_screen.dart';
 export 'list_view_screen.dart';
 export 'map_view_screen.dart' hide Container;
 export 'merchant_detail_screen.dart';
-export 'user_login_screen.dart';
+export 'unified_login_screen.dart';
 export 'user_register_screen.dart';
 export 'forgot_password_screen.dart';
 export 'user_profile_screen.dart';
