@@ -30,6 +30,8 @@ class MerchantProvider with ChangeNotifier {
   String _searchQuery = '';
   String? _selectedCategory;
   bool _filterOpen = false;
+  List<String> _activeOperatorFilters = [];
+  List<String> _activeMoneyTransferFilters = [];
 
   // Getters publics
   List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
@@ -53,6 +55,8 @@ class MerchantProvider with ChangeNotifier {
   String get searchQuery => _searchQuery;
   String? get selectedCategory => _selectedCategory;
   bool get filterOpen => _filterOpen;
+  List<String> get activeOperatorFilters => List.unmodifiable(_activeOperatorFilters);
+  List<String> get activeMoneyTransferFilters => List.unmodifiable(_activeMoneyTransferFilters);
 
   List<String> get uniqueServiceCategories {
     final allServices = _allLoadedMerchants.expand((merchant) => merchant.services).toSet();
@@ -183,6 +187,16 @@ class MerchantProvider with ChangeNotifier {
       tempList.retainWhere((m) => m.isOpen);
     }
 
+    if (_activeOperatorFilters.isNotEmpty) {
+      tempList.retainWhere((m) =>
+          _activeOperatorFilters.any((filter) => m.supportedOperators.contains(filter)));
+    }
+
+    if (_activeMoneyTransferFilters.isNotEmpty) {
+      tempList.retainWhere((m) =>
+          _activeMoneyTransferFilters.any((filter) => m.moneyTransferTypes.contains(filter)));
+    }
+
     _filteredMerchants = tempList;
   }
 
@@ -205,6 +219,8 @@ class MerchantProvider with ChangeNotifier {
     bool? onlyAvailableStock,
     String? stockStatus,
     String? searchQuery,
+    List<String>? operators,
+    List<String>? moneyTransferTypes,
     bool clearAll = false,
     bool clearServiceAndStockFilters = false,
     bool merchantTypeIsSet = false,
@@ -213,6 +229,8 @@ class MerchantProvider with ChangeNotifier {
     bool onlyAvailableStockIsSet = false,
     bool stockStatusIsSet = false,
     bool searchQueryIsSet = false,
+    bool operatorsIsSet = false,
+    bool moneyTransferTypesIsSet = false,
   }) {
     if (clearAll) {
       _activeMerchantTypeFilter = null;
@@ -221,6 +239,8 @@ class MerchantProvider with ChangeNotifier {
       _onlyShowAvailableStockForService = false;
       _activeStockStatusFilter = null;
       _searchQuery = '';
+      _activeOperatorFilters = [];
+      _activeMoneyTransferFilters = [];
     } else if (clearServiceAndStockFilters) {
       _activeServiceFilters = [];
       _activeStockServiceFilter = null;
@@ -257,6 +277,14 @@ class MerchantProvider with ChangeNotifier {
 
       if (stockStatusIsSet) {
         _activeStockStatusFilter = stockStatus;
+      }
+
+      if (operatorsIsSet) {
+        _activeOperatorFilters = operators ?? [];
+      }
+
+      if (moneyTransferTypesIsSet) {
+        _activeMoneyTransferFilters = moneyTransferTypes ?? [];
       }
     }
 

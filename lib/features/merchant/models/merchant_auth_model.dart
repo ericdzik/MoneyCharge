@@ -8,6 +8,8 @@ class MerchantAuthModel {
   final String address;
   final Map<String, dynamic>? openingHours;
   final List<String>? services; // Modifié
+  final List<String>? supportedOperators;
+  final List<String>? moneyTransferTypes;
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
@@ -28,6 +30,8 @@ class MerchantAuthModel {
     required this.address,
     this.openingHours,
     this.services, // Modifié
+    this.supportedOperators,
+    this.moneyTransferTypes,
     this.isVerified = false,
     this.isSuspended = false,
     required this.createdAt,
@@ -80,6 +84,8 @@ class MerchantAuthModel {
       address: data['address'] as String? ?? '',
       openingHours: openingHoursData,
       services: servicesList, // Modifié
+      supportedOperators: (data['supportedOperators'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
+      moneyTransferTypes: (data['moneyTransferTypes'] as List<dynamic>?)?.map((e) => e.toString()).toList(),
       isVerified: data['isVerified'] as bool? ?? false,
       isSuspended: data['isSuspended'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
@@ -104,6 +110,8 @@ class MerchantAuthModel {
       'address': address,
       'openingHours': openingHours,
       'services': services, // Sera une liste
+      'supportedOperators': supportedOperators,
+      'moneyTransferTypes': moneyTransferTypes,
       'isVerified': isVerified,
       'isSuspended': isSuspended,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -126,6 +134,8 @@ class MerchantAuthModel {
     String? address,
     Map<String, dynamic>? openingHours,
     List<String>? services, // Modifié
+    List<String>? supportedOperators,
+    List<String>? moneyTransferTypes,
     bool? isVerified,
     bool? isSuspended,
     DateTime? createdAt,
@@ -146,6 +156,8 @@ class MerchantAuthModel {
       address: address ?? this.address,
       openingHours: openingHours ?? this.openingHours,
       services: services ?? this.services,
+      supportedOperators: supportedOperators ?? this.supportedOperators,
+      moneyTransferTypes: moneyTransferTypes ?? this.moneyTransferTypes,
       isVerified: isVerified ?? this.isVerified,
       isSuspended: isSuspended ?? this.isSuspended,
       createdAt: createdAt ?? this.createdAt,

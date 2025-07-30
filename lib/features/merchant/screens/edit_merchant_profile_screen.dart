@@ -41,6 +41,12 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   final List<String> _stockStatusOptions = ['Disponible', 'Faible', 'Épuisé'];
   Map<String, String> _serviceStockStatus = {};
 
+  // Nouveaux champs pour les opérateurs et types de transfert
+  final List<String> _allOperators = ['Orange', 'MTN', 'Moov'];
+  final List<String> _allMoneyTransferTypes = ['T-Money', 'Flooz', 'Western Union'];
+  List<String> _selectedOperators = [];
+  List<String> _selectedMoneyTransferTypes = [];
+
   // Gestion des images
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
@@ -108,6 +114,10 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     });
     // S'assurer que tous les services sélectionnés ont une entrée de stock
     _updateStockStatusMapWithSelectedServices();
+
+    // Initialiser les opérateurs et types de transfert sélectionnés
+    _selectedOperators = List<String>.from(widget.merchant.supportedOperators ?? []);
+    _selectedMoneyTransferTypes = List<String>.from(widget.merchant.moneyTransferTypes ?? []);
   }
 
   void _updateStockStatusMapWithSelectedServices() {
@@ -199,6 +209,8 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         serviceStockStatus: finalServiceStockStatus,
         imageUrls: _imageUrls,
         imageFile: _profileImageFile,
+        supportedOperators: _selectedOperators,
+        moneyTransferTypes: _selectedMoneyTransferTypes,
       );
 
       if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
@@ -525,6 +537,58 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
                   ),
                 ),
               const SizedBox(height: AppDimensions.paddingL),
+
+              // Section Opérateurs Supportés
+              Text('Opérateurs Supportés', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+              const SizedBox(height: AppDimensions.paddingS),
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: _allOperators.map((operator) {
+                  return FilterChip(
+                    label: Text(operator),
+                    selected: _selectedOperators.contains(operator),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedOperators.add(operator);
+                        } else {
+                          _selectedOperators.remove(operator);
+                        }
+                      });
+                    },
+                    selectedColor: AppColors.primary,
+                    checkmarkColor: Colors.white,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppDimensions.paddingXL),
+
+              // Section Types de Transfert d'Argent
+              Text('Types de Transfert d\'Argent', style: AppTextStyles.h2.copyWith(fontSize: 20)),
+              const SizedBox(height: AppDimensions.paddingS),
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                children: _allMoneyTransferTypes.map((type) {
+                  return FilterChip(
+                    label: Text(type),
+                    selected: _selectedMoneyTransferTypes.contains(type),
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _selectedMoneyTransferTypes.add(type);
+                        } else {
+                          _selectedMoneyTransferTypes.remove(type);
+                        }
+                      });
+                    },
+                    selectedColor: AppColors.primary,
+                    checkmarkColor: Colors.white,
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: AppDimensions.paddingXL),
 
               // Section Stock des Services
               if (_selectedServices.containsValue(true)) // Afficher seulement si au moins un service est sélectionné

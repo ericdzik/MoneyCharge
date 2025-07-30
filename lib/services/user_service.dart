@@ -39,6 +39,8 @@ class UserService {
     required double? longitude,
     required String merchantType,
     required String profileType,
+    required List<String> supportedOperators,
+    required List<String> moneyTransferTypes,
   }) async {
     try {
       final userCredential = await fb_auth.FirebaseAuth.instance
@@ -64,6 +66,8 @@ class UserService {
           'lastLoginAt': FieldValue.serverTimestamp(),
           'latitude': latitude,
           'longitude': longitude,
+          'supportedOperators': supportedOperators,
+          'moneyTransferTypes': moneyTransferTypes,
         });
       } else {
         throw Exception("Erreur lors de la création du compte marchand.");

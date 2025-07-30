@@ -238,89 +238,22 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                         const SizedBox(height: AppDimensions.paddingM),
                         widget.merchant.services.isEmpty
                             ? const Text('Aucun service disponible.')
-                            : LayoutBuilder(
-                                builder: (context, constraints) {
-                                  // Si l'écran est trop petit, afficher les services en colonne
-                                  if (constraints.maxWidth < 350) {
-                                    return Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: widget.merchant.services.map((
-                                        service,
-                                      ) {
-                                        return Container(
-                                          key: ValueKey(service),
-                                          width: double.infinity,
-                                          margin: const EdgeInsets.only(
-                                            bottom: AppDimensions.paddingS,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppDimensions.paddingM,
-                                            vertical: AppDimensions.paddingS,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.background,
-                                            borderRadius: BorderRadius.circular(
-                                              AppDimensions.radiusS,
-                                            ),
-                                            border: Border.all(
-                                              color: AppColors.border,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            service,
-                                            style: AppTextStyles.body2,
-                                            textAlign: TextAlign.center,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
-                                      }).toList(),
-                                    );
-                                  } else {
-                                    // Disposition Wrap pour les écrans plus larges
-                                    return Wrap(
-                                      spacing: AppDimensions.paddingS,
-                                      runSpacing: AppDimensions.paddingS,
-                                      children: widget.merchant.services.map((
-                                        service,
-                                      ) {
-                                        return ConstrainedBox(
-                                          constraints: BoxConstraints(
-                                            maxWidth:
-                                                constraints.maxWidth * 0.45,
-                                          ),
-                                          child: Container(
-                                            key: ValueKey(service),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal:
-                                                  AppDimensions.paddingM,
-                                              vertical: AppDimensions.paddingS,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.background,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    AppDimensions.radiusS,
-                                                  ),
-                                              border: Border.all(
-                                                color: AppColors.border,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              service,
-                                              style: AppTextStyles.body2,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    );
-                                  }
-                                },
-                              ),
+                            : _buildChipList(widget.merchant.services),
+
+                        if (widget.merchant.supportedOperators.isNotEmpty) ...[
+                          const SizedBox(height: AppDimensions.paddingL),
+                          Text('Opérateurs supportés', style: AppTextStyles.h3),
+                          const SizedBox(height: AppDimensions.paddingM),
+                          _buildChipList(widget.merchant.supportedOperators, color: AppColors.secondary),
+                        ],
+
+                        if (widget.merchant.moneyTransferTypes.isNotEmpty) ...[
+                          const SizedBox(height: AppDimensions.paddingL),
+                          Text('Types de transfert d\'argent', style: AppTextStyles.h3),
+                          const SizedBox(height: AppDimensions.paddingM),
+                          _buildChipList(widget.merchant.moneyTransferTypes, color: AppColors.success),
+                        ],
+
                         const SizedBox(height: AppDimensions.paddingL),
                         _buildRatingSection(),
                         const SizedBox(height: AppDimensions.paddingL),
@@ -564,5 +497,20 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
       case MerchantStatus.outOfStock:
         return StatusType.outOfStock;
     }
+  }
+
+  Widget _buildChipList(List<String> items, {Color color = AppColors.primary}) {
+    return Wrap(
+      spacing: AppDimensions.paddingS,
+      runSpacing: AppDimensions.paddingS,
+      children: items.map((item) {
+        return Chip(
+          label: Text(item),
+          backgroundColor: color.withOpacity(0.1),
+          labelStyle: TextStyle(color: color, fontWeight: FontWeight.w600),
+          side: BorderSide(color: color.withOpacity(0.5)),
+        );
+      }).toList(),
+    );
   }
 }

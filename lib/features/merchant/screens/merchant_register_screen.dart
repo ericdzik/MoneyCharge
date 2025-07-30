@@ -41,6 +41,12 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   ];
   Map<String, bool> _selectedServices = {};
 
+  // Nouveaux champs pour les opérateurs et types de transfert
+  final List<String> _allOperators = ['Orange', 'MTN', 'Moov'];
+  final List<String> _allMoneyTransferTypes = ['T-Money', 'Flooz', 'Western Union'];
+  List<String> _selectedOperators = [];
+  List<String> _selectedMoneyTransferTypes = [];
+
   String? _selectedMerchantType;
   final List<String> _merchantTypes = [
     'Électronique',
@@ -717,6 +723,68 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   // Fin Section Services Proposés
                   const SizedBox(height: 24),
 
+                  // Section Opérateurs Supportés
+                  Text(
+                    'Opérateurs Supportés',
+                    style: AppTextStyles.body1.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: _allOperators.map((operator) {
+                      return FilterChip(
+                        label: Text(operator),
+                        selected: _selectedOperators.contains(operator),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedOperators.add(operator);
+                            } else {
+                              _selectedOperators.remove(operator);
+                            }
+                          });
+                        },
+                        selectedColor: AppColors.secondary,
+                        checkmarkColor: Colors.white,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Section Types de Transfert d'Argent
+                  Text(
+                    'Types de Transfert d\'Argent',
+                    style: AppTextStyles.body1.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.paddingS),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 4.0,
+                    children: _allMoneyTransferTypes.map((type) {
+                      return FilterChip(
+                        label: Text(type),
+                        selected: _selectedMoneyTransferTypes.contains(type),
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedMoneyTransferTypes.add(type);
+                            } else {
+                              _selectedMoneyTransferTypes.remove(type);
+                            }
+                          });
+                        },
+                        selectedColor: AppColors.secondary,
+                        checkmarkColor: Colors.white,
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 24),
+
                   // Informations de connexion
                   Text(
                     'Informations de Connexion',
@@ -1106,6 +1174,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         longitude: _selectedLocation!.longitude,
         merchantType: _selectedMerchantType!,
         profileType: _merchantProfileType, // Ajout du type de profil
+        supportedOperators: _selectedOperators,
+        moneyTransferTypes: _selectedMoneyTransferTypes,
       );
 
       if (!mounted) return;

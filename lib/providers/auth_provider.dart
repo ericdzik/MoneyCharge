@@ -166,6 +166,8 @@ class AuthProvider with ChangeNotifier {
     required double? longitude,
     required String merchantType,
     required String profileType,
+    required List<String> supportedOperators,
+    required List<String> moneyTransferTypes,
   }) async {
     await _executeAuthAction(() async {
       await _userService.registerMerchant(
@@ -180,6 +182,8 @@ class AuthProvider with ChangeNotifier {
         longitude: longitude,
         merchantType: merchantType,
         profileType: profileType,
+        supportedOperators: supportedOperators,
+        moneyTransferTypes: moneyTransferTypes,
       );
     });
   }
@@ -194,6 +198,8 @@ class AuthProvider with ChangeNotifier {
     List<String>? services,
     Map<String, String>? serviceStockStatus,
     List<String>? imageUrls,
+    List<String>? supportedOperators,
+    List<String>? moneyTransferTypes,
   }) async {
     if (_firebaseUser == null) {
       _setError("Aucun utilisateur connecté pour la mise à jour.");
@@ -216,6 +222,8 @@ class AuthProvider with ChangeNotifier {
           'services': services,
           'serviceStockStatus': serviceStockStatus,
           'imageUrls': imageUrls,
+          'supportedOperators': supportedOperators,
+          'moneyTransferTypes': moneyTransferTypes,
           'lastProfileUpdateAt': FieldValue.serverTimestamp(),
         };
       }

@@ -20,12 +20,24 @@ class ListViewScreen extends StatefulWidget {
 }
 
 class _ListViewScreenState extends State<ListViewScreen> {
+  final _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<MerchantProvider>(context, listen: false).listenToMerchants();
     });
+    _searchController.addListener(() {
+      Provider.of<MerchantProvider>(context, listen: false)
+          .applyFilters(searchQuery: _searchController.text, searchQueryIsSet: true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -47,6 +59,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
           SafeArea(
             child: Column(
               children: [
+                _buildFilterBar(),
                 Expanded(
                   child: Consumer<MerchantProvider>(
                     builder: (context, merchantProvider, child) {
@@ -112,6 +125,202 @@ class _ListViewScreenState extends State<ListViewScreen> {
       context,
       AppRoutes.mapView,
       arguments: {'merchant': merchant},
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Container(
+      padding: const EdgeInsets.all(8.0),
+      color: AppColors.background.withOpacity(0.95),
+      child: Column(
+        children: [
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Rechercher par nom ou adresse...',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8.0),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Consumer<MerchantProvider>(
+              builder: (context, merchantProvider, child) {
+                return Row(
+                  children: [
+                    _buildFilterChip(
+                      label: 'Ouvert',
+                      icon: Icons.access_time,
+                      isSelected: merchantProvider.filterOpen,
+                      onSelected: (_) => merchantProvider.toggleFilterOpen(),
+                    ),
+                    const SizedBox(width: 8.0),
+                    _buildFilterMenu(
+                      label: 'Services',
+                      icon: Icons.room_service,
+                      options: merchantProvider.uniqueServiceCategories,
+                      selectedOptions: merchantProvider.activeServiceFilters,
+                      onApply: (selected) {
+                        merchantProvider.applyFilters(services: selected, servicesIsSet: true);
+                      },
+                    ),
+                    const SizedBox(width: 8.0),
+                    _buildFilterMenu(
+                      label: 'Opérateurs',
+                      icon: Icons.sim_card,
+                      options: ['Orange', 'MTN', 'Moov'], // Ces listes pourraient être globales
+                      selectedOptions: merchantProvider.activeOperatorFilters,
+                      onApply: (selected) {
+                        merchantProvider.applyFilters(operators: selected, operatorsIsSet: true);
+                      },
+                    ),
+                     const SizedBox(width: 8.0),
+                    _buildFilterMenu(
+                      label: 'Transfert',
+                      icon: Icons.send_to_mobile,
+                      options: ['T-Money', 'Flooz', 'Western Union'],
+                      selectedOptions: merchantProvider.activeMoneyTransferFilters,
+                      onApply: (selected) {
+                        merchantProvider.applyFilters(moneyTransferTypes: selected, moneyTransferTypesIsSet: true);
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required IconData icon,
+    required bool isSelected,
+    required ValueChanged<bool> onSelected,
+  }) {
+    return FilterChip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: AppColors.primary.withOpacity(0.8),
+      checkmarkColor: Colors.white,
+      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+    );
+  }
+
+  Widget _buildFilterMenu({
+    required String label,
+    required IconData icon,
+    required List<String> options,
+    required List<String> selectedOptions,
+    required Function(List<String>) onApply,
+  }) {
+    return PopupMenuButton<String>(
+      child: Chip(
+        avatar: Icon(icon, size: 18),
+        label: Text(label + (selectedOptions.isNotEmpty ? ' (${selectedOptions.length})' : '')),
+        backgroundColor: selectedOptions.isNotEmpty ? AppColors.primary.withOpacity(0.8) : null,
+        labelStyle: TextStyle(color: selectedOptions.isNotEmpty ? Colors.white : Colors.black),
+      ),
+      onSelected: (value) {
+        // Géré par le contenu du popup
+      },
+      itemBuilder: (BuildContext context) {
+        return [
+          PopupMenuItem(
+            value: 'menu',
+            enabled: false,
+            child: _FilterMenuContent(
+              options: options,
+              initialSelectedOptions: selectedOptions,
+              onApply: onApply,
+            ),
+          ),
+        ];
+      },
+    );
+  }
+}
+
+class _FilterMenuContent extends StatefulWidget {
+  final List<String> options;
+  final List<String> initialSelectedOptions;
+  final Function(List<String>) onApply;
+
+  const _FilterMenuContent({
+    required this.options,
+    required this.initialSelectedOptions,
+    required this.onApply,
+  });
+
+  @override
+  __FilterMenuContentState createState() => __FilterMenuContentState();
+}
+
+class __FilterMenuContentState extends State<_FilterMenuContent> {
+  late List<String> _selectedOptions;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedOptions = List.from(widget.initialSelectedOptions);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 250,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          SizedBox(
+            height: 200, // Limite la hauteur de la liste
+            child: ListView(
+              children: widget.options.map((option) {
+                return CheckboxListTile(
+                  title: Text(option),
+                  value: _selectedOptions.contains(option),
+                  onChanged: (bool? selected) {
+                    setState(() {
+                      if (selected == true) {
+                        _selectedOptions.add(option);
+                      } else {
+                        _selectedOptions.remove(option);
+                      }
+                    });
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedOptions.clear();
+                  });
+                },
+                child: const Text('Effacer'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  widget.onApply(_selectedOptions);
+                  Navigator.pop(context);
+                },
+                child: const Text('Appliquer'),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
