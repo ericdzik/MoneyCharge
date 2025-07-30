@@ -45,44 +45,20 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
       print(
         '[UnifiedLoginScreen._handleLogin] Calling await authProvider.loginUnified...',
       );
-      await authProvider.loginUnified(
+      final success = await authProvider.loginUnified(
         _emailController.text,
         _passwordController.text,
-      );
-      print(
-        '[UnifiedLoginScreen._handleLogin] After await authProvider.loginUnified completed.',
-      );
-      print('[UnifiedLoginScreen._handleLogin] Current authProvider state:');
-      print(
-        '[UnifiedLoginScreen._handleLogin]   isAuthenticated: ${authProvider.isAuthenticated}',
-      );
-      print(
-        '[UnifiedLoginScreen._handleLogin]   userType: ${authProvider.userType}',
-      );
-      print('[UnifiedLoginScreen._handleLogin]   error: ${authProvider.error}');
-      print(
-        '[UnifiedLoginScreen._handleLogin]   isLoading: ${authProvider.isLoading}',
       );
 
       if (!mounted) return;
 
-      if (authProvider.isAuthenticated) {
-        print(
-          '[UnifiedLoginScreen._handleLogin] User IS Authenticated. UserType: ${authProvider.userType}',
-        );
-        final defaultRoute = RouteGuards.getDefaultRouteForUserType(
-          authProvider.userType,
-        );
-        print(
-          '[UnifiedLoginScreen._handleLogin] Navigating to defaultRoute: $defaultRoute',
-        );
+      if (success) {
+        final userType = authProvider.userType;
+        final defaultRoute = RouteGuards.getDefaultRouteForUserType(userType);
         Navigator.pushReplacementNamed(context, defaultRoute);
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
-            ),
+            content: Text('Connexion réussie en tant que ${_getRoleDisplayName(userType)}'),
             backgroundColor: AppColors.success,
           ),
         );

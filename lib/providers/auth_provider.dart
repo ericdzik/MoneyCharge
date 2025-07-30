@@ -47,7 +47,6 @@ class AuthProvider with ChangeNotifier {
     _authStateSubscription = _authService.authStateChanges.listen((
       fb_auth.User? user,
     ) async {
-      _setLoading(true);
       _firebaseUser = user;
       if (_firebaseUser != null) {
         await _tryFetchUserProfile(_firebaseUser!.uid);
@@ -55,7 +54,7 @@ class AuthProvider with ChangeNotifier {
         _userType = UserType.unknown;
         _clearProfiles();
       }
-      _setLoading(false);
+      notifyListeners(); // Notifier les auditeurs après la mise à jour de l'état
     });
   }
 
@@ -126,13 +125,16 @@ class AuthProvider with ChangeNotifier {
     super.dispose();
   }
 
-  Future<void> loginUnified(String email, String password) async {
+  Future<bool> loginUnified(String email, String password) async {
+    bool success = false;
     await _executeAuthAction(() async {
       final uid = await _authService.loginUnified(email, password);
       if (uid != null) {
-        // L'écouteur `_listenToAuthChanges` s'occupera du reste.
+        await _tryFetchUserProfile(uid);
+        success = isAuthenticated;
       }
     });
+    return success;
   }
 
   Future<void> registerUser(String name, String email, String password) async {
