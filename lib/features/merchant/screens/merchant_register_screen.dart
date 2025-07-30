@@ -958,6 +958,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
               ),
             ),
           ),
+          ),
         ],
       ),
     );

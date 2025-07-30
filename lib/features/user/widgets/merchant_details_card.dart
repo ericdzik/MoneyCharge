@@ -192,7 +192,7 @@ class MerchantDetailsCard extends StatelessWidget {
               children: [
                 // Informations de contact et horaires
                 _buildInfoSection([
-                  _buildInfoRow(Icons.access_time, 'Horaires', merchant.hours),
+                  _buildInfoRow(Icons.access_time, 'Horaires', merchant.hours as String),
                   _buildInfoRow(Icons.phone, 'Téléphone', merchant.phone),
                   _buildInfoRow(
                     Icons.directions_walk,
