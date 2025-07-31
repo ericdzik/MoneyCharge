@@ -55,8 +55,7 @@ class MerchantProvider with ChangeNotifier {
   bool get filterOpen => _filterOpen;
 
   List<String> get uniqueServiceCategories {
-    final allServices = _allLoadedMerchants.expand((merchant) => merchant.services).toSet();
-    return allServices.toList();
+    return ["Recharge de credit", "Transfert d'argent", "achat de carte sim"];
   }
 
   void listenToMerchants() {
