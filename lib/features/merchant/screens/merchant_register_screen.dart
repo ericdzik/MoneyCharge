@@ -37,7 +37,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   final List<String> _predefinedServices = [
     'Recharge de crédit',
     'Transfert d\'argent',
-    'Achat de crédit',
+    'Achat de carte SIM',
   ];
   Map<String, bool> _selectedServices = {};
 

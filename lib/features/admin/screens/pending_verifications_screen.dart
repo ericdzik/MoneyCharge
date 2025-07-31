@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/admin/widgets/merchant_table_widget.dart';
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -79,7 +80,17 @@ class PendingVerificationsScreen extends StatelessWidget {
               children: [
                 SelectableText('ID: ${merchant.id}'),
                 SelectableText('Email: ${merchant.email}'),
-                // ... ajouter d'autres détails si nécessaire
+                const Divider(height: 20, thickness: 1),
+                const Text(
+                  'Avis des clients:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 200, // Hauteur fixe pour la liste d'avis
+                  width: double.maxFinite, // Prendre toute la largeur
+                  child: ReviewListWidget(merchantId: merchant.id),
+                ),
               ],
             ),
           ),

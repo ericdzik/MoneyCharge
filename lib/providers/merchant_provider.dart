@@ -55,7 +55,7 @@ class MerchantProvider with ChangeNotifier {
   bool get filterOpen => _filterOpen;
 
   List<String> get uniqueServiceCategories {
-    return ["Recharge de credit", "Transfert d'argent", "achat de carte sim"];
+    return ["Recharge de crédit", "Transfert d'argent", "Achat de carte SIM"];
   }
 
   void listenToMerchants() {
