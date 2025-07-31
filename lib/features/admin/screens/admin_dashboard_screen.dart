@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import 'package:provider/provider.dart'; // Added for Provider
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
@@ -665,6 +666,17 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                   (entry) => Text(' - ${entry.key}: ${entry.value}'),
                 ),
               ],
+              const Divider(height: 20, thickness: 1),
+              const Text(
+                'Avis des clients:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 200, // Hauteur fixe pour la liste d'avis
+                width: double.maxFinite, // Prendre toute la largeur
+                child: ReviewListWidget(merchantId: merchant.id),
+              ),
             ],
           ),
         ),
