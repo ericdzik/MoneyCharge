@@ -170,9 +170,12 @@ class MerchantProvider with ChangeNotifier {
     }
 
     if (_searchQuery.isNotEmpty) {
-      tempList.retainWhere((m) =>
-          m.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          (m.address.toLowerCase().contains(_searchQuery.toLowerCase())));
+      tempList.retainWhere((m) {
+        final query = _searchQuery.toLowerCase();
+        return m.name.toLowerCase().contains(query) ||
+               m.address.toLowerCase().contains(query) ||
+               m.services.any((service) => service.toLowerCase().contains(query));
+      });
     }
 
     if (_selectedCategory != null) {
