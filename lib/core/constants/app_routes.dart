@@ -35,4 +35,5 @@ class AppRoutes {
   static const String adminPendingVerifications = '/admin/pending-verifications';
   static const String editMerchantProfile = '/merchant/edit-profile';
   static const String adminAds = '/admin/ads';
+  static const String adminAddAd = '/admin/ads/add';
 }

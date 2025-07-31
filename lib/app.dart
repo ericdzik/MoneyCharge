@@ -37,6 +37,7 @@ import 'features/merchant/screens/edit_merchant_profile_screen.dart';
 import 'features/admin/screens/admin_dashboard_screen.dart';
 import 'features/admin/screens/pending_verifications_screen.dart';
 import 'features/admin/screens/ad_screen.dart';
+import 'features/admin/screens/manage_ads_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/screens/notifications_screen.dart';
 import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
@@ -222,6 +223,12 @@ class LocaChargeApp extends StatelessWidget {
         );
 
       case AppRoutes.adminAds:
+        return MaterialPageRoute(
+          builder: (_) =>
+              RouteGuards.requireUserType(const ManageAdsScreen(), UserType.admin),
+        );
+
+      case AppRoutes.adminAddAd:
         return MaterialPageRoute(
           builder: (_) =>
               RouteGuards.requireUserType(const AdScreen(), UserType.admin),

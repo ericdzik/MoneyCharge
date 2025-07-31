@@ -21,6 +21,17 @@ class StorageService {
     }
   }
 
+  Future<void> deleteAdImage(String imageUrl) async {
+    try {
+      final Reference ref = _storage.refFromURL(imageUrl);
+      await ref.delete();
+    } catch (e) {
+      print("Erreur lors de la suppression de l'image de la publicité: $e");
+      // Optionally, re-throw the error if the caller needs to handle it
+      // throw e;
+    }
+  }
+
   Future<String?> uploadAdImage(XFile image) async {
     try {
       final String fileName =

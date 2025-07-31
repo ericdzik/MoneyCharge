@@ -82,4 +82,31 @@ class AdProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> deleteAd(String adId, String imageUrl) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      // First, delete the ad document from Firestore
+      await _firestore.collection('ads').doc(adId).delete();
+
+      // Then, delete the ad image from Storage
+      await _storageService.deleteAdImage(imageUrl);
+
+      // Refresh the ads list
+      await fetchAds();
+      return true;
+    } catch (e) {
+      print("Error in deleteAd: $e");
+      _error = "Erreur lors de la suppression de la publicité: ${e.toString()}";
+      // If deletion fails, refresh the ads list to ensure UI consistency
+      await fetchAds();
+      return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
