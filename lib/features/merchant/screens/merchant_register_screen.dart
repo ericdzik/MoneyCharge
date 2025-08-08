@@ -43,11 +43,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
   String? _selectedMerchantType;
   final List<String> _merchantTypes = [
-    'Électronique',
-    'Alimentation',
-    'Services Généraux',
-    'Point de Recharge',
-    'Autre',
+    'Boutique',
+    'Kiosque',
+    'La poste',
+    'Banque',
+    'Agence',
+    'Bar & Restaurant',
+    'Alimentation générale',
+    'Epicerie',
   ];
 
   // Nouveau state pour le type de marchand (fixe ou mobile)
