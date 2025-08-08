@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/status_badge.dart';
@@ -147,9 +148,13 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                   Swiper(
                                     itemBuilder:
                                         (BuildContext context, int index) {
-                                          return Image.network(
-                                            widget.merchant.imageUrls![index],
+                                          return CachedNetworkImage(
+                                            imageUrl: widget.merchant.imageUrls![index],
                                             fit: BoxFit.cover,
+                                            placeholder: (context, url) => const Center(
+                                              child: CircularProgressIndicator(),
+                                            ),
+                                            errorWidget: (context, url, error) => const Icon(Icons.error),
                                           );
                                         },
                                     itemCount:

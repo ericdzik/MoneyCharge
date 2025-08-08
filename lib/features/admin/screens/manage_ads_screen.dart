@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
@@ -49,7 +50,22 @@ class _ManageAdsScreenState extends State<ManageAdsScreen> {
               return Card(
                 margin: const EdgeInsets.all(8.0),
                 child: ListTile(
-                  leading: Image.network(ad.imageUrl, width: 50, height: 50, fit: BoxFit.cover),
+                  leading: SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: CachedNetworkImage(
+                      imageUrl: ad.imageUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => const Center(
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(Icons.error),
+                    ),
+                  ),
                   title: Text(ad.title),
                   subtitle: Text(ad.description),
                   trailing: IconButton(

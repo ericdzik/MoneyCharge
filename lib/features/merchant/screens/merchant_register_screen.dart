@@ -286,10 +286,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
           onPressed: () => Navigator.pop(context),
         ),
       ),

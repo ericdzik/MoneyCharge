@@ -6,6 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
+import '../../../core/utils/marker_utils.dart';
 
 class MapWidget extends StatefulWidget {
   final List<Merchant> merchants;
@@ -81,7 +82,7 @@ class _MapWidgetState extends State<MapWidget> {
     }
   }
 
-  void _createMarkers() {
+  Future<void> _createMarkers() async {
     _markers.clear();
 
     for (final merchant in widget.merchants) {
@@ -93,12 +94,13 @@ class _MapWidgetState extends State<MapWidget> {
           snippet: merchant.address,
           onTap: () => _onMarkerTapped(merchant),
         ),
-        icon: _getMarkerIcon(merchant.status),
+        icon: await MarkerUtils.getGeoMarkerDescriptor(size: 110),
         onTap: () => _onMarkerTapped(merchant),
       );
 
       _markers.add(marker);
     }
+    if (mounted) setState(() {});
   }
 
   void _createSearchCircle() {
