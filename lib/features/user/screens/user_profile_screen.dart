@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:locacharge/features/user/models/user_model.dart';
 import 'package:locacharge/features/user/screens/cgu_screen.dart';
 import 'package:locacharge/providers/favorite_merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
+//intl is not used yet, but good for future date formatting
+// import 'package:intl/intl.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../providers/auth_provider.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  final bool showBackground;
-
-  const UserProfileScreen({super.key, this.showBackground = true});
+  const UserProfileScreen({super.key});
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -40,292 +41,287 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
         children: [
-          if (widget.showBackground)
-            Positioned.fill(
-              child: ColorFiltered(
-                colorFilter:
-                    const ColorFilter.mode(Colors.black26, BlendMode.darken),
-                child: Image.asset(
-                  'assets/splash/33.png',
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          SafeArea(
-            child: Consumer3<AuthProvider, TransactionProvider,
-                FavoriteMerchantProvider>(
-              builder: (
-                context,
-                authProvider,
-                transactionProvider,
-                favoriteMerchantProvider,
-                child,
-              ) {
-                final user = authProvider.appUserProfile;
+          Positioned.fill(
+            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          ),
+          Consumer3<
+            AuthProvider,
+            TransactionProvider,
+            FavoriteMerchantProvider
+          >(
+            builder:
+                (
+                  context,
+                  authProvider,
+                  transactionProvider,
+                  favoriteMerchantProvider,
+                  child,
+                ) {
+                  final user = authProvider.appUserProfile;
 
-                if (authProvider.isLoading && user == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+                  if (authProvider.isLoading && user == null) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                if (user == null) {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(AppDimensions.paddingL),
-                      child: Text(
-                        "Profil utilisateur non disponible ou type d'utilisateur incorrect.",
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.body1,
+                  if (user == null) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppDimensions.paddingL),
+                        child: Text(
+                          "Profil utilisateur non disponible ou type d'utilisateur incorrect.",
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.body1,
+                        ),
                       ),
-                    ),
-                  );
-                }
+                    );
+                  }
 
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                  // Profil header
-                  Container(
+                  return SingleChildScrollView(
                     padding: const EdgeInsets.all(AppDimensions.paddingL),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.white,
-                          backgroundImage: null,
-                          child: user.profileImageUrl == null
-                              ? Text(
-                                  user.name.isNotEmpty
-                                      ? user.name[0].toUpperCase()
-                                      : 'U',
-                                  style: AppTextStyles.h1.copyWith(
-                                    fontSize: 36,
-                                    color: AppColors.primary,
-                                  ),
-                                )
-                              : null,
+                        // En-tête du profil
+                        Container(
+                          padding: const EdgeInsets.all(AppDimensions.paddingL),
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(
+                              AppDimensions.radiusM,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.white,
+                                backgroundImage: user.profileImageUrl != null
+                                    ? NetworkImage(user.profileImageUrl!)
+                                    : null,
+                                child: user.profileImageUrl == null
+                                    ? Text(
+                                        user.name.isNotEmpty
+                                            ? user.name[0].toUpperCase()
+                                            : 'U',
+                                        style: AppTextStyles.h1.copyWith(
+                                          fontSize: 36,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(height: AppDimensions.paddingM),
+                              Text(
+                                user.name,
+                                style: AppTextStyles.h2.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppDimensions.paddingXS),
+                              Text(
+                                user.email,
+                                style: AppTextStyles.body1.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: AppDimensions.paddingS),
+                              TextButton.icon(
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Modifier le profil'),
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.editProfile,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                        if (user.profileImageUrl != null)
-                          ClipOval(
-                            child: SizedBox(
-                              width: 100,
-                              height: 100,
-                              child: CachedNetworkImage(
-                                imageUrl: user.profileImageUrl!,
-                                fit: BoxFit.cover,
-                                placeholder: (context, url) => const Center(
-                                    child: CircularProgressIndicator()),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
+                        const SizedBox(height: AppDimensions.paddingXL),
+
+                        // Informations personnelles
+                        _buildSection(
+                          title: 'Informations personnelles',
+                          children: [
+                            _buildInfoTile(
+                              icon: Icons.person_outline,
+                              title: 'Nom complet',
+                              value: user.name,
+                            ),
+                            _buildInfoTile(
+                              icon: Icons.email_outlined,
+                              title: 'Email',
+                              value: user.email,
+                            ),
+                            _buildInfoTile(
+                              icon: Icons.phone_outlined,
+                              title: 'Téléphone',
+                              value: user.phone ?? 'Non renseigné',
+                            ),
+                            // _buildInfoTile(
+                            //   icon: Icons.calendar_today_outlined,
+                            //   title: 'Membre depuis',
+                            //   value: _formatDate(user.createdAt),
+                            // ),
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.paddingXL),
+
+                        // Statistiques
+                        _buildSection(
+                          title: 'Mes statistiques',
+                          children: [
+                            _buildStatTile(
+                              icon: Icons.location_on_outlined,
+                              title: 'Locations effectuées',
+                              value: transactionProvider.transactions.length
+                                  .toString(),
+                              color: AppColors.primary,
+                            ),
+                            _buildStatTile(
+                              icon: Icons.star_outline,
+                              title: 'Note moyenne',
+                              value: 'N/A', // TODO: Implement rating system
+                              color: AppColors.secondary,
+                            ),
+                            _buildStatTile(
+                              icon: Icons.favorite_border_outlined,
+                              title: 'Favoris',
+                              value: favoriteMerchantProvider
+                                  .favoriteMerchants
+                                  .length
+                                  .toString(),
+                              color: AppColors.success,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.paddingXL),
+
+                        // Actions
+                        _buildSection(
+                          title: 'Actions',
+                          children: [
+                            SwitchListTile(
+                              title: const Text('Mode sombre'),
+                              value:
+                                  Provider.of<ThemeProvider>(
+                                    context,
+                                  ).themeMode ==
+                                  ThemeMode.dark,
+                              onChanged: (value) {
+                                Provider.of<ThemeProvider>(
+                                  context,
+                                  listen: false,
+                                ).toggleTheme();
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.history_outlined,
+                              title: 'Historique des locations',
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.rentalHistory,
+                                );
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.favorite_border_outlined,
+                              title: 'Mes favoris',
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.favorites,
+                                );
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.notifications_outlined,
+                              title: 'Notifications',
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.notifications,
+                                );
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.help_outline,
+                              title: 'Aide et support',
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.help);
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.privacy_tip_outlined,
+                              title: 'Confidentialité',
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.privacy);
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.info_outline,
+                              title: 'À propos',
+                              onTap: () {
+                                Navigator.pushNamed(context, AppRoutes.about);
+                              },
+                            ),
+                            _buildActionTile(
+                              icon: Icons.article_outlined,
+                              title: 'Conditions d\'Utilisation',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const CguScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.paddingXL),
+
+                        CustomButton(
+                          text: 'Se déconnecter',
+                          onPressed: () => _showLogoutDialog(context),
+                          // No explicit color parameter needed, type: ButtonType.primary is default
+                          // and will use ElevatedButtonThemeData from app_theme.dart
+                        ),
+                        const SizedBox(height: AppDimensions.paddingM),
+
+                        Center(
+                          child: TextButton(
+                            onPressed: () => _showDeleteAccountDialog(context),
+                            child: Text(
+                              'Supprimer mon compte',
+                              style: AppTextStyles.body1.copyWith(
+                                color: AppColors.outOfStock,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ),
+                        ),
                         const SizedBox(height: AppDimensions.paddingM),
-                        Text(
-                          user.name,
-                          style: AppTextStyles.h2.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppDimensions.paddingXS),
-                        Text(
-                          user.email,
-                          style: AppTextStyles.body1.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppDimensions.paddingS),
-                        TextButton.icon(
-                          icon: const Icon(Icons.edit, size: 16),
-                          label: const Text('Modifier le profil'),
-                          onPressed: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.editProfile,
-                            );
-                          },
-                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: AppDimensions.paddingXL),
-
-                  // Informations personnelles
-                  _buildSection(
-                    title: 'Informations personnelles',
-                    children: [
-                      _buildInfoTile(
-                        icon: Icons.person_outline,
-                        title: 'Nom complet',
-                        value: user.name,
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.email_outlined,
-                        title: 'Email',
-                        value: user.email,
-                      ),
-                      _buildInfoTile(
-                        icon: Icons.phone_outlined,
-                        title: 'Téléphone',
-                        value: user.phone ?? 'Non renseigné',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.paddingXL),
-
-                  // Statistiques
-                  _buildSection(
-                    title: 'Mes statistiques',
-                    children: [
-                      _buildStatTile(
-                        icon: Icons.location_on_outlined,
-                        title: 'Locations effectuées',
-                        value: transactionProvider.transactions.length.toString(),
-                        color: AppColors.primary,
-                      ),
-                      _buildStatTile(
-                        icon: Icons.star_outline,
-                        title: 'Note moyenne',
-                        value: 'N/A',
-                        color: AppColors.secondary,
-                      ),
-                      _buildStatTile(
-                        icon: Icons.favorite_border_outlined,
-                        title: 'Favoris',
-                        value:
-                            favoriteMerchantProvider.favoriteMerchants.length
-                                .toString(),
-                        color: AppColors.success,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.paddingXL),
-
-                  // Actions
-                  _buildSection(
-                    title: 'Actions',
-                    children: [
-                      SwitchListTile(
-                        title: const Text('Mode sombre'),
-                        value: Provider.of<ThemeProvider>(context).themeMode ==
-                            ThemeMode.dark,
-                        onChanged: (value) {
-                          Provider.of<ThemeProvider>(context, listen: false)
-                              .toggleTheme();
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.history_outlined,
-                        title: 'Historique des locations',
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.rentalHistory,
-                          );
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.favorite_border_outlined,
-                        title: 'Mes favoris',
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.favorites,
-                          );
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.notifications_outlined,
-                        title: 'Notifications',
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.notifications,
-                          );
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.help_outline,
-                        title: 'Aide et support',
-                        onTap: () {
-                          Navigator.pushNamed(context, AppRoutes.help);
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.privacy_tip_outlined,
-                        title: 'Confidentialité',
-                        onTap: () {
-                          Navigator.pushNamed(context, AppRoutes.privacy);
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.info_outline,
-                        title: 'À propos',
-                        onTap: () {
-                          Navigator.pushNamed(context, AppRoutes.about);
-                        },
-                      ),
-                      _buildActionTile(
-                        icon: Icons.article_outlined,
-                        title: 'Conditions d\'Utilisation',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CguScreen(),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppDimensions.paddingXL),
-
-                  // Logout + Delete
-                  CustomButton(
-                    text: 'Se déconnecter',
-                    onPressed: () => _showLogoutDialog(context),
-                  ),
-                  const SizedBox(height: AppDimensions.paddingM),
-
-                  Center(
-                    child: TextButton(
-                      onPressed: () => _showDeleteAccountDialog(context),
-                      child: Text(
-                        'Supprimer mon compte',
-                        style: AppTextStyles.body1.copyWith(
-                          color: AppColors.outOfStock,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppDimensions.paddingM),
-                    ],
-                  ),
-                );
-              },
-            ),
+                  );
+                },
           ),
         ],
       ),

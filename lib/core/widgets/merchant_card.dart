@@ -7,8 +7,6 @@ import 'status_badge.dart';
 import 'custom_button.dart';
 import '../../features/user/models/merchant_model.dart';
 import '../../providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
-import '../../providers/location_provider.dart';
-import 'package:geolocator/geolocator.dart';
 
 class MerchantCard extends StatelessWidget {
   final Merchant merchant;
@@ -28,17 +26,6 @@ class MerchantCard extends StatelessWidget {
     final statusType = _getMerchantStatusType(merchant.status);
     final favoriteProvider = Provider.of<FavoriteMerchantProvider>(context);
     final isFavorite = favoriteProvider.isFavorite(merchant.id);
-
-    // Calcul dynamique distance et temps de marche
-    final locationProvider = Provider.of<LocationProvider>(context);
-    final double distanceMeters = Geolocator.distanceBetween(
-      locationProvider.effectiveLatitude,
-      locationProvider.effectiveLongitude,
-      merchant.latitude,
-      merchant.longitude,
-    );
-    final String walkingTimeText =
-        locationProvider.calculateWalkingTime(distanceMeters);
 
     return Card(
       color: Colors.white,
@@ -74,30 +61,22 @@ class MerchantCard extends StatelessWidget {
                     ),
                   ),
                   Row(
+                    // Row pour StatusBadge et IconButton
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Badge de disponibilité dynamique basé sur serviceStockStatus
-                      Builder(builder: (context) {
-                        final stock = merchant.serviceStockStatus;
-                        StatusType computedStatus = statusType;
-                        if (stock != null && stock.isNotEmpty) {
-                          final hasOut = stock.values.any((v) => v.toLowerCase().contains('rupture') || v.toLowerCase().contains('epuise'));
-                          final hasLow = stock.values.any((v) => v.toLowerCase().contains('faible') || v.toLowerCase().contains('bientot'));
-                          if (hasOut && !hasLow) {
-                            computedStatus = StatusType.outOfStock;
-                          } else if (hasLow) {
-                            computedStatus = StatusType.lowStock;
-                          } else {
-                            computedStatus = StatusType.available;
-                          }
-                        }
-                        return StatusBadge(status: computedStatus);
-                      }),
-                      const SizedBox(width: AppDimensions.paddingXS),
+                      StatusBadge(
+                        status: statusType,
+                      ), // Utilise les couleurs de AppColors via StatusBadge
+                      const SizedBox(
+                        width: AppDimensions.paddingXS,
+                      ), // Petit espace
                       IconButton(
                         icon: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? AppColors.error : AppColors.textSecondary,
+                          color: isFavorite
+                              ? AppColors.error
+                              : AppColors
+                                    .textSecondary, // Rouge si favori, gris sinon
                         ),
                         onPressed: () {
                           if (isFavorite) {
@@ -138,7 +117,7 @@ class MerchantCard extends StatelessWidget {
                             ),
                           ),
                           child: Text(
-                            '🚶 $walkingTimeText',
+                            '🚶 ${merchant.walkingTime}',
                             style: AppTextStyles.caption.copyWith(
                               color:
                                   AppColors.primary, // Texte en vert primaire
@@ -173,7 +152,7 @@ class MerchantCard extends StatelessWidget {
                               ),
                             ),
                             child: Text(
-                              '🚶 $walkingTimeText',
+                              '🚶 ${merchant.walkingTime}',
                               style: AppTextStyles.caption.copyWith(
                                 color:
                                     AppColors.primary, // Texte en vert primaire

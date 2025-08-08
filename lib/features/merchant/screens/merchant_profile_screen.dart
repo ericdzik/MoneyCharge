@@ -23,7 +23,6 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
       appBar: CustomAppBar(
         title: 'Profil Commerçant',
         showLogo: false,
-        backgroundColor: AppColors.primary,
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {

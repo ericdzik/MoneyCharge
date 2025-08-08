@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/widgets/ad_carousel_widget.dart';
+import 'package:locacharge/features/user/widgets/category_list_widget.dart';
 import 'package:locacharge/features/user/widgets/filter_widget.dart';
 import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
 import 'package:locacharge/providers/auth_provider.dart';
@@ -46,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
       const FavoritesScreen(),
       authProvider.userType == UserType.merchant
           ? const MerchantProfileScreen()
-          : const UserProfileScreen(showBackground: true),
+          : const UserProfileScreen(),
     ];
 
     return Scaffold(
@@ -62,21 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 final user = authProvider.appUserProfile;
                 return CircleAvatar(
                   backgroundColor: AppColors.onPrimary,
-                  child: ClipOval(
-                    child: SizedBox(
-                      width: 40,
-                      height: 40,
-                      child: user?.profileImageUrl != null
-                          ? CachedNetworkImage(
-                              imageUrl: user!.profileImageUrl!,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => const SizedBox(),
-                              errorWidget: (context, url, error) =>
-                                  Icon(Icons.person, color: AppColors.primary),
-                            )
-                          : Icon(Icons.person, color: AppColors.primary),
-                    ),
-                  ),
+                  backgroundImage: user?.profileImageUrl != null
+                      ? NetworkImage(user!.profileImageUrl!)
+                      : null,
+                  child: user?.profileImageUrl == null
+                      ? Icon(Icons.person, color: AppColors.primary)
+                      : null,
                 );
               },
             ),
@@ -91,32 +82,22 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           // Contenu principal avec padding pour l'AppBar
           SafeArea(
-            top: !(_currentIndex == 3 || _currentIndex == 1 || _currentIndex == 2),
             child: Padding(
-              padding: EdgeInsets.all(
-                (_currentIndex == 3 || _currentIndex == 1 || _currentIndex == 2)
-                    ? 0
-                    : AppDimensions.paddingS,
-              ),
+              padding: const EdgeInsets.all(AppDimensions.paddingS),
               child: Column(
                 children: [
                   if (_currentIndex == 0) const SearchBarWidget(),
                   if (_currentIndex == 0) const FilterWidget(),
                   Expanded(
-                    child: (_currentIndex == 3 || _currentIndex == 1 || _currentIndex == 2)
-                        ? Container(
-                            color: Colors.transparent,
-                            child: currentScreens[_currentIndex],
-                          )
-                        : Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusM,
-                              ),
-                            ),
-                            child: currentScreens[_currentIndex],
-                          ),
+                    child: Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
+                      ),
+                      child: currentScreens[_currentIndex],
+                    ),
                   ),
                   if (_currentIndex == 0) const AdCarouselWidget(),
                 ],

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/models/ad_model.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -145,16 +144,17 @@ class AdCard extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(10),
-          child: CachedNetworkImage(
-            imageUrl: ad.imageUrl,
+          child: Image.network(
+            ad.imageUrl,
             fit: BoxFit.cover,
             width: 250,
-            placeholder: (context, url) => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            errorWidget: (context, url, error) => const Center(
-              child: Icon(Icons.error),
-            ),
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return const Center(child: CircularProgressIndicator());
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(child: Icon(Icons.error));
+            },
           ),
         ),
       ),

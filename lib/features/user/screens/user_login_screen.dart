@@ -191,7 +191,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                         ],
                       ),
                       child: Icon(
-                        Icons.login_rounded,
+                        Icons.power_rounded,
                         size: 40,
                         color: AppColors.primary,
                       ),

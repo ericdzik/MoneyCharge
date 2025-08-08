@@ -76,7 +76,9 @@ class MerchantTableWidget extends StatelessWidget {
               columns: const [
                 DataColumn(label: Text('Nom')),
                 DataColumn(label: Text('Email')),
-                DataColumn(label: Text('Type')), // Nouvelle colonne
+                DataColumn(label: Text('Type')),
+                DataColumn(label: Text('Note')),
+                DataColumn(label: Text('Avis')),
                 DataColumn(label: Text('Statut')),
                 DataColumn(label: Text('Date d\'inscription')),
                 DataColumn(label: Text('Actions')),
@@ -97,7 +99,17 @@ class MerchantTableWidget extends StatelessWidget {
                       ),
                     ),
                     DataCell(SizedBox(width: 180, child: Text(merchant.email, overflow: TextOverflow.ellipsis))),
-                    DataCell(SizedBox(width: 120, child: Text(merchant.merchantType, overflow: TextOverflow.ellipsis))), // Affichage du type
+                    DataCell(SizedBox(width: 120, child: Text(merchant.merchantType, overflow: TextOverflow.ellipsis))),
+                    DataCell(
+                      Row(
+                        children: [
+                          const Icon(Icons.star, color: Colors.amber, size: 16),
+                          const SizedBox(width: 4),
+                          Text(merchant.averageRating.toStringAsFixed(1)),
+                        ],
+                      ),
+                    ),
+                    DataCell(Text(merchant.reviewCount.toString())),
                     DataCell(_buildStatusChip(merchant)),
                     DataCell(
                       SizedBox(
