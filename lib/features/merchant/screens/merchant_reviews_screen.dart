@@ -110,7 +110,7 @@ class ReviewTile extends StatelessWidget {
                       ),
                       Text(
                         DateFormat('dd MMMM yyyy, HH:mm').format(review.createdAt),
-                        style: Theme.of(context).textTheme.caption,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
