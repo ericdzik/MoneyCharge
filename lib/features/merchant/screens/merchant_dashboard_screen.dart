@@ -9,6 +9,7 @@ import '../widgets/merchant_header_widget.dart';
 import '../widgets/dashboard_stats_widget.dart';
 import '../../../core/constants/app_routes.dart';
 import 'edit_merchant_profile_screen.dart';
+import 'merchant_reviews_screen.dart';
 import '../../../providers/transaction_provider.dart'; // Ajout de l'import pour TransactionProvider
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
@@ -108,8 +109,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                         children: [
                           Text(
                             'Aperçu',
-                            style: AppTextStyles.h2
-                                .copyWith(fontSize: 20, color: Colors.white),
+                            style: AppTextStyles.h2.copyWith(fontSize: 20),
                           ),
                           const SizedBox(height: 16),
                           Builder(
@@ -132,6 +132,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                                 totalRevenue: transactionProvider.totalRevenue,
                                 totalTransactions: transactionProvider
                                     .totalSalesTransactionsCount,
+                                averageRating: currentMerchant.averageRating,
+                                reviewCount: currentMerchant.reviewCount,
                               );
                             },
                           ),
@@ -143,14 +145,14 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                               ),
                               child: Text(
                                 "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
-                                style: AppTextStyles.body2
-                                    .copyWith(color: Colors.redAccent),
+                                style: AppTextStyles.body2.copyWith(
+                                  color: Colors.red,
+                                ),
                               ),
                             ),
                           Text(
                             'Actions rapides',
-                            style: AppTextStyles.h2
-                                .copyWith(fontSize: 20, color: Colors.white),
+                            style: AppTextStyles.h2.copyWith(fontSize: 20),
                           ),
                           const SizedBox(height: 16),
                           _buildQuickActions(currentMerchant),
@@ -159,8 +161,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                             _buildLiveLocationCard(),
                           Text(
                             'Activité récente',
-                            style: AppTextStyles.h2
-                                .copyWith(fontSize: 20, color: Colors.white),
+                            style: AppTextStyles.h2.copyWith(fontSize: 20),
                           ),
                           const SizedBox(height: 16),
                           _buildRecentActivity(), // Sera mis à jour pour utiliser TransactionProvider
@@ -261,6 +262,22 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 );
               },
             ),
+            _buildActionCard(
+              title: 'Avis Clients',
+              subtitle: 'Voir les retours',
+              icon: Icons.reviews,
+              color: Colors.green,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MerchantReviewsScreen(
+                      merchantId: merchant.id,
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         );
       },
@@ -281,7 +298,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       child: Container(
         padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -298,7 +315,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
             Container(
               padding: EdgeInsets.all(isVerySmallScreen ? 8 : 10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
+                color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -315,7 +332,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                   title,
                   style: AppTextStyles.h3.copyWith(
                     fontSize: isVerySmallScreen ? 13 : 15,
-                    color: Colors.black87,
                   ),
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
@@ -330,7 +346,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 child: Text(
                   subtitle,
                   style: AppTextStyles.caption.copyWith(
-                    color: Colors.black54,
+                    color: AppColors.textSecondary,
                     fontSize: isVerySmallScreen ? 10 : 11,
                   ),
                   textAlign: TextAlign.center,

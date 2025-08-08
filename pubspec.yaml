@@ -24,7 +24,6 @@ dependencies:
   firebase_core: ^3.15.1
   firebase_auth: ^5.6.2
   cloud_firestore: ^5.6.11
-  cloud_functions: ^4.5.5 # vérifie la dernière version sur pub.dev
 
   # Pour décoder les polylignes de Google Directions API
   flutter_polyline_points: ^3.0.1
@@ -35,8 +34,6 @@ dependencies:
   image_picker: ^1.1.2
   card_swiper: ^3.0.1
   path: ^1.9.0
-  cached_network_image: ^3.3.1
-  flutter_image_compress: ^2.1.0
 
 
 dev_dependencies:

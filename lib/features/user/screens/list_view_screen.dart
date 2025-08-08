@@ -31,7 +31,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // AppBar retirée pour éviter le doublon avec l'AppBar du HomeScreen
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(
+        title: 'Liste des services',
+        backgroundColor: AppColors.primary,
+        showLogo: false,
+      ),
       body: Stack(
         children: [
           // Image de fond qui s'étend sous l'AppBar

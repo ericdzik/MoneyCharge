@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:path/path.dart' as p;
@@ -13,14 +12,7 @@ class StorageService {
     try {
       final String fileName = '${DateTime.now().millisecondsSinceEpoch}_${p.basename(image.path)}';
       final Reference ref = _storage.ref().child('merchants/$merchantId/$fileName');
-      // Compression
-      final compressed = await FlutterImageCompress.compressWithFile(
-        image.path,
-        quality: 70,
-      );
-      final UploadTask uploadTask = compressed != null
-          ? ref.putData(compressed, SettableMetadata(contentType: 'image/jpeg'))
-          : ref.putFile(File(image.path));
+      final UploadTask uploadTask = ref.putFile(File(image.path));
       final TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
@@ -45,13 +37,7 @@ class StorageService {
       final String fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${p.basename(image.path)}';
       final Reference ref = _storage.ref().child('ads/$fileName');
-      final compressed = await FlutterImageCompress.compressWithFile(
-        image.path,
-        quality: 70,
-      );
-      final UploadTask uploadTask = compressed != null
-          ? ref.putData(compressed, SettableMetadata(contentType: 'image/jpeg'))
-          : ref.putFile(File(image.path));
+      final UploadTask uploadTask = ref.putFile(File(image.path));
       final TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
     } catch (e) {

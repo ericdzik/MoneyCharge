@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
-import 'package:locacharge/features/user/models/review_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../models/review_model.dart'; // Correction de l'import
 import '../../../providers/auth_provider.dart';
-import '../../../services/api_service.dart';
 
 class AddReviewScreen extends StatefulWidget {
   final String merchantId;
@@ -49,20 +49,31 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
 
       final review = Review(
         id: '', // L'ID sera généré par Firestore
+        merchantId: widget.merchantId, // Ajout de l'ID du marchand
         userId: user.id,
         userName: user.name,
+        userProfileImageUrl: user.profileImageUrl, // Ajout de l'image de profil
         rating: _rating,
-        comment: _commentController.text,
+        comment: _commentController.text.trim(),
         createdAt: DateTime.now(),
       );
 
       try {
-        await ApiService().addReview(widget.merchantId, review);
-        Navigator.pop(context, true); // Indique que l'avis a été ajouté
+        // Remplacer ApiService par un appel direct à Firestore
+        await FirebaseFirestore.instance.collection('reviews').add(review.toJson());
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Avis ajouté avec succès !')),
+          );
+          Navigator.pop(context, true); // Indique que l'avis a été ajouté
+        }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de l\'ajout de l\'avis: $e')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur lors de l\'ajout de l\'avis: $e')),
+          );
+        }
       } finally {
         setState(() {
           _isLoading = false;

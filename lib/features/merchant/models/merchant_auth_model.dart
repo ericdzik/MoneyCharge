@@ -19,6 +19,8 @@ class MerchantAuthModel {
   final List<String>? imageUrls;
   final String? profileImageUrl;
   final bool isSuspended;
+  final double averageRating;
+  final int reviewCount;
 
   MerchantAuthModel({
     required this.id,
@@ -39,6 +41,8 @@ class MerchantAuthModel {
     this.serviceStockStatus, // Ajouté
     this.imageUrls,
     this.profileImageUrl,
+    this.averageRating = 0.0,
+    this.reviewCount = 0,
   });
 
   factory MerchantAuthModel.fromFirestore(
@@ -91,6 +95,8 @@ class MerchantAuthModel {
       serviceStockStatus: stockStatus, // Ajouté
       imageUrls: (data['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       profileImageUrl: data['profileImageUrl'] as String?,
+      averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
+      reviewCount: data['reviewCount'] as int? ?? 0,
     );
   }
 
@@ -115,6 +121,8 @@ class MerchantAuthModel {
       'serviceStockStatus': serviceStockStatus, // Ajouté
       'imageUrls': imageUrls,
       'profileImageUrl': profileImageUrl,
+      'averageRating': averageRating,
+      'reviewCount': reviewCount,
     };
   }
 
@@ -137,6 +145,8 @@ class MerchantAuthModel {
     Map<String, String>? serviceStockStatus, // Ajouté
     List<String>? imageUrls,
     String? profileImageUrl,
+    double? averageRating,
+    int? reviewCount,
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -157,6 +167,8 @@ class MerchantAuthModel {
       serviceStockStatus: serviceStockStatus ?? this.serviceStockStatus,
       imageUrls: imageUrls ?? this.imageUrls,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      averageRating: averageRating ?? this.averageRating,
+      reviewCount: reviewCount ?? this.reviewCount,
     );
   }
 }

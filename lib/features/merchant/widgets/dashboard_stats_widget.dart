@@ -7,6 +7,8 @@ class DashboardStatsWidget extends StatelessWidget {
   final int activeServices;
   final double totalRevenue;
   final int totalTransactions;
+  final double averageRating;
+  final int reviewCount;
 
   const DashboardStatsWidget({
     super.key,
@@ -14,6 +16,8 @@ class DashboardStatsWidget extends StatelessWidget {
     required this.activeServices,
     required this.totalRevenue,
     required this.totalTransactions,
+    required this.averageRating,
+    required this.reviewCount,
   });
 
   @override
@@ -27,17 +31,17 @@ class DashboardStatsWidget extends StatelessWidget {
 
         if (screenWidth < 360) {
           crossAxisCount = 1;
-          childAspectRatio = 2.6; // plus haut -> contenu plus grand
+          childAspectRatio = 3.5;
           isSmallScreen = true;
         } else if (screenWidth < 600) {
           crossAxisCount = 2;
-          childAspectRatio = 1.3; // plus haut -> contenu plus grand
+          childAspectRatio = 1.6;
         } else if (screenWidth < 900) {
           crossAxisCount = 2;
-          childAspectRatio = 1.4; // un peu plus haut
+          childAspectRatio = 1.8;
         } else {
           crossAxisCount = 4;
-          childAspectRatio = 1.3; // plus haut -> contenu plus grand
+          childAspectRatio = 1.5;
         }
 
         return GridView.count(
@@ -74,11 +78,11 @@ class DashboardStatsWidget extends StatelessWidget {
               color: Colors.orange,
             ),
             _buildStatCard(
-              isSmallScreen: isSmallScreen, // Ajout du paramètre manquant
-              title: 'Performance',
-              value: '${_calculatePerformance()}%',
-              subtitle: 'Taux de satisfaction',
-              icon: Icons.trending_up,
+              isSmallScreen: isSmallScreen,
+              title: 'Avis Clients',
+              value: '${averageRating.toStringAsFixed(1)} ★',
+              subtitle: '$reviewCount avis',
+              icon: Icons.star_half,
               color: Colors.blue,
             ),
           ],
@@ -96,7 +100,7 @@ class DashboardStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
+      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -110,18 +114,18 @@ class DashboardStatsWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
+                padding: EdgeInsets.all(isSmallScreen ? 5 : 7),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: color, size: isSmallScreen ? 18 : 22),
+                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18),
               ),
               Flexible(
                 child: Text(
@@ -129,7 +133,7 @@ class DashboardStatsWidget extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: isSmallScreen ? 11 : 13,
+                    fontSize: isSmallScreen ? 9 : 11,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -144,7 +148,7 @@ class DashboardStatsWidget extends StatelessWidget {
               child: Text(
                 value,
                 style: AppTextStyles.h2.copyWith(
-                  fontSize: isSmallScreen ? 20 : 26,
+                  fontSize: isSmallScreen ? 14 : 18,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
@@ -160,7 +164,7 @@ class DashboardStatsWidget extends StatelessWidget {
                 subtitle,
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: isSmallScreen ? 11 : 12,
+                  fontSize: isSmallScreen ? 9 : 10,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
@@ -171,13 +175,5 @@ class DashboardStatsWidget extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  int _calculatePerformance() {
-    if (totalServices == 0) {
-      // CORRIGÉ: Vérification pour éviter la division par zéro
-      return 0;
-    }
-    return ((activeServices / totalServices) * 100).round();
   }
 }

@@ -6,7 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart'
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
 import '../features/user/models/user_model.dart';
@@ -329,16 +328,7 @@ class AuthProvider with ChangeNotifier {
             .ref()
             .child('merchant_profile_images')
             .child('$uid.jpg');
-        // Compression légère pour accélérer l'upload et le chargement
-        final compressed = await FlutterImageCompress.compressWithFile(
-          profileImageFile.path,
-          quality: 70,
-        );
-        if (compressed != null) {
-          await ref.putData(compressed, SettableMetadata(contentType: 'image/jpeg'));
-        } else {
-          await ref.putFile(File(profileImageFile.path));
-        }
+        await ref.putFile(File(profileImageFile.path));
         final imageUrl = await ref.getDownloadURL();
         dataToUpdate['profileImageUrl'] = imageUrl;
       }
@@ -379,15 +369,7 @@ class AuthProvider with ChangeNotifier {
             .ref()
             .child('user_profile_images')
             .child('$uid.jpg');
-        final compressed2 = await FlutterImageCompress.compressWithFile(
-          imageFile.path,
-          quality: 70,
-        );
-        if (compressed2 != null) {
-          await ref.putData(compressed2, SettableMetadata(contentType: 'image/jpeg'));
-        } else {
-          await ref.putFile(File(imageFile.path));
-        }
+        await ref.putFile(File(imageFile.path));
         final imageUrl = await ref.getDownloadURL();
         dataToUpdate['profileImageUrl'] = imageUrl;
       }
