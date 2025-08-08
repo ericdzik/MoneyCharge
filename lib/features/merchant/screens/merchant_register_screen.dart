@@ -33,6 +33,8 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   Map<String, dynamic> _openingHours = {};
   // final _servicesController = TextEditingController(); // Ancien champ texte pour les services, sera remplacé
   late TextEditingController _otherServiceController; // Pour le service "Autre"
+  late TextEditingController
+      _otherMerchantTypeController; // Pour le type de commerce "Autre"
 
   final List<String> _predefinedServices = [
     'Recharge de crédit',
@@ -43,10 +45,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
   String? _selectedMerchantType;
   final List<String> _merchantTypes = [
-    'Électronique',
-    'Alimentation',
-    'Services Généraux',
-    'Point de Recharge',
+    'Boutique',
+    'Kiosque',
+    'La poste',
+    'Banque',
+    'Agence',
+    'Bar & Restaurant',
+    'Alimentation générale',
+    'Epicerie',
     'Autre',
   ];
 
@@ -75,6 +81,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     super.initState();
     _requestLocationPermissionAndFetch();
     _otherServiceController = TextEditingController();
+    _otherMerchantTypeController = TextEditingController();
     // Initialiser _selectedServices avec tous les services prédéfinis à false
     for (var service in _predefinedServices) {
       _selectedServices[service] = false;
@@ -259,6 +266,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     // _openingHoursController.dispose();
     // _servicesController.dispose(); // Ancien contrôleur
     _otherServiceController.dispose(); // Nouveau contrôleur pour "Autre"
+    _otherMerchantTypeController.dispose();
     super.dispose();
   }
 
@@ -548,6 +556,24 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                         ? 'Veuillez sélectionner un type de commerce'
                         : null,
                   ),
+                  if (_selectedMerchantType == 'Autre')
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: AppDimensions.paddingM,
+                      ),
+                      child: CustomTextField(
+                        controller: _otherMerchantTypeController,
+                        labelText: 'Précisez le type de commerce',
+                        hintText: 'Ex: Cordonnerie',
+                        validator: (value) {
+                          if (_selectedMerchantType == 'Autre' &&
+                              (value == null || value.isEmpty)) {
+                            return 'Veuillez préciser le type de commerce';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
                   const SizedBox(height: 24),
 
                   // Merchant Profile Type Selection
@@ -1093,6 +1119,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     }
 
     try {
+      // Déterminer le type de marchand final
+      String finalMerchantType;
+      if (_selectedMerchantType == 'Autre') {
+        finalMerchantType = _otherMerchantTypeController.text.trim();
+      } else {
+        finalMerchantType = _selectedMerchantType!;
+      }
+
       await authProvider.registerMerchant(
         businessName: _businessNameController.text,
         email: _emailController.text,
@@ -1104,7 +1138,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         password: _passwordController.text,
         latitude: _selectedLocation!.latitude,
         longitude: _selectedLocation!.longitude,
-        merchantType: _selectedMerchantType!,
+        merchantType: finalMerchantType, // Utilisation de la valeur finale
         profileType: _merchantProfileType, // Ajout du type de profil
       );
 
