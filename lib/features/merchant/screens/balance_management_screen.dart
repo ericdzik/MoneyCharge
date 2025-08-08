@@ -56,6 +56,7 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Gestion du solde & Transactions',
+        backgroundColor: AppColors.primary,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -68,15 +69,9 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
             tooltip: 'Rafraîchir les données',
           ),
         ],
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: AppColors.onPrimary,
-          labelColor: AppColors.onPrimary,
-          unselectedLabelColor: AppColors.onPrimary.withOpacity(0.7),
-          tabs: const [Tab(text: 'Toutes les Transactions')],
-        ),
         showLogo: false,
       ),
+
       body: Stack(
         children: [
           Positioned.fill(
@@ -134,17 +129,13 @@ class _BalanceManagementScreenState extends State<BalanceManagementScreen>
                     ),
                   ),
                 )
-              else // Ce bloc est l'enfant du Column si les conditions précédentes sont fausses
+              else
                 Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildTransactionsList(
-                        transactionProvider.merchantTransactions,
-                      ),
-                    ],
+                  child: _buildTransactionsList(
+                    transactionProvider.merchantTransactions,
                   ),
                 ),
+
             ],
           ),
         ],

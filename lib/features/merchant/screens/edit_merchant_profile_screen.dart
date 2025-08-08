@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
@@ -273,7 +274,14 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       itemBuilder: (context, index) {
         return Stack(
           children: [
-            Image.network(_imageUrls[index], fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+            CachedNetworkImage(
+              imageUrl: _imageUrls[index],
+              fit: BoxFit.cover,
+              width: double.infinity,
+              height: double.infinity,
+              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+            ),
             Positioned(
               top: 0,
               right: 0,
@@ -411,6 +419,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       appBar: CustomAppBar(
         title: 'Modifier le Profil',
         showLogo: false,
+        backgroundColor: AppColors.primary,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),

@@ -10,6 +10,7 @@ import '../../../providers/location_provider.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLngBounds
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/constants/app_routes.dart';
+import '../../../core/utils/marker_utils.dart';
 
 class MapViewScreen extends StatefulWidget {
   final Merchant? targetMerchant; // Marchand optionnel à cibler
@@ -212,7 +213,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                     _buildInfoRow(
                                       Icons.directions_car,
                                       'Temps de trajet',
-                                      merchant.drivingTime ?? 'Non disponible',
+                                      merchant.drivingTime ?? 'Indisponible',
                                     ),
                                   ],
                                 );
@@ -254,7 +255,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                             Icons.directions_car,
                                             'Temps de trajet',
                                             merchant.drivingTime ??
-                                                'Non disponible',
+                                                'Indisponible',
                                           ),
                                         ),
                                       ],
@@ -802,8 +803,25 @@ class _MapViewScreenState extends State<MapViewScreen> {
                               ? 15.0
                               : 13.0, // Zoom plus proche si marchand cible
                         ),
-                        onMapCreated: (GoogleMapController controller) {
+                        onMapCreated: (GoogleMapController controller) async {
                           _mapController = controller;
+                          // Remplacer les icônes des marqueurs par l'icône Géo personnalisée
+                          final custom = await MarkerUtils.getGeoMarkerDescriptor(size: 110);
+                          final current = Set<Marker>.from(merchantProvider.merchants.map((merchant) {
+                            return Marker(
+                              markerId: MarkerId(merchant.id),
+                              position: LatLng(merchant.latitude, merchant.longitude),
+                              infoWindow: InfoWindow(
+                                title: merchant.name,
+                                snippet: merchant.address,
+                                onTap: () => _onMerchantSelected(merchant),
+                              ),
+                              icon: custom,
+                            );
+                          }));
+                          setState(() {
+                            // Force GoogleMap à reconstruire avec les nouveaux marqueurs
+                          });
                         },
                         markers: merchantProvider.merchants.map((merchant) {
                           return Marker(
@@ -817,9 +835,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                               snippet: merchant.address,
                               onTap: () => _onMerchantSelected(merchant),
                             ),
-                            icon: BitmapDescriptor.defaultMarkerWithHue(
-                              merchant.profileType == 'mobile' ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueAzure,
-                            ), // Personnaliser
+                            icon: BitmapDescriptor.defaultMarker, // temporaire
                           );
                         }).toSet(),
                         polylines: {

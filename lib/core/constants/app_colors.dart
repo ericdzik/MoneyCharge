@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Couleurs principales fournies
   static const Color primary = Color(0xFF1E3A8A); // Bleu principal
-  static const Color primaryLight = Color(
-    0xFF1D4ED8,
-  ); // Bleu royal (alternative)
+  static const Color primaryLight = Color(0xFF1D4ED8); // Bleu royal (alternative)
 
   // Dégradé jaune/orange
   static const Color yellow = Color(0xFFFBBF24); // Jaune

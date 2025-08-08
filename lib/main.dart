@@ -14,13 +14,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Configuration de l'orientation
+  // Configuration de l'orientation de l'écran
+  // Pour une application de type "mobile", on fixe l'orientation en portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
 
-  // Configuration de la barre de statut
+  // Configuration de la barre de statut et de la barre de navigation
+  // Pour une application de type "mobile", on utilise un style clair pour la barre de statut
+  // et une barre de navigation blanche avec des icônes sombres
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,

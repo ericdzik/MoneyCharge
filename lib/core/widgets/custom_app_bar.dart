@@ -24,8 +24,44 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Si une couleur de fond solide est fournie, utiliser une AppBar simple (sans blur/clip)
+    if (backgroundColor != null) {
+      return AppBar(
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        leading: leading,
+        centerTitle: true,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (showLogo) ...[
+              const SimIcon(),
+              const SizedBox(width: AppDimensions.paddingS),
+            ],
+            Flexible(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ) ??
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        actions: actions?.take(3).toList(),
+        bottom: bottom,
+      );
+    }
+
+    // Sinon, utiliser la version glassmorphism existante
     return ClipRRect(
-      // Pour arrondir le bas de l'AppBar si besoin
       borderRadius: const BorderRadius.only(
         bottomLeft: Radius.circular(16),
         bottomRight: Radius.circular(16),
@@ -33,42 +69,35 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: AppBar(
-          backgroundColor:
-              backgroundColor ??
-              Colors.white.withOpacity(0.15), // Glassmorphisme or custom color
+          backgroundColor: Colors.white.withOpacity(0.15),
           elevation: 0,
           leading: leading,
-          title: Flexible(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (showLogo) ...[
-                  const SimIcon(),
-                  const SizedBox(width: AppDimensions.paddingS),
-                ],
-                Flexible(
-                  child: Text(
-                    title,
-                    overflow: TextOverflow.ellipsis,
-                    style:
-                        Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ) ??
-                        const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
-                  ),
-                ),
+          centerTitle: true,
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showLogo) ...[
+                const SimIcon(),
+                const SizedBox(width: AppDimensions.paddingS),
               ],
-            ),
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).appBarTheme.titleTextStyle?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ) ??
+                      const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                ),
+              ),
+            ],
           ),
-          actions: actions != null
-              ? actions!.take(3).toList()
-              : null, // Limiter à 3 actions max
-          // Optionnel : fine bordure blanche translucide en bas
+          actions: actions?.take(3).toList(),
           shape: const Border(
             bottom: BorderSide(color: Color(0x33FFFFFF), width: 1),
           ),
