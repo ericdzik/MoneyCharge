@@ -12,6 +12,7 @@ import 'package:locacharge/services/storage_service.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 
 class EditMerchantProfileScreen extends StatefulWidget {
@@ -338,9 +339,32 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   }
 
   Future<void> _uploadProfileImage(XFile file) async {
-    setState(() {
-      _profileImageFile = file;
-    });
+    // Option de recadrage avant d'appliquer
+    final CroppedFile? cropped = await ImageCropper().cropImage(
+      sourcePath: file.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Recadrer la photo',
+          toolbarColor: AppColors.primary,
+          toolbarWidgetColor: Colors.white,
+          lockAspectRatio: false,
+        ),
+        IOSUiSettings(
+          title: 'Recadrer la photo',
+          aspectRatioLockEnabled: false,
+        ),
+      ],
+    );
+
+    if (cropped != null) {
+      setState(() {
+        _profileImageFile = XFile(cropped.path);
+      });
+    } else {
+      setState(() {
+        _profileImageFile = file; // fallback sans crop
+      });
+    }
   }
 
   Future<void> _pickAndUploadImages() async {
@@ -351,7 +375,25 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       final List<XFile> pickedFiles = await _picker.pickMultiImage();
       if (pickedFiles.isNotEmpty) {
         for (var file in pickedFiles) {
-          final imageUrl = await _storageService.uploadImage(file, widget.merchant.id);
+          // Proposer un recadrage pour chaque image
+          final CroppedFile? cropped = await ImageCropper().cropImage(
+            sourcePath: file.path,
+            uiSettings: [
+              AndroidUiSettings(
+                toolbarTitle: 'Recadrer l\'image',
+                toolbarColor: AppColors.primary,
+                toolbarWidgetColor: Colors.white,
+                lockAspectRatio: false,
+              ),
+              IOSUiSettings(
+                title: 'Recadrer l\'image',
+                aspectRatioLockEnabled: false,
+              ),
+            ],
+          );
+
+          final XFile toUpload = cropped != null ? XFile(cropped.path) : file;
+          final imageUrl = await _storageService.uploadImage(toUpload, widget.merchant.id);
           if (imageUrl != null) {
             setState(() {
               _imageUrls.add(imageUrl);
