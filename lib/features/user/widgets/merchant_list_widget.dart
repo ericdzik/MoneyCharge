@@ -119,10 +119,16 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
           builder: (context, constraints) {
             if (constraints.maxWidth < 80) {
               // Pour les très petits écrans, afficher seulement l'icône
-              return _buildStatusIcon(merchant.status);
+              return _buildStatusIcon(
+                merchant.status,
+                serviceStockStatus: merchant.serviceStockStatus,
+              );
             } else {
               // Pour les écrans plus larges, afficher le chip complet
-              return _buildStatusChip(merchant.status);
+              return _buildStatusChip(
+                merchant.status,
+                serviceStockStatus: merchant.serviceStockStatus,
+              );
             }
           },
         ),
@@ -131,11 +137,12 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
     );
   }
 
-  Widget _buildStatusIcon(MerchantStatus status) {
+  Widget _buildStatusIcon(MerchantStatus status, {Map<String, String>? serviceStockStatus}) {
     Color color;
     IconData icon;
+    final effectiveStatus = _computeEffectiveStatus(status, serviceStockStatus);
 
-    switch (status) {
+    switch (effectiveStatus) {
       case MerchantStatus.available:
         color = AppColors.available;
         icon = Icons.check_circle;
@@ -153,11 +160,12 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
     return Icon(icon, color: color, size: 20);
   }
 
-  Widget _buildStatusChip(MerchantStatus status) {
+  Widget _buildStatusChip(MerchantStatus status, {Map<String, String>? serviceStockStatus}) {
     Color color;
     String text;
+    final effectiveStatus = _computeEffectiveStatus(status, serviceStockStatus);
 
-    switch (status) {
+    switch (effectiveStatus) {
       case MerchantStatus.available:
         color = AppColors.available;
         text = 'Disponible';
@@ -190,6 +198,18 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
         overflow: TextOverflow.ellipsis,
       ),
     );
+  }
+
+  MerchantStatus _computeEffectiveStatus(MerchantStatus base, Map<String, String>? stock) {
+    if (stock == null || stock.isEmpty) return base;
+    final combined = stock.values.map((v) => v.toLowerCase()).join(' ');
+    if (combined.contains('rupture') || combined.contains('épuis') || combined.contains('epuise')) {
+      return MerchantStatus.outOfStock;
+    }
+    if (combined.contains('faible') || combined.contains('bientôt') || combined.contains('bientot')) {
+      return MerchantStatus.lowStock;
+    }
+    return MerchantStatus.available;
   }
 
   Widget _buildEmptyState() {

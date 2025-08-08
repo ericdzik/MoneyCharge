@@ -253,33 +253,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                       children: widget.merchant.services.map((
                                         service,
                                       ) {
-                                        return Container(
-                                          key: ValueKey(service),
-                                          width: double.infinity,
-                                          margin: const EdgeInsets.only(
-                                            bottom: AppDimensions.paddingS,
-                                          ),
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: AppDimensions.paddingM,
-                                            vertical: AppDimensions.paddingS,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.background,
-                                            borderRadius: BorderRadius.circular(
-                                              AppDimensions.radiusS,
-                                            ),
-                                            border: Border.all(
-                                              color: AppColors.border,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            service,
-                                            style: AppTextStyles.body2,
-                                            textAlign: TextAlign.center,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        );
+                                        return _buildServiceItem(service);
                                       }).toList(),
                                     );
                                   } else {
@@ -295,31 +269,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                                             maxWidth:
                                                 constraints.maxWidth * 0.45,
                                           ),
-                                          child: Container(
-                                            key: ValueKey(service),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal:
-                                                  AppDimensions.paddingM,
-                                              vertical: AppDimensions.paddingS,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.background,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    AppDimensions.radiusS,
-                                                  ),
-                                              border: Border.all(
-                                                color: AppColors.border,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              service,
-                                              style: AppTextStyles.body2,
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          ),
+                                          child: _buildServiceItem(service),
                                         );
                                       }).toList(),
                                     );
@@ -561,6 +511,21 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   }
 
   StatusType _getStatusType() {
+    final stock = widget.merchant.serviceStockStatus;
+    if (stock != null && stock.isNotEmpty) {
+      // Agréger et passer en minuscule pour une détection robuste
+      final combined = stock.values
+          .map((v) => v.toString().toLowerCase())
+          .join(' ');
+      if (combined.contains('rupture') || combined.contains('épuis') || combined.contains('epuise')) {
+        return StatusType.outOfStock;
+      }
+      if (combined.contains('faible') || combined.contains('bientôt') || combined.contains('bientot')) {
+        return StatusType.lowStock;
+      }
+      return StatusType.available;
+    }
+
     switch (widget.merchant.status) {
       case MerchantStatus.available:
         return StatusType.available;
@@ -569,5 +534,66 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
       case MerchantStatus.outOfStock:
         return StatusType.outOfStock;
     }
+  }
+
+  Widget _buildServiceItem(String serviceName) {
+    final stockMap = widget.merchant.serviceStockStatus ?? const {};
+    final raw = stockMap[serviceName] ?? '';
+    final lower = raw.toLowerCase();
+    Color borderColor = AppColors.available;
+    String label = 'Disponible';
+    Color textColor = AppColors.available;
+    if (lower.contains('rupture') || lower.contains('épuis') || lower.contains('epuise')) {
+      borderColor = AppColors.outOfStock;
+      textColor = AppColors.outOfStock;
+      label = 'Épuisé';
+    } else if (lower.contains('faible') || lower.contains('bientôt') || lower.contains('bientot')) {
+      borderColor = AppColors.lowStock;
+      textColor = AppColors.lowStock;
+      label = 'Stock faible';
+    }
+
+    return Container(
+      key: ValueKey(serviceName),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.paddingM,
+        vertical: AppDimensions.paddingS,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              serviceName,
+              style: AppTextStyles.body2,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: AppDimensions.paddingS),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: textColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: textColor),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

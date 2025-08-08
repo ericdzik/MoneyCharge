@@ -27,17 +27,17 @@ class DashboardStatsWidget extends StatelessWidget {
 
         if (screenWidth < 360) {
           crossAxisCount = 1;
-          childAspectRatio = 3.5;
+          childAspectRatio = 2.6; // plus haut -> contenu plus grand
           isSmallScreen = true;
         } else if (screenWidth < 600) {
           crossAxisCount = 2;
-          childAspectRatio = 1.6;
+          childAspectRatio = 1.3; // plus haut -> contenu plus grand
         } else if (screenWidth < 900) {
           crossAxisCount = 2;
-          childAspectRatio = 1.8;
+          childAspectRatio = 1.4; // un peu plus haut
         } else {
           crossAxisCount = 4;
-          childAspectRatio = 1.5;
+          childAspectRatio = 1.3; // plus haut -> contenu plus grand
         }
 
         return GridView.count(
@@ -96,7 +96,7 @@ class DashboardStatsWidget extends StatelessWidget {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(isSmallScreen ? 8 : 12),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(10),
@@ -110,18 +110,18 @@ class DashboardStatsWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: EdgeInsets.all(isSmallScreen ? 5 : 7),
+                padding: EdgeInsets.all(isSmallScreen ? 8 : 10),
                 decoration: BoxDecoration(
                   color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(icon, color: color, size: isSmallScreen ? 14 : 18),
+                child: Icon(icon, color: color, size: isSmallScreen ? 18 : 22),
               ),
               Flexible(
                 child: Text(
@@ -129,7 +129,7 @@ class DashboardStatsWidget extends StatelessWidget {
                   textAlign: TextAlign.right,
                   style: AppTextStyles.caption.copyWith(
                     color: AppColors.textSecondary,
-                    fontSize: isSmallScreen ? 9 : 11,
+                    fontSize: isSmallScreen ? 11 : 13,
                   ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
@@ -144,7 +144,7 @@ class DashboardStatsWidget extends StatelessWidget {
               child: Text(
                 value,
                 style: AppTextStyles.h2.copyWith(
-                  fontSize: isSmallScreen ? 14 : 18,
+                  fontSize: isSmallScreen ? 20 : 26,
                   fontWeight: FontWeight.bold,
                 ),
                 maxLines: 1,
@@ -160,7 +160,7 @@ class DashboardStatsWidget extends StatelessWidget {
                 subtitle,
                 style: AppTextStyles.caption.copyWith(
                   color: AppColors.textSecondary,
-                  fontSize: isSmallScreen ? 9 : 10,
+                  fontSize: isSmallScreen ? 11 : 12,
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 2,
