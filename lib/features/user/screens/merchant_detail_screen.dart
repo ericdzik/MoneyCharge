@@ -198,6 +198,11 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                           content: widget.merchant.name,
                         ),
                         _buildInfoCard(
+                          icon: Icons.business, // Icône pour le type de commerce
+                          title: 'Type de commerce',
+                          content: widget.merchant.merchantType ?? 'Non spécifié',
+                        ),
+                        _buildInfoCard(
                           icon: Icons.location_on,
                           title: 'Adresse',
                           content: widget.merchant.address,
