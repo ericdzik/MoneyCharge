@@ -23,6 +23,7 @@ class Merchant {
   final List<String>? imageUrls;
   final double averageRating;
   final int reviewCount;
+  final bool isPremium;
 
   // Nouveaux champs pour correspondre à MerchantAuthModel et aux besoins de l'admin
   final String? email;
@@ -60,6 +61,7 @@ class Merchant {
     this.drivingTime,
     this.averageRating = 0.0,
     this.reviewCount = 0,
+    this.isPremium = false,
   }) : clientCalculatedIsOpen = false, clientCalculatedStatus = MerchantStatus.available {
      _updateOpenStatusBasedOnHours();
   }
@@ -96,6 +98,7 @@ class Merchant {
       lastLoginAt: json['lastLoginAt'] != null ? DateTime.tryParse(json['lastLoginAt'] as String) : null,
       averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: json['reviewCount'] as int? ?? 0,
+      isPremium: json['isPremium'] as bool? ?? false,
     );
     // Note: _updateOpenStatusBasedOnHours() est déjà appelé par le constructeur principal de Merchant
     // donc pas besoin de le rappeler ici si Merchant() est bien le constructeur utilisé.
@@ -154,6 +157,7 @@ class Merchant {
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
       averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: data['reviewCount'] as int? ?? 0,
+      isPremium: data['isPremium'] as bool? ?? false,
       // isOpen: false, // Sera calculé par _updateOpenStatusBasedOnHours via le constructeur
       // status: MerchantStatus.available, // Déjà géré par le constructeur principal
     );
@@ -195,6 +199,7 @@ class Merchant {
       'lastLoginAt': lastLoginAt?.toIso8601String(),
       'averageRating': averageRating,
       'reviewCount': reviewCount,
+      'isPremium': isPremium,
     };
   }
 }

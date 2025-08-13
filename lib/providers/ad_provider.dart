@@ -40,11 +40,36 @@ class AdProvider with ChangeNotifier {
     }
   }
 
+  Future<void> fetchMyAds(String merchantId) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final adsSnapshot = await _firestore
+          .collection('ads')
+          .where('merchantId', isEqualTo: merchantId)
+          .orderBy('createdAt', descending: true)
+          .get();
+      _ads = adsSnapshot.docs
+          .map((doc) => Ad.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
+          .toList();
+    } catch (e) {
+      print("Error in fetchMyAds: $e");
+      _error = "Erreur lors de la récupération de vos publicités: ${e.toString()}";
+      _ads = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
   Future<bool> addAd({
     required String title,
     required String description,
     required XFile image,
     required String url,
+    required String merchantId,
   }) async {
     _isLoading = true;
     _error = null;
@@ -64,6 +89,7 @@ class AdProvider with ChangeNotifier {
         imageUrl: imageUrl,
         url: url,
         createdAt: Timestamp.now(),
+        merchantId: merchantId,
       );
 
       await _firestore.collection('ads').add(

@@ -205,23 +205,15 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           childAspectRatio = 1.2;
         }
 
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: childAspectRatio,
-          children: [
-            _buildActionCard(
+        final actions = <Widget>[
+          _buildActionCard(
               title: 'Gérer le solde',
               subtitle: 'Transactions et inventaire',
               icon: Icons.account_balance_wallet,
               color: AppColors.primary,
               onTap: () =>
-                  Navigator.pushNamed(context, AppRoutes.balanceManagement),
-            ),
-            _buildActionCard(
+                  Navigator.pushNamed(context, AppRoutes.balanceManagement)),
+          _buildActionCard(
               title: 'Transactions',
               subtitle: 'Voir l\'historique',
               icon: Icons.receipt_long,
@@ -234,9 +226,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                     ),
                   ),
                 );
-              },
-            ),
-            _buildActionCard(
+              }),
+          _buildActionCard(
               title: 'Profil',
               subtitle: 'Modifier les informations',
               icon: Icons.person,
@@ -249,9 +240,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                         EditMerchantProfileScreen(merchant: merchant),
                   ),
                 );
-              },
-            ),
-            _buildActionCard(
+              }),
+          _buildActionCard(
               title: 'Support',
               subtitle: 'Contacter l\'assistance',
               icon: Icons.support_agent,
@@ -262,9 +252,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                     content: Text('Navigation vers le support (TODO)'),
                   ),
                 );
-              },
-            ),
-            _buildActionCard(
+              }),
+          _buildActionCard(
               title: 'Avis Clients',
               subtitle: 'Voir les retours',
               icon: Icons.reviews,
@@ -278,9 +267,37 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                     ),
                   ),
                 );
+              }),
+        ];
+
+        if (merchant.isPremium) {
+          actions.add(
+            _buildActionCard(
+              title: 'Services Premium',
+              subtitle: 'Publicités et plus',
+              icon: Icons.workspace_premium,
+              color: Colors.purple,
+              onTap: () {
+                // TODO: Add navigation to premium services screen
+                // Navigator.pushNamed(context, AppRoutes.premiumServices);
+                 ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Navigation vers les services premium (TODO)'),
+                  ),
+                );
               },
             ),
-          ],
+          );
+        }
+
+        return GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: crossAxisCount,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: childAspectRatio,
+          children: actions,
         );
       },
     );

@@ -42,5 +42,18 @@ service cloud.firestore {
       // A user can only update or delete their own reviews.
       allow update, delete: if request.auth.uid == resource.data.userId || isAdmin();
     }
+
+    // Rules for the 'ads' collection
+    match /ads/{adId} {
+      // Anyone can read ads
+      allow read: if request.auth != null;
+
+      // Only premium merchants can create ads for themselves
+      allow create: if request.resource.data.merchantId == request.auth.uid &&
+                      get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isPremium == true;
+
+      // Only the merchant who owns the ad or an admin can update/delete it
+      allow update, delete: if resource.data.merchantId == request.auth.uid || isAdmin();
+    }
   }
 }

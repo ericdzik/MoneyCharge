@@ -32,6 +32,9 @@ import 'features/merchant/screens/merchant_register_screen.dart';
 import 'features/merchant/screens/merchant_dashboard_screen.dart';
 import 'features/merchant/screens/balance_management_screen.dart';
 import 'features/merchant/screens/edit_merchant_profile_screen.dart';
+import 'features/merchant/screens/premium_services_screen.dart';
+import 'features/merchant/screens/manage_ads_screen.dart';
+import 'features/merchant/screens/create_ad_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
@@ -186,6 +189,30 @@ class LocaChargeApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             const MerchantProfileScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.premiumServices:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const PremiumServicesScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.merchantManageAds:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const ManageMerchantAdsScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.merchantAddAd:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const CreateAdScreen(),
             UserType.merchant,
           ),
         );
