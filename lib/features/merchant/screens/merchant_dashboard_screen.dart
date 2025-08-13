@@ -278,13 +278,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               icon: Icons.workspace_premium,
               color: Colors.purple,
               onTap: () {
-                // TODO: Add navigation to premium services screen
-                // Navigator.pushNamed(context, AppRoutes.premiumServices);
-                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Navigation vers les services premium (TODO)'),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.premiumServices);
               },
             ),
           );
