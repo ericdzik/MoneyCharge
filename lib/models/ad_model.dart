@@ -7,7 +7,7 @@ class Ad {
   final String imageUrl;
   final String url;
   final Timestamp createdAt;
-  final String merchantId;
+  final String? merchantId;
   final bool isActive;
   final Timestamp? expiresAt;
 
@@ -18,7 +18,7 @@ class Ad {
     required this.imageUrl,
     required this.url,
     required this.createdAt,
-    required this.merchantId,
+    this.merchantId,
     this.isActive = true,
     this.expiresAt,
   });
@@ -32,7 +32,7 @@ class Ad {
       imageUrl: data['imageUrl'] as String,
       url: data['url'] as String,
       createdAt: data['createdAt'] as Timestamp,
-      merchantId: data['merchantId'] as String,
+      merchantId: data['merchantId'] as String?,
       isActive: data['isActive'] as bool? ?? true,
       expiresAt: data['expiresAt'] as Timestamp?,
     );

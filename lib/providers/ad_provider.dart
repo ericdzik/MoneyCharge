@@ -69,7 +69,7 @@ class AdProvider with ChangeNotifier {
     required String description,
     required XFile image,
     required String url,
-    required String merchantId,
+    String? merchantId,
   }) async {
     _isLoading = true;
     _error = null;
