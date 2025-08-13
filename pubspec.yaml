@@ -51,7 +51,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - .env
+    - assets/.env
     - assets/icon/logo.png
     - assets/splash/splash_screen.png
     - assets/splash/32.png

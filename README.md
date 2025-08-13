@@ -33,7 +33,7 @@ Application de location de chargeurs de téléphone avec interface unifiée.
 git clone [url-du-projet]
 
 # Créer le fichier de configuration local
-cp .env.example .env
+cp assets/.env.example assets/.env
 
 # Installer les dépendances
 flutter pub get
@@ -73,17 +73,17 @@ lib/
 ## 🔧 Configuration
 
 ### Variables d'Environnement
-La configuration de l'application, comme l'URL de l'API, est gérée via un fichier `.env`.
+La configuration de l'application, comme l'URL de l'API, est gérée via un fichier `assets/.env`.
 
-1.  Copiez le fichier `.env.example` et renommez-le en `.env`.
-2.  Modifiez les valeurs dans `.env` pour votre environnement.
+1.  Copiez le fichier `assets/.env.example` et renommez-le en `assets/.env`.
+2.  Modifiez les valeurs dans `assets/.env` pour votre environnement.
 
 ```
-# .env
+# assets/.env
 BASE_URL=https://api.locacharge.com/v1
 ```
 
-Le fichier `lib/services/api_service.dart` charge cette variable au démarrage.
+Le fichier `lib/main.dart` charge ce fichier au démarrage pour que les variables soient disponibles dans toute l'application.
 
 ## 🚨 Notes Importantes
 
