@@ -403,6 +403,30 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateUserToPremium() async {
+    _setLoading(true);
+    _error = null;
+
+    if (_firebaseUser == null) {
+      _error = "Aucun utilisateur connecté pour la mise à jour.";
+      _setLoading(false);
+      return;
+    }
+    final uid = _firebaseUser!.uid;
+
+    try {
+      await _firestore.collection('users').doc(uid).update({
+        'isPremium': true,
+        'premiumSince': FieldValue.serverTimestamp(),
+      });
+      await _fetchUserProfile(uid); // Recharger pour la cohérence
+    } catch (e) {
+      _error = "Erreur lors du passage au statut premium: ${e.toString()}";
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void _setLoading(bool loading) {
     if (_isLoading == loading) return;
     _isLoading = loading;

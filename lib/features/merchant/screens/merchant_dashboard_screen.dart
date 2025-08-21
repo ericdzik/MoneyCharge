@@ -280,6 +280,16 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 );
               },
             ),
+            if (!merchant.isPremium)
+              _buildActionCard(
+                title: 'Devenir Premium',
+                subtitle: 'Accès exclusif',
+                icon: Icons.star,
+                color: Colors.amber,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.premiumSubscription);
+                },
+              ),
           ],
         );
       },

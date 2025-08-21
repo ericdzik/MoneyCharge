@@ -1,7 +1,56 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const crypto = require("crypto");
+const axios = require("axios");
 
 admin.initializeApp();
+
+const PAYSTACK_SECRET_KEY = functions.config().paystack.secret_key;
+
+exports.paystackWebhook = functions.https.onRequest(async (req, res) => {
+  const hash = crypto.createHmac('sha512', PAYSTACK_SECRET_KEY)
+                     .update(JSON.stringify(req.body))
+                     .digest('hex');
+
+  if (hash !== req.headers['x-paystack-signature']) {
+    console.error("Invalid Paystack signature");
+    res.status(401).send("Invalid signature");
+    return;
+  }
+
+  const event = req.body;
+
+  if (event.event === 'charge.success') {
+    const { reference, amount, customer } = event.data;
+    const email = customer.email;
+
+    try {
+      const querySnapshot = await admin.firestore().collection('users').where('email', '==', email).limit(1).get();
+      if (querySnapshot.empty) {
+        console.error(`User with email ${email} not found.`);
+        res.status(404).send("User not found");
+        return;
+      }
+
+      const userDoc = querySnapshot.docs[0];
+      const userId = userDoc.id;
+
+      await admin.firestore().collection('users').doc(userId).update({
+        isPremium: true,
+        premiumSince: admin.firestore.FieldValue.serverTimestamp(),
+        lastPaystackReference: reference,
+      });
+
+      console.log(`Successfully upgraded user ${userId} to premium.`);
+      res.status(200).send("Webhook processed successfully.");
+    } catch (error) {
+      console.error("Error updating user to premium:", error);
+      res.status(500).send("Internal server error");
+    }
+  } else {
+    res.status(200).send("Event not handled");
+  }
+});
 
 exports.onNewReview = functions.firestore
     .document("/users/{merchantId}/reviews/{reviewId}")
