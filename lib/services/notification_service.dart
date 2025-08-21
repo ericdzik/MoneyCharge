@@ -325,8 +325,6 @@ class NotificationService {
         tzScheduledDate,
         details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         payload: payload,
       );
     } catch (e) {
