@@ -138,16 +138,31 @@ class NotificationService {
   static void _handleNotificationPayload(Map<String, dynamic> data) {
     final screen = data['screen'] as String?;
 
-    if (screen == 'reviews') {
-      final merchantId = data['merchantId'] as String?;
-      if (merchantId != null) {
+    switch (screen) {
+      case 'reviews':
+        final merchantId = data['merchantId'] as String?;
+        if (merchantId != null) {
+          NavigationService.navigatorKey.currentState?.pushNamed(
+            AppRoutes.merchantReviews,
+            arguments: {'merchantId': merchantId},
+          );
+        }
+        break;
+      case 'balance_management':
         NavigationService.navigatorKey.currentState?.pushNamed(
-          AppRoutes.merchantReviews,
-          arguments: {'merchantId': merchantId},
+          AppRoutes.balanceManagement,
         );
-      }
+        break;
+      case 'pending_verifications':
+        NavigationService.navigatorKey.currentState?.pushNamed(
+          AppRoutes.adminPendingVerifications,
+        );
+        break;
+      default:
+        // Optional: navigate to a default screen if payload is unknown
+        print('Unknown notification screen: $screen');
+        break;
     }
-    // Add other cases for different screens here
   }
 
   /// Afficher une notification locale
