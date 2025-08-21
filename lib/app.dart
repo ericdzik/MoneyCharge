@@ -32,6 +32,7 @@ import 'features/merchant/screens/merchant_register_screen.dart';
 import 'features/merchant/screens/merchant_dashboard_screen.dart';
 import 'features/merchant/screens/balance_management_screen.dart';
 import 'features/merchant/screens/edit_merchant_profile_screen.dart';
+import 'features/merchant/screens/merchant_reviews_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
@@ -45,8 +46,8 @@ import 'package:locacharge/features/user/screens/privacy_screen.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'features/merchant/models/merchant_auth_model.dart';
-import 'services/deep_link_service.dart';
 import 'services/navigation_service.dart';
+import 'services/notification_service.dart';
 
 class LocaChargeApp extends StatefulWidget {
   const LocaChargeApp({super.key});
@@ -56,18 +57,11 @@ class LocaChargeApp extends StatefulWidget {
 }
 
 class _LocaChargeAppState extends State<LocaChargeApp> {
-  final DeepLinkService _deepLinkService = DeepLinkService();
-
   @override
   void initState() {
     super.initState();
-    _deepLinkService.initUniLinks();
-  }
-
-  @override
-  void dispose() {
-    _deepLinkService.dispose();
-    super.dispose();
+    // Initialize notification service here to listen for incoming notifications
+    NotificationService.initialize();
   }
 
   @override
@@ -191,6 +185,16 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             const BalanceManagementScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.merchantReviews:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final merchantId = args?['merchantId'] as String;
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            MerchantReviewsScreen(merchantId: merchantId),
             UserType.merchant,
           ),
         );

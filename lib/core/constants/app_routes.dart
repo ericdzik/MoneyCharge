@@ -25,6 +25,7 @@ class AppRoutes {
   static const String merchantProfile = '/merchant/profile';
   static const String merchantAnalytics = '/merchant/analytics';
   static const String balanceManagement = '/merchant/balance';
+  static const String merchantReviews = '/merchant/reviews';
 
   // Routes admin
   static const String adminDashboard = '/admin/dashboard';

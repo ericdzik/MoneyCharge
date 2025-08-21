@@ -219,7 +219,7 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
 
   TransactionType _selectedType = TransactionType.sale;
   BalanceType _selectedBalanceType = BalanceType.credit;
-  String? _selectedOperator = 'Autre';
+  String? _selectedOperator;
 
   final List<String> _operators = [
     'MTN',

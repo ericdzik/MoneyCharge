@@ -142,4 +142,18 @@ class AuthService {
     }
   }
 
+  // Save FCM token to user's document
+  Future<void> saveFCMToken(String token) async {
+    final userId = getCurrentUserId();
+    if (userId == null) return;
+
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'fcmTokens': FieldValue.arrayUnion([token]),
+      });
+    } catch (e) {
+      print('Error saving FCM token: $e');
+      // It's okay to fail silently here, we can retry later.
+    }
+  }
 }

@@ -4,11 +4,20 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import '../core/constants/app_colors.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'auth_service.dart';
+import 'dart:convert';
+import 'navigation_service.dart';
+import '../core/constants/app_routes.dart';
 
 /// Service de notifications pour l'application
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _notifications =
+  static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+  static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static final AuthService _authService = AuthService();
 
   static bool _isInitialized = false;
 
@@ -42,14 +51,60 @@ class NotificationService {
       );
 
       // Initialiser le plugin
-      await _notifications.initialize(
+      await _localNotifications.initialize(
         settings,
         onDidReceiveNotificationResponse: _onNotificationTapped,
       );
 
+      // Initialiser FCM
+      await initFCM();
+
       _isInitialized = true;
     } catch (e) {
       print('Notification initialization error: $e');
+    }
+  }
+
+  /// Initialiser Firebase Cloud Messaging
+  static Future<void> initFCM() async {
+    NotificationSettings settings = await _fcm.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      final token = await _fcm.getToken();
+      if (token != null) {
+        await _authService.saveFCMToken(token);
+        _fcm.onTokenRefresh.listen((newToken) async {
+          await _authService.saveFCMToken(newToken);
+        });
+      }
+
+      // Gérer les notifications lorsque l'application est au premier plan
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        print('Got a message whilst in the foreground!');
+        print('Message data: ${message.data}');
+
+        if (message.notification != null) {
+          print('Message also contained a notification: ${message.notification}');
+          showNotification(
+            id: message.hashCode,
+            title: message.notification!.title ?? 'Notification',
+            body: message.notification!.body ?? '',
+            payload: json.encode(message.data), // Encode the whole data map
+          );
+        }
+      });
+
+      // Gérer le clic sur la notification lorsque l'application est ouverte depuis l'arrière-plan
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        print('A new onMessageOpenedApp event was published!');
+        _handleNotificationPayload(message.data);
+      });
+    } else {
+      print('User declined or has not accepted permission for FCM');
     }
   }
 
@@ -70,14 +125,29 @@ class NotificationService {
     // Navigation basée sur le payload de la notification
     final payload = response.payload;
     if (payload != null) {
-      _handleNotificationPayload(payload);
+      try {
+        final decodedPayload = json.decode(payload) as Map<String, dynamic>;
+        _handleNotificationPayload(decodedPayload);
+      } catch (e) {
+        print('Error decoding notification payload: $e');
+      }
     }
   }
 
   /// Gérer le payload de la notification
-  static void _handleNotificationPayload(String payload) {
-    // Implémenter la logique de navigation selon le type de notification
-    print('Notification payload: $payload');
+  static void _handleNotificationPayload(Map<String, dynamic> data) {
+    final screen = data['screen'] as String?;
+
+    if (screen == 'reviews') {
+      final merchantId = data['merchantId'] as String?;
+      if (merchantId != null) {
+        NavigationService.navigatorKey.currentState?.pushNamed(
+          AppRoutes.merchantReviews,
+          arguments: {'merchantId': merchantId},
+        );
+      }
+    }
+    // Add other cases for different screens here
   }
 
   /// Afficher une notification locale
@@ -120,7 +190,7 @@ class NotificationService {
       );
 
       // Afficher la notification
-      await _notifications.show(id, title, body, details, payload: payload);
+      await _localNotifications.show(id, title, body, details, payload: payload);
     } catch (e) {
       print('Show notification error: $e');
     }
@@ -233,7 +303,7 @@ class NotificationService {
         tz.local,
       );
 
-      await _notifications.zonedSchedule(
+      await _localNotifications.zonedSchedule(
         id,
         title,
         body,
@@ -251,18 +321,18 @@ class NotificationService {
 
   /// Annuler une notification
   static Future<void> cancelNotification(int id) async {
-    await _notifications.cancel(id);
+    await _localNotifications.cancel(id);
   }
 
   /// Annuler toutes les notifications
   static Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
+    await _localNotifications.cancelAll();
   }
 
   /// Obtenir les notifications en attente
   static Future<List<PendingNotificationRequest>>
   getPendingNotifications() async {
-    return await _notifications.pendingNotificationRequests();
+    return await _localNotifications.pendingNotificationRequests();
   }
 
   /// Vérifier si les notifications sont activées

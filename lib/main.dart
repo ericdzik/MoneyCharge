@@ -5,6 +5,7 @@ import 'package:locacharge/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 import 'app.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,9 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialiser les notifications
+  await NotificationService.initialize();
 
   // Configuration de l'orientation de l'écran
   // Pour une application de type "mobile", on fixe l'orientation en portrait
