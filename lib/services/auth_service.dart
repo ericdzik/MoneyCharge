@@ -67,61 +67,6 @@ class AuthService {
     }
   }
 
-  // Inscription marchand
-  Future<String?> registerMerchant({
-    required String businessName,
-    required String email,
-    required String phone,
-    required String address,
-    required Map<String, dynamic> openingHours,
-    required List<String> services,
-    required String password,
-    required double? latitude,
-    required double? longitude,
-    required String merchantType,
-    required String profileType,
-  }) async {
-    try {
-      final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      final user = userCredential.user;
-      if (user != null) {
-        // Créer le profil marchand dans Firestore
-        await _firestore.collection('users').doc(user.uid).set({
-          'uid': user.uid,
-          'email': email,
-          'name': businessName,
-          'role': 'merchant',
-          'merchantType': merchantType,
-          'profileType': profileType,
-          'createdAt': FieldValue.serverTimestamp(),
-          'phone': phone,
-          'address': address,
-          'openingHours': openingHours,
-          'services': services,
-          'isVerified': false,
-          'isActive': true,
-          'lastLoginAt': FieldValue.serverTimestamp(),
-          'latitude': latitude,
-          'longitude': longitude,
-        });
-        return user.uid;
-      }
-      return null;
-    } on fb_auth.FirebaseAuthException catch (e) {
-      if (e.code == 'weak-password') {
-        throw Exception('Le mot de passe est trop faible.');
-      } else if (e.code == 'email-already-in-use') {
-        throw Exception('Cette adresse e-mail est déjà utilisée.');
-      }
-      rethrow;
-    } catch (e) {
-      throw Exception('Une erreur inconnue est survenue lors de l\'inscription du marchand.');
-    }
-  }
-
   // Méthode privée pour créer le profil utilisateur dans Firestore
   Future<void> _createUserProfileInFirestore({
     required String uid,

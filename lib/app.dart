@@ -32,9 +32,6 @@ import 'features/merchant/screens/merchant_register_screen.dart';
 import 'features/merchant/screens/merchant_dashboard_screen.dart';
 import 'features/merchant/screens/balance_management_screen.dart';
 import 'features/merchant/screens/edit_merchant_profile_screen.dart';
-import 'features/merchant/screens/premium_services_screen.dart';
-import 'features/merchant/screens/manage_ads_screen.dart';
-import 'features/merchant/screens/create_ad_screen.dart';
 
 // Import des écrans admin
 import 'features/admin/screens/admin_dashboard_screen.dart';
@@ -48,9 +45,30 @@ import 'package:locacharge/features/user/screens/privacy_screen.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'features/merchant/models/merchant_auth_model.dart';
+import 'services/deep_link_service.dart';
+import 'services/navigation_service.dart';
 
-class LocaChargeApp extends StatelessWidget {
+class LocaChargeApp extends StatefulWidget {
   const LocaChargeApp({super.key});
+
+  @override
+  State<LocaChargeApp> createState() => _LocaChargeAppState();
+}
+
+class _LocaChargeAppState extends State<LocaChargeApp> {
+  final DeepLinkService _deepLinkService = DeepLinkService();
+
+  @override
+  void initState() {
+    super.initState();
+    _deepLinkService.initUniLinks();
+  }
+
+  @override
+  void dispose() {
+    _deepLinkService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +86,7 @@ class LocaChargeApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Geo Money&Charge',
+        navigatorKey: NavigationService.navigatorKey,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeProvider.themeMode,
@@ -189,30 +208,6 @@ class LocaChargeApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             const MerchantProfileScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.premiumServices:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const PremiumServicesScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.merchantManageAds:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const ManageMerchantAdsScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.merchantAddAd:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const CreateAdScreen(),
             UserType.merchant,
           ),
         );

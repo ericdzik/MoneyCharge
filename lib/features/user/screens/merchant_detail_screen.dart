@@ -13,7 +13,9 @@ import 'package:card_swiper/card_swiper.dart';
 import 'package:locacharge/features/user/screens/add_review_screen.dart';
 import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import '../../../providers/location_provider.dart';
-import '../../../providers/favorite_merchant_provider.dart'; // Ajout de FavoriteMerchantProvider
+import '../../../providers/favorite_merchant_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../services/sharing_service.dart';
 
 class MerchantDetailScreen extends StatefulWidget {
   final Merchant merchant;
@@ -29,6 +31,12 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   String _walkingTime = 'Calcul...';
   String _drivingTime = 'Calcul...';
   final LocationService _locationService = LocationService();
+
+  void _shareMerchant() {
+    final String link = SharingService.createShareLinkForMerchant(widget.merchant.id);
+    final String shareText = 'Découvrez ce marchand sur LocaCharge: $link';
+    Share.share(shareText);
+  }
 
   @override
   void initState() {
@@ -110,9 +118,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () {
-              // Partager
-            },
+            onPressed: _shareMerchant,
           ),
         ],
       ),

@@ -15,9 +15,9 @@ import '../services/auth_service.dart';
 enum UserType { user, merchant, admin, unknown }
 
 class AuthProvider with ChangeNotifier {
-  final AuthService _authService;
-  final FirebaseFirestore _firestore;
-  final fb_auth.FirebaseAuth _firebaseAuth;
+  final AuthService _authService = AuthService();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance;
   StreamSubscription? _authStateSubscription;
 
   fb_auth.User? _firebaseUser;
@@ -39,13 +39,7 @@ class AuthProvider with ChangeNotifier {
   AdminModel? get adminProfile => _adminProfile;
   String? get userId => _firebaseUser?.uid;
 
-  AuthProvider({
-    AuthService? authService,
-    FirebaseFirestore? firestore,
-    fb_auth.FirebaseAuth? firebaseAuth,
-  })  : _authService = authService ?? AuthService(),
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _firebaseAuth = firebaseAuth ?? fb_auth.FirebaseAuth.instance {
+  AuthProvider() {
     _listenToAuthChanges();
   }
 
@@ -230,37 +224,71 @@ class AuthProvider with ChangeNotifier {
     required String phone,
     required String address,
     required Map<String, dynamic> openingHours,
-    required List<String> services,
+    required List<String> services, // CHANGED to List<String>
     required String password,
     required double? latitude,
     required double? longitude,
-    required String merchantType,
-    required String profileType,
+    required String merchantType, // ADDED
+    required String profileType, // NOUVEAU
   }) async {
     _setLoading(true);
     _error = null;
+
+    print("[AuthProvider] Début de l'inscription marchand pour: $email");
+
     try {
-      final uid = await _authService.registerMerchant(
-        businessName: businessName,
-        email: email,
-        phone: phone,
-        address: address,
-        openingHours: openingHours,
-        services: services,
-        password: password,
-        latitude: latitude,
-        longitude: longitude,
-        merchantType: merchantType,
-        profileType: profileType,
-      );
-      if (uid == null) {
-        _error = "Erreur d'inscription du marchand: UID non retourné.";
+      // Créer le compte Firebase Auth directement sans passer par AuthService
+      print("[AuthProvider] Création du compte Firebase Auth...");
+      final userCredential = await fb_auth.FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      final uid = userCredential.user?.uid;
+      print("[AuthProvider] Compte Firebase Auth créé avec UID: $uid");
+
+      if (uid != null) {
+        // Créer directement le profil marchand dans Firestore
+        print("[AuthProvider] Création du profil marchand dans Firestore...");
+        await _firestore.collection('users').doc(uid).set({
+          'uid': uid,
+          'email': email,
+          'name': businessName,
+          'role': 'merchant', // Forcer le rôle marchand
+          'merchantType': merchantType,
+          'profileType': profileType,
+          'createdAt': FieldValue.serverTimestamp(),
+          'phone': phone,
+          'address': address,
+          'openingHours': openingHours,
+          'services': services,
+          'isVerified': false,
+          'isActive': true,
+          'lastLoginAt': FieldValue.serverTimestamp(),
+          'latitude': latitude,
+          'longitude': longitude,
+        });
+
+        print("[AuthProvider] Profil marchand créé avec succès dans Firestore");
+      } else {
+        _error = "Erreur lors de la création du compte marchand.";
+        print(
+          "[AuthProvider] Erreur: UID null après création du compte Firebase Auth",
+        );
       }
-      // The auth state listener will handle fetching the profile.
+    } on fb_auth.FirebaseAuthException catch (e) {
+      print("[AuthProvider] Erreur Firebase Auth lors de l'inscription marchand: ${e.code}");
+      if (e.code == 'weak-password') {
+        _error = 'Le mot de passe est trop faible.';
+      } else if (e.code == 'email-already-in-use') {
+        _error = 'Cette adresse e-mail est déjà utilisée.';
+      } else {
+        _error = 'Erreur d\'inscription: ${e.message}';
+      }
     } catch (e) {
-      _error = e.toString();
+      _error = "Une erreur inconnue est survenue: ${e.toString()}";
+      print("[AuthProvider] Erreur générique lors de l'inscription marchand: $e");
     } finally {
       _setLoading(false);
+      print("[AuthProvider] Fin de l'inscription marchand. Erreur: $_error");
     }
   }
 

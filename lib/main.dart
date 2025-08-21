@@ -4,14 +4,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables
-  await dotenv.load(fileName: "assets/.env");
 
   // Initialisation de Firebase
   await Firebase.initializeApp(

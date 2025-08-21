@@ -21,7 +21,6 @@ class MerchantAuthModel {
   final bool isSuspended;
   final double averageRating;
   final int reviewCount;
-  final bool isPremium;
 
   MerchantAuthModel({
     required this.id,
@@ -44,7 +43,6 @@ class MerchantAuthModel {
     this.profileImageUrl,
     this.averageRating = 0.0,
     this.reviewCount = 0,
-    this.isPremium = false,
   });
 
   factory MerchantAuthModel.fromFirestore(
@@ -99,7 +97,6 @@ class MerchantAuthModel {
       profileImageUrl: data['profileImageUrl'] as String?,
       averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
       reviewCount: data['reviewCount'] as int? ?? 0,
-      isPremium: data['isPremium'] as bool? ?? false,
     );
   }
 
@@ -126,7 +123,6 @@ class MerchantAuthModel {
       'profileImageUrl': profileImageUrl,
       'averageRating': averageRating,
       'reviewCount': reviewCount,
-      'isPremium': isPremium,
     };
   }
 
@@ -151,7 +147,6 @@ class MerchantAuthModel {
     String? profileImageUrl,
     double? averageRating,
     int? reviewCount,
-    bool? isPremium,
   }) {
     return MerchantAuthModel(
       id: id ?? this.id,
@@ -174,7 +169,6 @@ class MerchantAuthModel {
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       averageRating: averageRating ?? this.averageRating,
       reviewCount: reviewCount ?? this.reviewCount,
-      isPremium: isPremium ?? this.isPremium,
     );
   }
 }
