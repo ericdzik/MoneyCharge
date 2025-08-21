@@ -8,7 +8,9 @@ class PremiumSubscriptionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final paymentService = PaymentService(publicKey: 'pk_test_YOUR_PUBLIC_KEY');
+    final paymentService = PaymentService(
+        publicKey: 'pk_test_YOUR_PUBLIC_KEY',
+        secretKey: 'sk_test_YOUR_SECRET_KEY');
 
     return Scaffold(
       appBar: AppBar(
