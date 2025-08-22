@@ -12,7 +12,10 @@ import '../../merchant/models/merchant_auth_model.dart';
 import '../services/admin_firestore_service.dart'; // Added
 import '../../../providers/auth_provider.dart'; // Added
 import '../../../providers/merchant_provider.dart'; // Added
+import 'dart:math';
+import '../../../services/notification_service.dart';
 import '../../../core/widgets/custom_app_bar.dart';
+import 'notification_screen.dart';
 // Removed AdminMockDataService import as it's being replaced for primary data
 // import '../services/admin_mock_data_service.dart';
 
@@ -161,6 +164,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           // Contenu principal avec padding pour l'AppBar
           SafeArea(child: _buildBody()),
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _sendTestNotification,
+        tooltip: 'Envoyer une notification de test',
+        child: const Icon(Icons.notification_add),
       ),
     );
   }
@@ -691,8 +699,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   }
 
   void _showNotifications() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Affichage des notifications (simulé)')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationScreen()),
     );
   }
 
@@ -756,6 +765,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       const SnackBar(
         content: Text('Affichage des tickets de support (simulé)'),
       ),
+    );
+  }
+
+  void _sendTestNotification() {
+    NotificationService.showNotification(
+      id: Random().nextInt(1000),
+      title: 'Notification de test',
+      body: 'Ceci est une notification de test pour vérifier le système.',
     );
   }
 

@@ -6,6 +6,8 @@ import 'package:timezone/data/latest.dart' as tz;
 import '../core/constants/app_colors.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/notification_model.dart';
 import 'auth_service.dart';
 import 'dart:convert';
 import 'navigation_service.dart';
@@ -206,6 +208,16 @@ class NotificationService {
 
       // Afficher la notification
       await _localNotifications.show(id, title, body, details, payload: payload);
+
+      // Enregistrer la notification
+      final notification = NotificationModel(
+        id: id,
+        title: title,
+        body: body,
+        payload: payload,
+        timestamp: DateTime.now(),
+      );
+      await _saveNotification(notification);
     } catch (e) {
       print('Show notification error: $e');
     }
@@ -356,6 +368,38 @@ class NotificationService {
     } catch (e) {
       return false;
     }
+  }
+
+  /// Sauvegarder une notification dans les SharedPreferences
+  static Future<void> _saveNotification(NotificationModel notification) async {
+    final prefs = await SharedPreferences.getInstance();
+    final notifications = await getStoredNotifications();
+    notifications.insert(0, notification); // Ajouter au début de la liste
+    await _storeNotifications(notifications);
+  }
+
+  /// Récupérer les notifications depuis les SharedPreferences
+  static Future<List<NotificationModel>> getStoredNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsJson = prefs.getString('notifications');
+    if (notificationsJson != null) {
+      return NotificationModel.decode(notificationsJson);
+    }
+    return [];
+  }
+
+  /// Stocker la liste des notifications dans les SharedPreferences
+  static Future<void> _storeNotifications(
+      List<NotificationModel> notifications) async {
+    final prefs = await SharedPreferences.getInstance();
+    final notificationsJson = NotificationModel.encode(notifications);
+    await prefs.setString('notifications', notificationsJson);
+  }
+
+  /// Effacer toutes les notifications stockées
+  static Future<void> clearStoredNotifications() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('notifications');
   }
 }
 
