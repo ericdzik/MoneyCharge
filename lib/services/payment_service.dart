@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'notification_service.dart';
 
 class PaymentService {
   final String? publicKey;
@@ -32,6 +33,11 @@ class PaymentService {
       onSuccess: () async {
         debugPrint('successful payment');
         await authProvider.updateUserToPremium();
+        await NotificationService.showTransactionSuccess(
+          merchantName: 'LocaCharge Premium',
+          amount: 5000,
+          transactionType: 'Abonnement Premium',
+        );
       },
     );
   }

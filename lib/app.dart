@@ -14,6 +14,7 @@ import 'providers/ad_provider.dart';
 
 // Import des écrans utilisateur
 import 'features/user/screens/home_screen.dart';
+import 'features/user/screens/promotions_screen.dart';
 import 'features/user/screens/list_view_screen.dart';
 import 'features/user/screens/map_view_screen.dart' hide Container;
 import 'features/user/screens/merchant_detail_screen.dart';
@@ -218,6 +219,9 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
 
       case AppRoutes.notifications:
         return MaterialPageRoute(builder: (_) => const NotificationsScreen());
+
+      case AppRoutes.promotions:
+        return MaterialPageRoute(builder: (_) => const PromotionsScreen());
 
       case AppRoutes.help:
         return MaterialPageRoute(builder: (_) => const HelpAndSupportScreen());

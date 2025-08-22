@@ -15,6 +15,7 @@ class AppRoutes {
   static const String rentalHistory = '/rental-history';
   static const String favorites = '/favorites';
   static const String notifications = '/notifications';
+  static const String promotions = '/promotions';
   static const String help = '/help';
   static const String privacy = '/privacy';
   static const String about = '/about';

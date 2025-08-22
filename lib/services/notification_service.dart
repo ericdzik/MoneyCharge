@@ -160,6 +160,16 @@ class NotificationService {
           AppRoutes.adminPendingVerifications,
         );
         break;
+      case 'new_merchant':
+        NavigationService.navigatorKey.currentState?.pushNamed(
+          AppRoutes.listView,
+        );
+        break;
+      case 'promotion':
+        NavigationService.navigatorKey.currentState?.pushNamed(
+          AppRoutes.promotions,
+        );
+        break;
       default:
         // Optional: navigate to a default screen if payload is unknown
         print('Unknown notification screen: $screen');

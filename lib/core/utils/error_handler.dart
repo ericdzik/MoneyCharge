@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/notification_service.dart';
 
 /// Gestionnaire d'erreurs centralisé pour l'application
 class ErrorHandler {
@@ -74,6 +75,12 @@ class ErrorHandler {
           },
         ),
       ),
+    );
+
+    // Déclencher également une notification d'erreur
+    NotificationService.showError(
+      title: 'Erreur',
+      message: message,
     );
   }
 
