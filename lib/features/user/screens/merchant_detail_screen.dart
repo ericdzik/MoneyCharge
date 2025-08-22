@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/status_badge.dart';
@@ -111,7 +112,9 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () {
-              // Partager
+              final String merchantInfo =
+                  'Découvrez ce marchand sur LocaCharge : ${widget.merchant.name}, situé au ${widget.merchant.address}';
+              Share.share(merchantInfo);
             },
           ),
         ],
