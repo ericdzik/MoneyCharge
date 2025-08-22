@@ -15,6 +15,9 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../models/transaction_model.dart'; // Ajout de l'import pour TransactionModel et enums
+import '../../admin/screens/notification_screen.dart';
+import '../../../services/notification_service.dart';
+import 'dart:math';
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -100,6 +103,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                   MerchantHeaderWidget(
                     merchant: currentMerchant,
                     onLogout: () => _handleLogout(context),
+                    onNotificationsTapped: _showNotifications,
                   ),
                   Expanded(
                     child: SingleChildScrollView(
@@ -177,6 +181,26 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _sendTestNotification,
+        tooltip: 'Envoyer une notification de test',
+        child: const Icon(Icons.notification_add),
+      ),
+    );
+  }
+
+  void _sendTestNotification() {
+    NotificationService.showNotification(
+      id: Random().nextInt(1000),
+      title: 'Notification de test (Marchand)',
+      body: 'Ceci est une notification de test pour le marchand.',
+    );
+  }
+
+  void _showNotifications() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationScreen()),
     );
   }
 

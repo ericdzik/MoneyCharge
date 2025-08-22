@@ -6,11 +6,13 @@ import '../models/merchant_auth_model.dart';
 class MerchantHeaderWidget extends StatelessWidget {
   final MerchantAuthModel merchant;
   final VoidCallback? onLogout;
+  final VoidCallback? onNotificationsTapped;
 
   const MerchantHeaderWidget({
     super.key,
     required this.merchant,
     this.onLogout,
+    this.onNotificationsTapped,
   });
 
   @override
@@ -54,15 +56,28 @@ class MerchantHeaderWidget extends StatelessWidget {
                   ],
                 ),
               ),
-              if (onLogout != null)
-                IconButton(
-                  onPressed: onLogout,
-                  icon: const Icon(
-                    Icons.logout,
-                    color: AppColors.onPrimary,
-                    size: 24,
-                  ),
-                ),
+              Row(
+                children: [
+                  if (onNotificationsTapped != null)
+                    IconButton(
+                      onPressed: onNotificationsTapped,
+                      icon: const Icon(
+                        Icons.notifications,
+                        color: AppColors.onPrimary,
+                        size: 24,
+                      ),
+                    ),
+                  if (onLogout != null)
+                    IconButton(
+                      onPressed: onLogout,
+                      icon: const Icon(
+                        Icons.logout,
+                        color: AppColors.onPrimary,
+                        size: 24,
+                      ),
+                    ),
+                ],
+              )
             ],
           ),
           const SizedBox(height: 12),
