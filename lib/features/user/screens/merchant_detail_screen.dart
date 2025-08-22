@@ -119,7 +119,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
                   'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
 
               final String shareMessage =
-                  'Découvrez ce marchand sur LocaCharge : $merchantName\n\n'
+                  'Découvrez ce marchand sur Géo : $merchantName\n\n'
                   '📍 Emplacement sur Google Maps :\n$googleMapsUrl';
 
               Share.share(shareMessage);
