@@ -118,8 +118,14 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
               final String googleMapsUrl =
                   'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
 
+              final String services = widget.merchant.services.join('\n- ');
+              final String servicesText = services.isNotEmpty
+                  ? 'Services proposés :\n- $services\n\n'
+                  : '';
+
               final String shareMessage =
                   'Découvrez ce marchand sur Géo : $merchantName\n\n'
+                  '$servicesText'
                   '📍 Emplacement sur Google Maps :\n$googleMapsUrl';
 
               Share.share(shareMessage);
