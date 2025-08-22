@@ -112,9 +112,17 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: () {
-              final String merchantInfo =
-                  'Découvrez ce marchand sur LocaCharge : ${widget.merchant.name}, situé au ${widget.merchant.address}';
-              Share.share(merchantInfo);
+              final String merchantName = widget.merchant.name;
+              final double latitude = widget.merchant.latitude;
+              final double longitude = widget.merchant.longitude;
+              final String googleMapsUrl =
+                  'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude';
+
+              final String shareMessage =
+                  'Découvrez ce marchand sur LocaCharge : $merchantName\n\n'
+                  '📍 Emplacement sur Google Maps :\n$googleMapsUrl';
+
+              Share.share(shareMessage);
             },
           ),
         ],
