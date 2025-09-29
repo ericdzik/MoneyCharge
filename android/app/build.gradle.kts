@@ -28,7 +28,7 @@ android {
 
         // Limiter les architectures pour réduire la mémoire utilisée
         ndk {
-            abiFilters += listOf("armeabi-v7a", "arm64-v8a") // x86 et x86_64 non nécessaires
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64") // x86 et x86_64 non nécessaires
         }
     }
 
