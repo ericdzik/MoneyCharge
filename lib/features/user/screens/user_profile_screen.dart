@@ -302,24 +302,27 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   const SizedBox(height: AppDimensions.paddingXL),
 
                   // Logout + Delete
-                  CustomButton(
-                    text: 'Se déconnecter',
-                    onPressed: () => _showLogoutDialog(context),
-                  ),
-                  const SizedBox(height: AppDimensions.paddingM),
-
-                  Center(
-                    child: TextButton(
-                      onPressed: () => _showDeleteAccountDialog(context),
-                      child: Text(
-                        'Supprimer mon compte',
-                        style: AppTextStyles.body1.copyWith(
-                          color: AppColors.outOfStock,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomButton(
+                              text: 'Se déconnecter',
+                              onPressed: () => _showLogoutDialog(context),
+                              backgroundColor: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.paddingM), // espace entre les deux
+                          Expanded(
+                            child: CustomButton(
+                              text: 'Supprimer',
+                              onPressed: () => _showDeleteAccountDialog(context),
+                              backgroundColor: AppColors.outOfStock, // couleur rouge/danger
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
+
+
                   const SizedBox(height: AppDimensions.paddingM),
                     ],
                   ),

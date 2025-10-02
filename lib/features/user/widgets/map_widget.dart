@@ -35,9 +35,10 @@ class _MapWidgetState extends State<MapWidget> {
   final LocationService _locationService = LocationService();
   Position? _currentPosition;
   Set<Marker> _markers = {};
-  Set<Circle> _circles = {};
   bool _isLoading = true;
   String _selectedMerchantId = '';
+
+  static const LatLng _defaultLocation = LatLng(6.1319, 1.2228); // Lomé, Togo
 
   @override
   void initState() {
@@ -45,27 +46,32 @@ class _MapWidgetState extends State<MapWidget> {
     _initializeMap();
   }
 
+  @override
+  void didUpdateWidget(MapWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.merchants != widget.merchants) {
+      _createMarkers();
+    }
+  }
+
+  @override
+  void dispose() {
+    _mapController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _initializeMap() async {
     try {
-      // Obtenir la position actuelle
       if (widget.showUserLocation) {
         await _getCurrentLocation();
       }
-
-      // Créer les marqueurs
-      _createMarkers();
-
-      // Créer le cercle de recherche
-      _createSearchCircle();
-
-      setState(() {
-        _isLoading = false;
-      });
+      await _createMarkers();
     } catch (e) {
-      print('Erreur d\'initialisation de la carte: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      debugPrint('Erreur d\'initialisation de la carte: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -75,15 +81,14 @@ class _MapWidgetState extends State<MapWidget> {
       if (permission == LocationPermission.denied) {
         await _locationService.requestPermission();
       }
-
       _currentPosition = await _locationService.getCurrentPosition();
     } catch (e) {
-      print('Erreur lors de l\'obtention de la position: $e');
+      debugPrint('Erreur lors de l\'obtention de la position: $e');
     }
   }
 
   Future<void> _createMarkers() async {
-    _markers.clear();
+    final newMarkers = <Marker>{};
 
     for (final merchant in widget.merchants) {
       final marker = Marker(
@@ -97,52 +102,17 @@ class _MapWidgetState extends State<MapWidget> {
         icon: await MarkerUtils.getGeoMarkerDescriptor(size: 110),
         onTap: () => _onMarkerTapped(merchant),
       );
-
-      _markers.add(marker);
+      newMarkers.add(marker);
     }
-    if (mounted) setState(() {});
-  }
 
-  void _createSearchCircle() {
-    if (_currentPosition != null) {
-      _circles.clear();
-      _circles.add(
-        Circle(
-          circleId: const CircleId('search_radius'),
-          center: LatLng(
-            _currentPosition!.latitude,
-            _currentPosition!.longitude,
-          ),
-          radius: 5000, // 5km de rayon
-          fillColor: AppColors.primary.withOpacity(0.1),
-          strokeColor: AppColors.primary,
-          strokeWidth: 2,
-        ),
-      );
-    }
-  }
-
-  BitmapDescriptor _getMarkerIcon(MerchantStatus status) {
-    switch (status) {
-      case MerchantStatus.available:
-        return BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueGreen,
-        ); // Google Maps constraint
-      case MerchantStatus.lowStock:
-        return BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueOrange,
-        );
-      case MerchantStatus.outOfStock:
-        return BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed);
+    if (mounted) {
+      setState(() => _markers = newMarkers);
     }
   }
 
   void _onMarkerTapped(Merchant merchant) {
-    setState(() {
-      _selectedMerchantId = merchant.id;
-    });
+    setState(() => _selectedMerchantId = merchant.id);
 
-    // Animer vers le marqueur
     _mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(
         LatLng(merchant.latitude, merchant.longitude),
@@ -150,7 +120,6 @@ class _MapWidgetState extends State<MapWidget> {
       ),
     );
 
-    // Appeler le callback
     widget.onMerchantSelected?.call(merchant);
   }
 
@@ -158,22 +127,21 @@ class _MapWidgetState extends State<MapWidget> {
     _mapController = controller;
     widget.onMapCreated?.call(controller);
 
-    // Centrer la carte sur la position initiale ou la position actuelle
-    if (widget.initialPosition != null) {
-      controller.animateCamera(
-        CameraUpdate.newLatLngZoom(widget.initialPosition!, widget.initialZoom),
-      );
-    } else if (_currentPosition != null) {
-      controller.animateCamera(
-        CameraUpdate.newLatLngZoom(
-          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-          widget.initialZoom,
-        ),
-      );
-    }
+    final target = widget.initialPosition ??
+        (_currentPosition != null
+            ? LatLng(_currentPosition!.latitude, _currentPosition!.longitude)
+            : _defaultLocation);
+
+    controller.animateCamera(
+      CameraUpdate.newLatLngZoom(target, widget.initialZoom),
+    );
   }
 
-  void _goToCurrentLocation() async {
+  Future<void> _goToCurrentLocation() async {
+    if (_currentPosition == null) {
+      await _getCurrentLocation();
+    }
+
     if (_currentPosition != null && _mapController != null) {
       await _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
@@ -181,24 +149,16 @@ class _MapWidgetState extends State<MapWidget> {
           15.0,
         ),
       );
-    } else {
-      await _getCurrentLocation();
-      if (_currentPosition != null) {
-        await _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(
-            LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-            15.0,
-          ),
-        );
-      }
     }
   }
 
   void _showAllMerchants() {
-    if (widget.merchants.isEmpty) return;
+    if (widget.merchants.isEmpty || _mapController == null) return;
 
     final bounds = _calculateBounds();
-    _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50.0));
+    _mapController!.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 50.0),
+    );
   }
 
   LatLngBounds _calculateBounds() {
@@ -230,14 +190,7 @@ class _MapWidgetState extends State<MapWidget> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return Container(
-        height: 300,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Center(child: CircularProgressIndicator()),
-      );
+      return const _MapLoadingWidget();
     }
 
     return Container(
@@ -259,180 +212,177 @@ class _MapWidgetState extends State<MapWidget> {
           children: [
             GoogleMap(
               initialCameraPosition: CameraPosition(
-                target:
-                    widget.initialPosition ??
+                target: widget.initialPosition ??
                     (_currentPosition != null
                         ? LatLng(
                             _currentPosition!.latitude,
                             _currentPosition!.longitude,
                           )
-                        : const LatLng(
-                            6.1319,
-                            1.2228,
-                          )), // Lomé, Togo par défaut
+                        : _defaultLocation),
                 zoom: widget.initialZoom,
               ),
               onMapCreated: _onMapCreated,
               markers: _markers,
-              circles: _circles,
               myLocationEnabled: widget.showUserLocation,
-              myLocationButtonEnabled: false, // On utilise notre propre bouton
-              zoomControlsEnabled: false, // On utilise nos propres contrôles
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
               mapToolbarEnabled: false,
               compassEnabled: true,
-              onCameraMove: (position) {
-                // Optionnel: Mettre à jour la position de la carte
-              },
             ),
-            // Boutons de contrôle personnalisés
-            Positioned(
-              top: 16,
-              right: 16,
-              child: Column(
-                children: [
-                  FloatingActionButton.small(
-                    heroTag: null, // Disable Hero animation for this FAB
-                    onPressed: _goToCurrentLocation,
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    child: const Icon(Icons.my_location),
-                  ),
-                  const SizedBox(height: 8),
-                  FloatingActionButton.small(
-                    heroTag: null, // Disable Hero animation for this FAB
-                    onPressed: _showAllMerchants,
-                    backgroundColor: Colors.white,
-                    foregroundColor: AppColors.primary,
-                    child: const Icon(Icons.zoom_out_map),
-                  ),
-                ],
-              ),
+            _MapControlButtons(
+              onLocationTap: _goToCurrentLocation,
+              onZoomOutTap: _showAllMerchants,
             ),
-            // Légende des marqueurs
-            Positioned(
-              bottom: 16,
-              left: 16,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildLegendItem('Disponible', AppColors.primary),
-                    const SizedBox(width: 8),
-                    _buildLegendItem('Stock faible', Colors.orange),
-                    const SizedBox(width: 8),
-                    _buildLegendItem('Rupture', Colors.red),
-                  ],
-                ),
-              ),
-            ),
+            const _MapLegend(),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text(label, style: AppTextStyles.caption.copyWith(fontSize: 10)),
-      ],
-    );
-  }
-
-  Widget _buildStatusChip(MerchantStatus status) {
-    Color color;
-    String text;
-
-    switch (status) {
-      case MerchantStatus.available:
-        color = AppColors.primary;
-        text = 'Disponible';
-        break;
-      case MerchantStatus.lowStock:
-        color = Colors.orange;
-        text = 'Stock faible';
-        break;
-      case MerchantStatus.outOfStock:
-        color = Colors.red;
-        text = 'Rupture';
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
         ),
       ),
     );
   }
 }
 
-class MapMarker extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  final Color color;
+class _MapLoadingWidget extends StatelessWidget {
+  const _MapLoadingWidget();
 
-  const MapMarker({
-    super.key,
-    required this.label,
-    required this.onTap,
-    this.color = AppColors.primary,
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 300,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      ),
+    );
+  }
+}
+
+class _MapControlButtons extends StatelessWidget {
+  final VoidCallback onLocationTap;
+  final VoidCallback onZoomOutTap;
+
+  const _MapControlButtons({
+    required this.onLocationTap,
+    required this.onZoomOutTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+    return Positioned(
+      top: 16,
+      right: 16,
+      child: Column(
+        children: [
+          _MapControlButton(
+            icon: Icons.my_location,
+            onPressed: onLocationTap,
+          ),
+          const SizedBox(height: 8),
+          _MapControlButton(
+            icon: Icons.zoom_out_map,
+            onPressed: onZoomOutTap,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MapControlButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _MapControlButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      elevation: 2,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Container(
+          width: 40,
+          height: 40,
+          alignment: Alignment.center,
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _MapLegend extends StatelessWidget {
+  const _MapLegend();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 16,
+      left: 16,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: Text(
-          label,
-          style: AppTextStyles.caption.copyWith(
-            color: AppColors.onPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _LegendItem(label: 'Disponible', color: AppColors.primary),
+            SizedBox(width: 8),
+            _LegendItem(label: 'Stock faible', color: Colors.orange),
+            SizedBox(width: 8),
+            _LegendItem(label: 'Rupture', color: Colors.red),
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _LegendItem({
+    required this.label,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: AppTextStyles.caption.copyWith(fontSize: 10),
+        ),
+      ],
     );
   }
 }

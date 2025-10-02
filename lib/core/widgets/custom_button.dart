@@ -14,6 +14,7 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final double? width;
   final bool isResponsive;
+  final Color backgroundColor;
 
   const CustomButton({
     Key? key,
@@ -24,6 +25,7 @@ class CustomButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
     this.isResponsive = true,
+    this.backgroundColor= AppColors.primary,
   }) : super(key: key);
 
   @override

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_dimensions.dart';
+import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../core/widgets/custom_text_field.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../models/review_model.dart'; // Correction de l'import
+import '../../../core/widgets/background_image_widget.dart';
+import '../../../models/review_model.dart';
 import '../../../providers/auth_provider.dart';
 
 class AddReviewScreen extends StatefulWidget {
@@ -13,7 +16,7 @@ class AddReviewScreen extends StatefulWidget {
   const AddReviewScreen({super.key, required this.merchantId});
 
   @override
-  _AddReviewScreenState createState() => _AddReviewScreenState();
+  State<AddReviewScreen> createState() => _AddReviewScreenState();
 }
 
 class _AddReviewScreenState extends State<AddReviewScreen> {
@@ -29,117 +32,178 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
   }
 
   Future<void> _submitReview() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
+    if (!_formKey.currentState!.validate()) return;
 
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final user = authProvider.appUserProfile;
+    setState(() => _isLoading = true);
 
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vous devez être connecté pour laisser un avis.')),
-        );
-        setState(() {
-          _isLoading = false;
-        });
-        return;
+    final user = context.read<AuthProvider>().appUserProfile;
+
+    if (user == null) {
+      if (mounted) {
+        _showSnackBar('Vous devez être connecté pour laisser un avis.');
+        setState(() => _isLoading = false);
       }
+      return;
+    }
 
-      final review = Review(
-        id: '', // L'ID sera généré par Firestore
-        merchantId: widget.merchantId, // Ajout de l'ID du marchand
-        userId: user.id,
-        userName: user.name,
-        userProfileImageUrl: user.profileImageUrl, // Ajout de l'image de profil
-        rating: _rating,
-        comment: _commentController.text.trim(),
-        createdAt: DateTime.now(),
-      );
+    final review = Review(
+      id: '',
+      merchantId: widget.merchantId,
+      userId: user.id,
+      userName: user.name,
+      userProfileImageUrl: user.profileImageUrl,
+      rating: _rating,
+      comment: _commentController.text.trim(),
+      createdAt: DateTime.now(),
+    );
 
-      try {
-        // Remplacer ApiService par un appel direct à Firestore
-        await FirebaseFirestore.instance.collection('reviews').add(review.toJson());
+    try {
+      await FirebaseFirestore.instance
+          .collection('reviews')
+          .add(review.toJson());
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Avis ajouté avec succès !')),
-          );
-          Navigator.pop(context, true); // Indique que l'avis a été ajouté
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur lors de l\'ajout de l\'avis: $e')),
-          );
-        }
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
+      if (mounted) {
+        _showSnackBar('Avis ajouté avec succès !');
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Erreur lors de l\'ajout de l\'avis: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
     }
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Laisser un avis'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Votre note',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Slider(
-                value: _rating,
-                onChanged: (newRating) {
-                  setState(() {
-                    _rating = newRating;
-                  });
-                },
-                divisions: 4,
-                min: 1,
-                max: 5,
-                label: _rating.toString(),
-              ),
-              Center(
-                child: Text(
-                  _rating.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.primary),
-                ),
-              ),
-              const SizedBox(height: 24),
-              CustomTextField(
-                controller: _commentController,
-                labelText: 'Votre commentaire',
-                hintText: 'Partagez votre expérience...',
-                maxLines: 5,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer un commentaire.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-              CustomButton(
-                text: _isLoading ? 'Envoi...' : 'Envoyer l\'avis',
-                onPressed: _isLoading ? null : _submitReview,
-              ),
-            ],
-          ),
+      extendBodyBehindAppBar: true,
+      appBar: CustomAppBar(
+        title: 'Laisser un avis',
+        showLogo: false,
+        backgroundColor: AppColors.primary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
       ),
+      body: Stack(
+        children: [
+          const Positioned.fill(child: BackgroundImage()),
+          SafeArea(
+            child: Center(
+              child: Container(
+                margin: const EdgeInsets.all(AppDimensions.paddingM),
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.75,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(AppDimensions.paddingL),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _RatingSection(
+                          rating: _rating,
+                          onRatingChanged: (value) => setState(() => _rating = value),
+                        ),
+                        const SizedBox(height: AppDimensions.paddingL),
+                        CustomTextField(
+                          controller: _commentController,
+                          labelText: 'Votre commentaire',
+                          hintText: 'Partagez votre expérience...',
+                          maxLines: 5,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Veuillez entrer un commentaire.';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: AppDimensions.paddingL),
+                        CustomButton(
+                          text: _isLoading ? 'Envoi...' : 'Envoyer l\'avis',
+                          onPressed: _isLoading ? null : _submitReview,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RatingSection extends StatelessWidget {
+  final double rating;
+  final ValueChanged<double> onRatingChanged;
+
+  const _RatingSection({
+    required this.rating,
+    required this.onRatingChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Votre note',
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: AppDimensions.paddingM),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) {
+            final starValue = index + 1.0;
+            return IconButton(
+              iconSize: 40,
+              onPressed: () => onRatingChanged(starValue),
+              icon: Icon(
+                rating >= starValue ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+              ),
+            );
+          }),
+        ),
+        Center(
+          child: Text(
+            rating.toStringAsFixed(1),
+            style: const TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
