@@ -1,8 +1,22 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+fun localProperties(): Properties {
+    val properties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(FileInputStream(localPropertiesFile))
+    }
+    return properties
+}
+
+val localProps = localProperties()
 
 android {
     namespace = "com.example.locacharge"
@@ -30,6 +44,7 @@ android {
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64") // x86 et x86_64 non nécessaires
         }
+        manifestPlaceholders["mapsApiKey"] = localProps.getProperty("maps.apiKey", "YOUR_API_KEY_HERE")
     }
 
     buildTypes {
