@@ -46,3 +46,9 @@ app.*.map.json
 
 # iOS secrets
 /ios/Runner/Secrets.xcconfig
+
+# Environment variables
+.env
+
+# Temporary files for verification
+jules-scratch/

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
@@ -8,6 +9,10 @@ import 'app.dart';
 import 'services/notification_service.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialisation de Firebase

@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:locacharge/core/widgets/profile_avatar.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 
 class EditMerchantProfileScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   late TextEditingController _otherServiceController;
 
   // Gestion des services
-  final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d\'argent', 'Carte SIM'];
+  final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d'argent', 'Carte SIM'];
   Map<String, bool> _selectedServices = {};
   // String _customService = ''; // Retiré, _otherServiceController.text est la source de vérité
 
@@ -47,7 +48,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   final ImagePicker _picker = ImagePicker();
   final StorageService _storageService = StorageService();
   List<String> _imageUrls = [];
-  XFile? _profileImageFile;
+  File? _profileImageFile;
   bool _isUploading = false;
 
   @override
@@ -182,10 +183,6 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       });
 
       // S'assurer que la map de stock est à jour avec les services finaux
-      // (ceci est déjà fait par _updateStockStatusMapWithSelectedServices lors des changements,
-      // mais une dernière vérification/nettoyage peut être utile ici si la logique est complexe)
-      // Pour l'instant, on suppose que _serviceStockStatus est déjà correct.
-      // Il faut s'assurer que _serviceStockStatus ne contient que les services actuellement dans finalServices.
       Map<String, String> finalServiceStockStatus = {};
       for (var service in finalServices) {
         finalServiceStockStatus[service] = _serviceStockStatus[service] ?? _stockStatusOptions.first;
@@ -200,7 +197,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         services: finalServices,
         serviceStockStatus: finalServiceStockStatus,
         imageUrls: _imageUrls,
-        profileImageFile: _profileImageFile,
+        profileImageFile: _profileImageFile != null ? XFile(_profileImageFile!.path) : null,
       );
 
       if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
@@ -300,73 +297,6 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
     );
   }
 
-  Future<void> _pickAndUploadProfileImage() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galerie'),
-                onTap: () async {
-                  Navigator.of(context).pop();
-                  final pickedFile =
-                      await _picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    _uploadProfileImage(pickedFile);
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_camera),
-                title: const Text('Appareil photo'),
-                onTap: () async {
-                  Navigator.of(context).pop();
-                  final pickedFile =
-                      await _picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    _uploadProfileImage(pickedFile);
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Future<void> _uploadProfileImage(XFile file) async {
-    // Option de recadrage avant d'appliquer
-    final CroppedFile? cropped = await ImageCropper().cropImage(
-      sourcePath: file.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Recadrer la photo',
-          toolbarColor: AppColors.primary,
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: false,
-        ),
-        IOSUiSettings(
-          title: 'Recadrer la photo',
-          aspectRatioLockEnabled: false,
-        ),
-      ],
-    );
-
-    if (cropped != null) {
-      setState(() {
-        _profileImageFile = XFile(cropped.path);
-      });
-    } else {
-      setState(() {
-        _profileImageFile = file; // fallback sans crop
-      });
-    }
-  }
-
   Future<void> _pickAndUploadImages() async {
     setState(() {
       _isUploading = true;
@@ -432,30 +362,15 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Center(
-                child: Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 60,
-                      backgroundImage: _profileImageFile != null
-                          ? FileImage(File(_profileImageFile!.path))
-                          : (widget.merchant.profileImageUrl != null
-                              ? NetworkImage(widget.merchant.profileImageUrl!)
-                              : null) as ImageProvider?,
-                      child: _profileImageFile == null && widget.merchant.profileImageUrl == null
-                          ? const Icon(Icons.business, size: 60)
-                          : null,
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: IconButton(
-                        icon: const Icon(Icons.camera_alt),
-                        onPressed: _pickAndUploadProfileImage,
-                      ),
-                    ),
-                  ],
-                ),
+              ProfileAvatar(
+                imageUrl: widget.merchant.profileImageUrl,
+                imageFile: _profileImageFile,
+                onImageSelected: (file) {
+                  setState(() {
+                    _profileImageFile = file;
+                  });
+                },
+                placeholderIcon: Icons.business,
               ),
               const SizedBox(height: AppDimensions.paddingXL),
               Text(

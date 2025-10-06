@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../features/user/models/merchant_model.dart';
 import '../features/user/models/review_model.dart';
@@ -8,7 +9,7 @@ import '../core/utils/error_handler.dart';
 
 class ApiService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String baseUrl = 'https://api.locacharge.com/v1';
+  static final String baseUrl = dotenv.env['API_BASE_URL'] ?? 'https://api.locacharge.com/v1';
   static const Duration _timeout = Duration(seconds: 30);
 
   // Méthodes génériques HTTP avec gestion d'erreurs

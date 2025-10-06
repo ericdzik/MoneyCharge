@@ -110,17 +110,19 @@ lib/
 static const String baseUrl = 'https://api.locacharge.com/v1';
 ```
 
-### Logique de Détection des Rôles
+### Gestion des Rôles
+Le rôle de chaque utilisateur (`user`, `merchant`, `admin`) est stocké de manière sécurisée dans un champ `role` au sein de son document utilisateur dans la base de données Firestore.
+
+Lors de la connexion, l'application récupère ce rôle depuis Firestore pour déterminer l'interface à afficher. Cette approche garantit que les rôles sont gérés côté serveur et ne peuvent pas être usurpés par le client.
+
 ```dart
-// Dans lib/services/auth_service.dart
-String _detectUserType(String email) {
-  if (email.contains('admin') || email.contains('@locacharge.com')) {
-    return 'admin';
-  } else if (email.contains('merchant') || email.contains('boutique')) {
-    return 'merchant';
-  } else {
-    return 'user';
-  }
+// Exemple de la structure de données dans Firestore (collection 'users')
+{
+  "uid": "...",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "role": "user", // "user", "merchant", ou "admin"
+  "createdAt": "..."
 }
 ```
 
@@ -128,7 +130,7 @@ String _detectUserType(String email) {
 
 ### Production
 - Retirer les boutons de test rapide
-- Implémenter une vraie authentification
+- Vérifier et renforcer les règles de sécurité Firestore
 - Configurer les variables d'environnement
 - Ajouter des tests unitaires
 
