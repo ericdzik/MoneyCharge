@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/services/image_picker_service.dart';
+import 'package:image_cropper/image_cropper.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String? imageUrl;

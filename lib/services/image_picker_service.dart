@@ -18,7 +18,6 @@ class ImagePickerService {
 
     final croppedFile = await ImageCropper().cropImage(
       sourcePath: pickedFile.path,
-      cropStyle: cropStyle,
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: 'Recadrer l’image',
@@ -26,12 +25,14 @@ class ImagePickerService {
           toolbarWidgetColor: Colors.white,
           hideBottomControls: true,
           lockAspectRatio: lockAspectRatio,
+          cropStyle: cropStyle,
         ),
         IOSUiSettings(
           title: 'Recadrer l’image',
           aspectRatioLockEnabled: lockAspectRatio,
           doneButtonTitle: 'Valider',
           cancelButtonTitle: 'Annuler',
+          cropStyle: cropStyle,
         ),
       ],
     );

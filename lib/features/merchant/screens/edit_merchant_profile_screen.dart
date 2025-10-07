@@ -36,7 +36,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
   late TextEditingController _otherServiceController;
 
   // Gestion des services
-  final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d'argent', 'Carte SIM'];
+  final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d\'argent', 'Carte SIM'];
   Map<String, bool> _selectedServices = {};
   // String _customService = ''; // Retiré, _otherServiceController.text est la source de vérité
 
