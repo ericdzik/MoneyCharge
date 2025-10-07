@@ -60,8 +60,8 @@ flutter:
     - assets/splash/33.png
     - assets/splash/25.png
     - assets/splash/24.png
-   # - .env
-   # - .env.example
+    - .env
+    - .env.example
     
   # fonts:
   # - family: Inter
