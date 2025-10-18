@@ -132,7 +132,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       appBar: CustomAppBar(
         title: 'Dashboard Admin',
         backgroundColor: AppColors.primary,
@@ -162,7 +162,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
           ),
           // Contenu principal avec padding pour l'AppBar
-          SafeArea(child: _buildBody()),
+          Padding(
+            padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
+            child: _buildBody(),
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
