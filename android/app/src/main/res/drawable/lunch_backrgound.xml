@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Couleur de fond si l'image ne couvre pas entièrement -->
+    <item android:drawable="@android:color/white"/>
+
+    <!-- Image de splash qui occupe tout l'écran -->
+    <item>
+        <scale
+            android:scaleGravity="fill"
+            android:drawable="@drawable/splash_screen"
+            android:gravity="center"
+            android:scaleType="fitXY" />
+
+    </item>
+
+</layer-list>
