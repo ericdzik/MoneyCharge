@@ -44,7 +44,7 @@ android {
         ndk {
             abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64") // x86 et x86_64 non nécessaires
         }
-        manifestPlaceholders["mapsApiKey"] = localProps.getProperty("maps.apiKey", "YOUR_API_KEY_HERE")
+        manifestPlaceholders["mapsApiKey"] = localProps.getProperty("mapsApiKey", "AIzaSyDAHK3ivuTDoxHj0hTp5rkTQxPojkj8FSU")
     }
 
     buildTypes {

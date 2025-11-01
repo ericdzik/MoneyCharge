@@ -538,52 +538,25 @@ class _BottomActions extends StatelessWidget {
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.border)),
       ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 360) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                CustomButton(
-                  text: 'Appeler',
-                  type: ButtonType.outline,
-                  icon: const Icon(Icons.phone, size: 20),
-                  onPressed: () =>
-                      LocationService().makePhoneCall(phone),
-                ),
-                const SizedBox(height: AppDimensions.paddingS),
-                CustomButton(
-                  text: 'Itinéraire',
-                  icon: const Icon(Icons.directions, size: 20),
-                  onPressed: onNavigate,
-                ),
-              ],
-            );
-          }
-
-          return Row(
-            children: [
-              Expanded(
-                child: CustomButton(
-                  text: 'Appeler',
-                  type: ButtonType.outline,
-                  icon: const Icon(Icons.phone, size: 20),
-                  onPressed: () =>
-                      LocationService().makePhoneCall(phone),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.paddingM),
-              Expanded(
-                child: CustomButton(
-                  text: 'Itinéraire',
-                  icon: const Icon(Icons.directions, size: 20),
-                  onPressed: onNavigate,
-                ),
-              ),
-            ],
-          );
-        },
+      child: Row(
+        children: [
+          Expanded(
+            child: CustomButton(
+              text: 'Appeler',
+              type: ButtonType.outline,
+              icon: const Icon(Icons.phone, size: 20),
+              onPressed: () => LocationService().makePhoneCall(phone),
+            ),
+          ),
+          const SizedBox(width: AppDimensions.paddingM),
+          Expanded(
+            child: CustomButton(
+              text: 'Itinéraire',
+              icon: const Icon(Icons.directions, size: 20),
+              onPressed: onNavigate,
+            ),
+          ),
+        ],
       ),
     );
   }
