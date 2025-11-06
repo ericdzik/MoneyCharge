@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/constants/app_colors.dart';
-import '../widgets/map_widget.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +14,7 @@ import '../../../core/utils/marker_utils.dart';
 class MapViewScreen extends StatefulWidget {
   final Merchant? targetMerchant; // Marchand optionnel à cibler
 
-  const MapViewScreen({Key? key, this.targetMerchant}) : super(key: key);
+  const MapViewScreen({super.key, this.targetMerchant});
 
   @override
   State<MapViewScreen> createState() => _MapViewScreenState();

@@ -25,7 +25,7 @@ class MerchantListWidget extends StatefulWidget {
 class _MerchantListWidgetState extends State<MerchantListWidget> {
   final ScrollController _scrollController = ScrollController();
   static const int _pageSize = 10;
-  int _currentPage = 0;
+  final int _currentPage = 0;
 
   @override
   void initState() {

@@ -6,13 +6,14 @@ import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/core/widgets/profile_avatar.dart';
+import 'package:locacharge/core/widgets/background_image_widget.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 
 class EditUserProfileScreen extends StatefulWidget {
-  const EditUserProfileScreen({Key? key}) : super(key: key);
+  const EditUserProfileScreen({super.key});
 
   @override
   State<EditUserProfileScreen> createState() => _EditUserProfileScreenState();
@@ -23,8 +24,6 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   File? _imageFile;
-
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -43,58 +42,50 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     super.dispose();
   }
 
-  Future<void> _pickAndCropImage() async {
+  /// ✅ Reçoit le fichier brut → Crop
+  Future<void> _cropImage(File file) async {
     try {
-      final pickedFile = await _picker.pickImage(
-        source: ImageSource.gallery,
-        imageQuality: 85, // Optimisation de la qualité
+      final croppedFile = await ImageCropper().cropImage(
+        sourcePath: file.path,
+        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
+        compressFormat: ImageCompressFormat.jpg,
+        compressQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        uiSettings: [
+          AndroidUiSettings(
+            toolbarTitle: 'Recadrer l\'image',
+            toolbarColor: AppColors.primary,
+            toolbarWidgetColor: Colors.white,
+            hideBottomControls: false,
+            lockAspectRatio: true,
+            initAspectRatio: CropAspectRatioPreset.square,
+          ),
+          IOSUiSettings(
+            title: 'Recadrer l\'image',
+            aspectRatioLockEnabled: true,
+            resetAspectRatioEnabled: false,
+            aspectRatioPickerButtonHidden: true,
+          ),
+        ],
       );
 
-      if (pickedFile != null) {
-        final croppedFile = await ImageCropper().cropImage(
-          sourcePath: pickedFile.path,
-          aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-          compressFormat: ImageCompressFormat.jpg,
-          compressQuality: 85, // Réduit de 100 à 85 pour éviter les fichiers trop lourds
-          maxWidth: 1024, // Limite la taille maximale
-          maxHeight: 1024,
-          uiSettings: [
-            AndroidUiSettings(
-              toolbarTitle: 'Recadrer l\'image',
-              toolbarColor: AppColors.primary,
-              toolbarWidgetColor: Colors.white,
-              hideBottomControls: false,
-              lockAspectRatio: true, // Verrouille le ratio 1:1
-              initAspectRatio: CropAspectRatioPreset.square,
-            ),
-            IOSUiSettings(
-              title: 'Recadrer l\'image',
-              aspectRatioLockEnabled: true,
-              resetAspectRatioEnabled: false,
-              aspectRatioPickerButtonHidden: true,
-            ),
-          ],
-        );
-
-        if (croppedFile != null) {
-          setState(() {
-            _imageFile = File(croppedFile.path);
-          });
-        }
+      if (croppedFile != null) {
+        setState(() {
+          _imageFile = File(croppedFile.path);
+        });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors du recadrage de l\'image: $e'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Erreur lors du recadrage : $e"),
+          backgroundColor: AppColors.error,
+        ),
+      );
     }
   }
 
-  /// 💾 Sauvegarde du profil avec gestion d'erreur améliorée
   Future<void> _saveProfile() async {
     if (_formKey.currentState!.validate()) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -106,44 +97,32 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
           imageFile: _imageFile != null ? XFile(_imageFile!.path) : null,
         );
 
-        if (mounted) {
-          if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profil mis à jour avec succès !'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-            Navigator.of(context).pop();
-          } else {
-            // Gestion des erreurs spécifiques
-            String errorMessage = authProvider.error ?? 'Erreur lors de la mise à jour.';
+        if (!mounted) return;
 
-            if (errorMessage.contains('permission') || errorMessage.contains('403')) {
-              errorMessage = 'Erreur de permissions. Vérifiez vos règles Firebase Storage.';
-            } else if (errorMessage.contains('network') || errorMessage.contains('Unable to resolve')) {
-              errorMessage = 'Problème de connexion. Vérifiez votre réseau.';
-            }
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(errorMessage),
-                backgroundColor: AppColors.error,
-                duration: const Duration(seconds: 4),
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        if (mounted) {
+        if (success) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profil mis à jour !'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          Navigator.of(context).pop();
+        } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Une erreur inattendue s\'est produite: $e'),
+              content: Text(authProvider.error ?? 'Erreur inconnue'),
               backgroundColor: AppColors.error,
-              duration: const Duration(seconds: 4),
             ),
           );
         }
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Erreur: $e"),
+            backgroundColor: AppColors.error,
+          ),
+        );
       }
     }
   }
@@ -154,6 +133,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     final user = authProvider.appUserProfile;
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Modifier le Profil',
         showLogo: false,
@@ -162,61 +142,62 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: user == null
-          ? const Center(child: Text('Utilisateur non trouvé.'))
-          : SingleChildScrollView(
-        padding: const EdgeInsets.all(AppDimensions.paddingL),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Avatar avec recadrage
-              ProfileAvatar(
-                imageUrl: user.profileImageUrl,
-                imageFile: _imageFile,
-                onImageSelected: (_) => _pickAndCropImage(),
-              ),
-              const SizedBox(height: AppDimensions.paddingXL),
-
-              // Nom complet
-              CustomTextField(
-                controller: _nameController,
-                labelText: 'Nom complet',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Veuillez entrer votre nom.';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: AppDimensions.paddingM),
-
-              // Téléphone
-              CustomTextField(
-                controller: _phoneController,
-                labelText: 'Numéro de téléphone',
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: AppDimensions.paddingM),
-
-              // Email
-              CustomTextField(
-                controller: TextEditingController(text: user.email),
-                labelText: 'Email (non modifiable)',
-                enabled: false,
-              ),
-              const SizedBox(height: AppDimensions.paddingXL),
-
-              // Bouton Sauvegarde
-              CustomButton(
-                text: authProvider.isLoading
-                    ? 'Sauvegarde...'
-                    : 'Sauvegarder',
-                onPressed:
-                authProvider.isLoading ? null : _saveProfile,
-              ),
-            ],
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/splash/33.png'), // Remplacez par votre image
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: user == null
+            ? const Center(child: Text('Utilisateur non trouvé.'))
+            : SingleChildScrollView(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top + kToolbarHeight + AppDimensions.paddingL,
+            left: AppDimensions.paddingL,
+            right: AppDimensions.paddingL,
+            bottom: AppDimensions.paddingL,
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ProfileAvatar(
+                  imageUrl: user.profileImageUrl,
+                  imageFile: _imageFile,
+                  onPick: (File rawFile) async {
+                    await _cropImage(rawFile);
+                  },
+                ),
+                const SizedBox(height: AppDimensions.paddingXL),
+                CustomTextField(
+                  controller: _nameController,
+                  labelText: 'Nom complet',
+                  validator: (value) =>
+                  value == null || value.isEmpty ? 'Entrez votre nom' : null,
+                ),
+                const SizedBox(height: AppDimensions.paddingM),
+                CustomTextField(
+                  controller: _phoneController,
+                  labelText: 'Numéro de téléphone',
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: AppDimensions.paddingM),
+                CustomTextField(
+                  controller: TextEditingController(text: user.email),
+                  labelText: 'Email (non modifiable)',
+                  enabled: false,
+                ),
+                const SizedBox(height: AppDimensions.paddingXL),
+                CustomButton(
+                  text: authProvider.isLoading ? 'Sauvegarde...' : 'Sauvegarder',
+                  onPressed: authProvider.isLoading ? null : _saveProfile,
+                ),
+              ],
+            ),
           ),
         ),
       ),

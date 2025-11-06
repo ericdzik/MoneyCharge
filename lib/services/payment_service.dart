@@ -29,6 +29,7 @@ class PaymentService {
       callBackUrl: "https://locacharge.app/payment-callback",
       onClosed: () {
         debugPrint('Could\'nt finish payment');
+        return null;
       },
       onSuccess: () async {
         debugPrint('successful payment');
@@ -38,6 +39,7 @@ class PaymentService {
           amount: 5000,
           transactionType: 'Abonnement Premium',
         );
+        return null;
       },
     );
   }

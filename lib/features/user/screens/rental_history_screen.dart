@@ -152,7 +152,7 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
           _buildStatItem(
             icon: Icons.monetization_on,
             title: 'Coût',
-            value: '${totalCost} FCFA',
+            value: '$totalCost FCFA',
             color: AppColors.success,
           ),
         ],

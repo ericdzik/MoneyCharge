@@ -228,7 +228,7 @@ class MapQuickActions extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(8),
-            child: Container(
+            child: SizedBox(
               width: 40,
               height: 40,
               child: Icon(icon, color: AppColors.primary, size: 20),

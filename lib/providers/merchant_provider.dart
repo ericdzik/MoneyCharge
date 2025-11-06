@@ -6,10 +6,8 @@ import '../services/notification_service.dart';
 import 'dart:math';
 
 import 'dart:async';
-import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../features/user/models/merchant_model.dart'; // For user-facing merchant list
-import '../features/merchant/models/merchant_auth_model.dart'; // For admin-facing merchant list
+// For user-facing merchant list
+// For admin-facing merchant list
 
 class MerchantProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

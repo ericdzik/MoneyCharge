@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';

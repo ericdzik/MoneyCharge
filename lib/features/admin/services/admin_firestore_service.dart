@@ -13,7 +13,7 @@ class AdminFirestoreService {
           await _firestore.collection('users').doc(adminId).get();
       if (docSnapshot.exists && docSnapshot.data()?['role'] == 'admin') {
         return AdminModel.fromFirestore(
-            docSnapshot as DocumentSnapshot<Map<String, dynamic>>);
+            docSnapshot);
       }
       return null;
     } catch (e) {

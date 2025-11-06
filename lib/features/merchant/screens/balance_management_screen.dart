@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_button.dart';
 import '../../../providers/transaction_provider.dart';
 import '../../../providers/auth_provider.dart';
-import '../models/balance_model.dart';
 import '../../../models/transaction_model.dart';
 import '../widgets/transaction_card_widget.dart';
 import '../widgets/balance_summary_widget.dart';
@@ -339,10 +337,12 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Saisir 0 si pas de commission';
-                  if (double.tryParse(value) == null)
+                  }
+                  if (double.tryParse(value) == null) {
                     return 'Commission invalide';
+                  }
                   return null;
                 },
               ),

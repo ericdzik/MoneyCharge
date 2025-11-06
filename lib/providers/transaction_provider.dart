@@ -43,8 +43,8 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
       return;
     }
-    final String? merchantId = authProvider.merchantProfile!.id;
-    if (merchantId == null || merchantId.isEmpty) {
+    final String merchantId = authProvider.merchantProfile!.id;
+    if (merchantId.isEmpty) {
       _transactionsError = "ID du marchand non disponible.";
       _isLoadingTransactions = false;
       notifyListeners();

@@ -395,7 +395,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   child: child,
                 ),
               )
-              .toList(),
+              ,
         ],
       ),
     );

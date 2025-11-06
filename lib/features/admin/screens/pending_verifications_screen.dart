@@ -10,9 +10,9 @@ class PendingVerificationsScreen extends StatelessWidget {
   final List<MerchantAuthModel> pendingMerchants;
 
   const PendingVerificationsScreen({
-    Key? key,
+    super.key,
     required this.pendingMerchants,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

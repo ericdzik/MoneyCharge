@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart'
     as fb_auth; // Pour l'objet User de Firebase
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../features/merchant/models/merchant_auth_model.dart';
 import '../features/admin/models/admin_model.dart';
@@ -89,7 +88,7 @@ class AuthProvider with ChangeNotifier {
             break;
           case UserType.user:
             _appUserProfile = User.fromFirestore(
-              docSnapshot as DocumentSnapshot<Map<String, dynamic>>,
+              docSnapshot,
             );
             _merchantProfile = null;
             _adminProfile = null;

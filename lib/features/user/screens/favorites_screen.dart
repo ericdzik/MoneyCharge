@@ -5,7 +5,6 @@ import '../../../core/constants/app_text_styles.dart';
 import '../../../core/widgets/merchant_card.dart';
 import '../../../providers/favorite_merchant_provider.dart';
 import '../../../providers/merchant_provider.dart';
-import '../models/merchant_model.dart';
 import '../../../core/constants/app_routes.dart';
 
 class FavoritesScreen extends StatelessWidget {

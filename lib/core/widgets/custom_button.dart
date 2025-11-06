@@ -17,7 +17,7 @@ class CustomButton extends StatelessWidget {
   final Color backgroundColor;
 
   const CustomButton({
-    Key? key,
+    super.key,
     required this.text,
     this.onPressed,
     this.type = ButtonType.primary,
@@ -26,7 +26,7 @@ class CustomButton extends StatelessWidget {
     this.width,
     this.isResponsive = true,
     this.backgroundColor= AppColors.primary,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

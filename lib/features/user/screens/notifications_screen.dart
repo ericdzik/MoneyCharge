@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 
 class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

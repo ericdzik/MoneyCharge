@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:locacharge/core/utils/opening_hours_parser.dart';
-import 'package:flutter/material.dart'; // Pour TimeOfDay, bien que non directement utilisé dans les asserts ici
+// Pour TimeOfDay, bien que non directement utilisé dans les asserts ici
 
 void main() {
   group('OpeningHoursParser.isStoreOpen', () {

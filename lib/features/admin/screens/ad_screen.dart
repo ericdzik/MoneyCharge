@@ -8,7 +8,7 @@ import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 
 class AdScreen extends StatefulWidget {
-  const AdScreen({Key? key}) : super(key: key);
+  const AdScreen({super.key});
 
   @override
   _AdScreenState createState() => _AdScreenState();

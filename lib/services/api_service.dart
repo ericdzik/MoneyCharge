@@ -223,8 +223,9 @@ class ApiService {
       final queryParams = <String, String>{};
       if (merchantId != null) queryParams['merchant_id'] = merchantId;
       if (userId != null) queryParams['user_id'] = userId;
-      if (startDate != null)
+      if (startDate != null) {
         queryParams['start_date'] = startDate.toIso8601String();
+      }
       if (endDate != null) queryParams['end_date'] = endDate.toIso8601String();
 
       final uri = Uri.parse(

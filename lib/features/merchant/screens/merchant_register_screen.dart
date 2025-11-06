@@ -11,7 +11,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
-import '../../../core/widgets/custom_app_bar.dart'; // Added import for CustomAppBar
+// Added import for CustomAppBar
 import '../widgets/opening_hours_selector.dart';
 
 class MerchantRegisterScreen extends StatefulWidget {
@@ -41,7 +41,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     'Transfert d\'argent',
     'Achat de carte SIM',
   ];
-  Map<String, bool> _selectedServices = {};
+  final Map<String, bool> _selectedServices = {};
 
   String? _selectedMerchantType;
   final List<String> _merchantTypes = [
@@ -702,7 +702,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       activeColor: AppColors.secondary,
                       controlAffinity: ListTileControlAffinity.leading,
                     );
-                  }).toList(),
+                  }),
                   CheckboxListTile(
                     title: const Text(
                       'Autre',

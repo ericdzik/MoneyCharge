@@ -271,7 +271,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
 }
 
 class _SplashScreenLauncher extends StatefulWidget {
-  const _SplashScreenLauncher({Key? key}) : super(key: key);
+  const _SplashScreenLauncher();
 
   @override
   State<_SplashScreenLauncher> createState() => _SplashScreenLauncherState();

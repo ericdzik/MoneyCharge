@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../services/payment_service.dart';
-import '../../../providers/auth_provider.dart';
 
 class PremiumSubscriptionScreen extends StatelessWidget {
   const PremiumSubscriptionScreen({super.key});

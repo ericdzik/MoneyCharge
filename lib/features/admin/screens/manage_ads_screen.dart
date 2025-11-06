@@ -6,7 +6,7 @@ import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 
 class ManageAdsScreen extends StatefulWidget {
-  const ManageAdsScreen({Key? key}) : super(key: key);
+  const ManageAdsScreen({super.key});
 
   @override
   _ManageAdsScreenState createState() => _ManageAdsScreenState();

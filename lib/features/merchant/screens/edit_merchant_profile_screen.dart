@@ -19,7 +19,7 @@ import 'package:locacharge/core/constants/app_text_styles.dart';
 class EditMerchantProfileScreen extends StatefulWidget {
   final MerchantAuthModel merchant;
 
-  const EditMerchantProfileScreen({Key? key, required this.merchant}) : super(key: key);
+  const EditMerchantProfileScreen({super.key, required this.merchant});
 
   @override
   State<EditMerchantProfileScreen> createState() => _EditMerchantProfileScreenState();
@@ -37,7 +37,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
 
   // Gestion des services
   final List<String> _predefinedServices = ['Recharge crédit', 'Transfert d\'argent', 'Carte SIM'];
-  Map<String, bool> _selectedServices = {};
+  final Map<String, bool> _selectedServices = {};
   // String _customService = ''; // Retiré, _otherServiceController.text est la source de vérité
 
   // Gestion du stock des services
@@ -365,12 +365,11 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
               ProfileAvatar(
                 imageUrl: widget.merchant.profileImageUrl,
                 imageFile: _profileImageFile,
-                onImageSelected: (file) {
+                onPick: (file) {
                   setState(() {
                     _profileImageFile = file;
                   });
                 },
-                placeholderIcon: Icons.business,
               ),
               const SizedBox(height: AppDimensions.paddingXL),
               Text(
@@ -462,7 +461,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
                   },
                   activeColor: AppColors.primary,
                 );
-              }).toList(),
+              }),
               CheckboxListTile(
                 title: const Text('Autre'),
                 value: _selectedServices['Autre'],
@@ -523,7 +522,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
                     },
                   ),
                 );
-              }).toList(),
+              }),
               const SizedBox(height: AppDimensions.paddingXL),
 
               Consumer<AuthProvider>(

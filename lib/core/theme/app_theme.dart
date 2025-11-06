@@ -15,8 +15,6 @@ class AppTheme {
         onSecondary: AppColors.onSecondary,
         error: AppColors.error,
         onError: AppColors.onError,
-        background: AppColors.background, // Vert clair
-        onBackground: AppColors.textPrimary,
         surface: AppColors.surface,
         onSurface: AppColors.onSurface,
       ),
@@ -161,8 +159,6 @@ class AppTheme {
         onSecondary: AppColors.onSecondary,
         error: AppColors.error,
         onError: AppColors.onError,
-        background: Colors.grey[900]!,
-        onBackground: Colors.white,
         surface: Colors.grey[800]!,
         onSurface: Colors.white,
       ),

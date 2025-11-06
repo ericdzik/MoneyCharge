@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../../core/widgets/custom_app_bar.dart';
 import '../../../core/widgets/merchant_card.dart';
 import '../../../providers/merchant_provider.dart';
-import '../../../core/constants/app_colors.dart';
-import 'merchant_detail_screen.dart';
 import '../models/merchant_model.dart'; // Ajout de l'import pour Merchant
-import 'map_view_screen.dart'; // Ajout de l'import pour MapViewScreen
+// Ajout de l'import pour MapViewScreen
 // import '../../../services/location_service.dart'; // Retiré car plus utilisé directement
 import '../../../core/constants/app_routes.dart'; // Ajout de l'import pour AppRoutes
 
 class ListViewScreen extends StatefulWidget {
   final GoogleMapController? mapController;
-  const ListViewScreen({Key? key, this.mapController}) : super(key: key);
+  const ListViewScreen({super.key, this.mapController});
 
   @override
   State<ListViewScreen> createState() => _ListViewScreenState();

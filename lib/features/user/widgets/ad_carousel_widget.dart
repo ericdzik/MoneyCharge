@@ -7,7 +7,7 @@ import 'package:locacharge/models/ad_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AdCarouselWidget extends StatefulWidget {
-  const AdCarouselWidget({Key? key}) : super(key: key);
+  const AdCarouselWidget({super.key});
 
   @override
   _AdCarouselWidgetState createState() => _AdCarouselWidgetState();
@@ -120,7 +120,7 @@ class _AdCarouselWidgetState extends State<AdCarouselWidget> {
 class AdCard extends StatelessWidget {
   final Ad ad;
 
-  const AdCard({Key? key, required this.ad}) : super(key: key);
+  const AdCard({super.key, required this.ad});
 
   @override
   Widget build(BuildContext context) {
