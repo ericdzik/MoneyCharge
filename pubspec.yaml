@@ -1,10 +1,10 @@
 name: locacharge
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.1.0
+version: 1.0.0+1
 
 environment:
-  sdk: '>=3.8.1 <4.0.0'
+  sdk: ^3.8.1
 
 dependencies:
   # Base Flutter
@@ -58,6 +58,7 @@ dev_dependencies:
 
   # Outil de génération d’icônes (uniquement en build)
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.6
 
 
 flutter:
@@ -84,6 +85,5 @@ flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/lunchIcon.png"
-  adaptive_icon_background: "#FF1D4ED8"
-  adaptive_icon_foreground: "assets/icon/lunchIcon.png"
+
 

@@ -9,7 +9,6 @@ import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../../../core/widgets/custom_app_bar.dart';
-import '../../../core/widgets/background_image_widget.dart';
 import '../../../core/widgets/custom_bottom_nav_bar.dart';
 import '../../../core/widgets/profile_avatar_widget.dart';
 import '../../../core/widgets/merchant_counter_card.dart';
@@ -45,9 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
   }
 
-  bool get _needsFullScreenLayout =>
-      _currentIndex == 1 || _currentIndex == 2 || _currentIndex == 3;
-
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -55,82 +51,129 @@ class _HomeScreenState extends State<HomeScreen> {
     final screens = _buildScreens(isMerchant);
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: CustomAppBar(
-        title: 'Géo Money&Charge',
-        backgroundColor: AppColors.primary,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: AppDimensions.paddingS),
-            child: Consumer<AuthProvider>(
-              builder: (context, auth, _) => ProfileAvatar(
-                imageUrl: auth.appUserProfile?.profileImageUrl,
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: BackgroundImage()),
-          SafeArea(
-            top: !_needsFullScreenLayout,
-            child: Padding(
-              padding: EdgeInsets.all(
-                _needsFullScreenLayout ? 0 : AppDimensions.paddingS,
-              ),
-              child: Column(
-                children: [
-                  if (_currentIndex == 0) ...[
-                    const SearchBarWidget(),
-                    const FilterWidget(),
-                  ],
-                  Expanded(
-                    child: _needsFullScreenLayout
-                        ? screens[_currentIndex]
-                        : Card(
-                            elevation: 4,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppDimensions.radiusM,
-                              ),
-                            ),
-                            child: screens[_currentIndex],
-                          ),
-                  ),
-                  if (_currentIndex == 0) ...[
-                    const SizedBox(height: AppDimensions.paddingS),
-                    Consumer<MerchantProvider>(
-                      builder: (context, provider, _) {
-                        if (provider.merchants.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return MerchantCounterCard(
-                          merchantCount: provider.merchants.length,
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ListViewScreen(),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppDimensions.paddingS),
-                    const AdCarouselWidget(),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      extendBodyBehindAppBar: _currentIndex == 0,
+      body: _currentIndex == 0
+          ? _buildMapView(screens[0])
+          : SafeArea(child: screens[_currentIndex]),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
+    );
+
+  }
+
+  Widget _buildMapView(Widget mapContent) {
+    return Stack(
+      children: [
+        // Carte en plein écran
+        Positioned.fill(child: mapContent),
+
+        // Barre de recherche et filtres flottants
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  AppColors.primary.withOpacity(0.95),
+                  AppColors.primary.withOpacity(0.85),
+                  AppColors.primary.withOpacity(0.0),
+                ],
+                stops: const [0.0, 0.7, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppDimensions.paddingS,
+                  AppDimensions.paddingS,
+                  AppDimensions.paddingS,
+                  AppDimensions.paddingL,
+                ),
+                child: Column(
+                  children: [
+                    // Header avec titre et avatar
+                    Row(
+                      children: [
+                        Text(
+                          'Géo Money&Charge',
+                          style: AppTextStyles.body1.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        const Spacer(),
+                        Consumer<AuthProvider>(
+                          builder: (context, auth, _) => ProfileAvatar(
+                            imageUrl: auth.appUserProfile?.profileImageUrl,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimensions.paddingM),
+                    const SearchBarWidget(),
+                    const SizedBox(height: AppDimensions.paddingS),
+                    const FilterWidget(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Compteur de marchands flottant
+        Positioned(
+          bottom: AppDimensions.paddingM,
+          left: AppDimensions.paddingS,
+          right: AppDimensions.paddingS,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Carrousel publicitaire
+              const AdCarouselWidget(),
+              const SizedBox(height: AppDimensions.paddingS),
+
+              // Compteur de marchands
+              Consumer<MerchantProvider>(
+                builder: (context, provider, _) {
+                  if (provider.merchants.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+                  return Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: MerchantCounterCard(
+                      merchantCount: provider.merchants.length,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ListViewScreen(),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
@@ -165,25 +208,54 @@ class _MapViewContentState extends State<MapViewContent> {
     return Consumer<MerchantProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.merchants.isEmpty) {
-          return const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+          return Container(
+            color: AppColors.primary.withOpacity(0.1),
+            child: const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
           );
         }
 
         if (provider.error != null) {
-          return Center(
-            child: Text(
-              "Erreur: ${provider.error}",
-              style: AppTextStyles.body1.copyWith(color: AppColors.error),
+          return Container(
+            color: AppColors.primary.withOpacity(0.1),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.paddingM),
+                child: Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.paddingM),
+                    child: Text(
+                      "Erreur: ${provider.error}",
+                      style: AppTextStyles.body1.copyWith(color: AppColors.error),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
             ),
           );
         }
 
         if (provider.merchants.isEmpty) {
-          return Center(
-            child: Text(
-              "Aucun point de service trouvé.",
-              style: AppTextStyles.body1,
+          return Container(
+            color: AppColors.primary.withOpacity(0.1),
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.paddingM),
+                child: Card(
+                  elevation: 4,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppDimensions.paddingM),
+                    child: Text(
+                      "Aucun point de service trouvé.",
+                      style: AppTextStyles.body1,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
             ),
           );
         }

@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
+import '../../../core/constants/app_dimensions.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import '../../../core/utils/marker_utils.dart';
@@ -193,50 +194,39 @@ class _MapWidgetState extends State<MapWidget> {
       return const _MapLoadingWidget();
     }
 
-    return Container(
-      height: 300,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return Stack(
+      children: [
+        // Carte Google Maps en plein écran
+        GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: widget.initialPosition ??
+                (_currentPosition != null
+                    ? LatLng(
+                  _currentPosition!.latitude,
+                  _currentPosition!.longitude,
+                )
+                    : _defaultLocation),
+            zoom: widget.initialZoom,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          children: [
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: widget.initialPosition ??
-                    (_currentPosition != null
-                        ? LatLng(
-                            _currentPosition!.latitude,
-                            _currentPosition!.longitude,
-                          )
-                        : _defaultLocation),
-                zoom: widget.initialZoom,
-              ),
-              onMapCreated: _onMapCreated,
-              markers: _markers,
-              myLocationEnabled: widget.showUserLocation,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-              compassEnabled: true,
-            ),
-            _MapControlButtons(
-              onLocationTap: _goToCurrentLocation,
-              onZoomOutTap: _showAllMerchants,
-            ),
-            const _MapLegend(),
-          ],
+          onMapCreated: _onMapCreated,
+          markers: _markers,
+          myLocationEnabled: widget.showUserLocation,
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+          compassEnabled: false,
+          mapType: MapType.normal,
         ),
-      ),
+
+        // Boutons de contrôle flottants
+        _MapControlButtons(
+          onLocationTap: _goToCurrentLocation,
+          onZoomOutTap: _showAllMerchants,
+        ),
+
+        // Légende flottante
+        const _MapLegend(),
+      ],
     );
   }
 }
@@ -247,11 +237,7 @@ class _MapLoadingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 300,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
+      color: AppColors.primary.withOpacity(0.1),
       child: const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
@@ -271,20 +257,34 @@ class _MapControlButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 16,
-      right: 16,
-      child: Column(
-        children: [
-          _MapControlButton(
-            icon: Icons.my_location,
-            onPressed: onLocationTap,
-          ),
-          const SizedBox(height: 8),
-          _MapControlButton(
-            icon: Icons.zoom_out_map,
-            onPressed: onZoomOutTap,
-          ),
-        ],
+      top: MediaQuery.of(context).padding.top + 200, // En dessous du header
+      right: AppDimensions.paddingS,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            _MapControlButton(
+              icon: Icons.my_location,
+              onPressed: onLocationTap,
+              tooltip: 'Ma position',
+            ),
+            const SizedBox(height: 8),
+            _MapControlButton(
+              icon: Icons.zoom_out_map,
+              onPressed: onZoomOutTap,
+              tooltip: 'Voir tous',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -293,26 +293,42 @@ class _MapControlButtons extends StatelessWidget {
 class _MapControlButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onPressed;
+  final String tooltip;
 
   const _MapControlButton({
     required this.icon,
     required this.onPressed,
+    required this.tooltip,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 0,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          child: Icon(icon, color: AppColors.primary, size: 20),
+        borderRadius: BorderRadius.circular(12),
+        child: Tooltip(
+          message: tooltip,
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color: AppColors.primary.withOpacity(0.1),
+                width: 1,
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
         ),
       ),
     );
@@ -325,29 +341,46 @@ class _MapLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 16,
-      left: 16,
+      top: MediaQuery.of(context).padding.top + 200,
+      left: AppDimensions.paddingS,
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.paddingS,
+          vertical: AppDimensions.paddingXS,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.1),
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 4,
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
-        child: const Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _LegendItem(label: 'Disponible', color: AppColors.primary),
-            SizedBox(width: 8),
-            _LegendItem(label: 'Stock faible', color: Colors.orange),
-            SizedBox(width: 8),
-            _LegendItem(label: 'Rupture', color: Colors.red),
+            Text(
+              'Légende',
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const _LegendItem(label: 'Disponible', color: AppColors.success),
+            const SizedBox(height: 2),
+            const _LegendItem(label: 'Stock faible', color: Colors.orange),
+            const SizedBox(height: 2),
+            const _LegendItem(label: 'Rupture', color: Colors.red),
           ],
         ),
       ),
@@ -370,17 +403,27 @@ class _LegendItem extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 12,
-          height: 12,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withOpacity(0.3),
+                blurRadius: 2,
+                spreadRadius: 1,
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: 6),
         Text(
           label,
-          style: AppTextStyles.caption.copyWith(fontSize: 10),
+          style: AppTextStyles.caption.copyWith(
+            fontSize: 11,
+            color: Colors.black87,
+          ),
         ),
       ],
     );

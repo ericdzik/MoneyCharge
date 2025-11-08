@@ -9,24 +9,21 @@ import 'providers/auth_provider.dart';
 import 'providers/location_provider.dart';
 import 'providers/merchant_provider.dart';
 import 'providers/transaction_provider.dart';
-import 'providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
+import 'providers/favorite_merchant_provider.dart';
 import 'providers/ad_provider.dart';
 
 // Import des écrans utilisateur
 import 'features/user/screens/home_screen.dart';
 import 'features/user/screens/promotions_screen.dart';
 import 'features/user/screens/list_view_screen.dart';
-import 'features/user/screens/map_view_screen.dart' hide Container;
 import 'features/user/screens/merchant_detail_screen.dart';
 import 'features/user/screens/user_login_screen.dart';
 import 'features/user/screens/user_register_screen.dart';
 import 'features/user/screens/forgot_password_screen.dart';
-import 'core/widgets/auth_wrapper.dart';
 import 'features/user/screens/user_profile_screen.dart';
 import 'features/user/screens/rental_history_screen.dart';
 import 'features/user/screens/favorites_screen.dart';
 import 'features/user/screens/edit_user_profile_screen.dart';
-import 'features/user/screens/splash_screen.dart';
 
 // Import des écrans marchand
 import 'features/merchant/screens/merchant_register_screen.dart';
@@ -61,7 +58,6 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
   @override
   void initState() {
     super.initState();
-    // Initialize notification service here to listen for incoming notifications
     NotificationService.initialize();
   }
 
@@ -74,29 +70,87 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => MerchantProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
-        ChangeNotifierProvider(
-          create: (_) => FavoriteMerchantProvider(),
-        ), // Ajout ici
+        ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()),
         ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
-      child: MaterialApp(
-        title: 'Geo Money&Charge',
-        navigatorKey: NavigationService.navigatorKey,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: themeProvider.themeMode,
-        debugShowCheckedModeBanner: false,
-        initialRoute: '/',
-        onGenerateRoute: _generateRoute,
+      child: Consumer<AuthProvider>(
+        builder: (context, authProvider, _) {
+          return MaterialApp(
+            title: 'Geo Money&Charge',
+            navigatorKey: NavigationService.navigatorKey,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            debugShowCheckedModeBanner: false,
+            // Route initiale basée sur l'état d'authentification
+            home: _getInitialScreen(authProvider),
+            onGenerateRoute: (settings) => _generateRoute(settings, authProvider),
+          );
+        },
       ),
     );
   }
 
-  Route<dynamic> _generateRoute(RouteSettings settings) {
+  // Détermine l'écran initial en fonction de l'état d'authentification
+  Widget _getInitialScreen(AuthProvider authProvider) {
+    if (authProvider.isLoading) {
+      // Afficher un écran de chargement pendant la vérification
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (!authProvider.isAuthenticated) {
+      return const UnifiedLoginScreen();
+    }
+
+    // Rediriger vers l'écran approprié selon le type d'utilisateur
+    switch (authProvider.userType) {
+      case UserType.user:
+        return const HomeScreen();
+      case UserType.merchant:
+        return const MerchantDashboardScreen();
+      case UserType.admin:
+        return const AdminDashboardScreen();
+      default:
+        return const UnifiedLoginScreen();
+    }
+  }
+
+  Route<dynamic> _generateRoute(RouteSettings settings, AuthProvider authProvider) {
+    // Routes publiques (accessibles sans authentification)
+    if (_isPublicRoute(settings.name)) {
+      return _getPublicRoute(settings);
+    }
+
+    // Si l'utilisateur n'est pas authentifié, rediriger vers login
+    if (!authProvider.isAuthenticated) {
+      return MaterialPageRoute(
+        builder: (_) => const UnifiedLoginScreen(),
+        settings: settings,
+      );
+    }
+
+    // Routes protégées
+    return _getProtectedRoute(settings);
+  }
+
+  // Vérifie si la route est publique
+  bool _isPublicRoute(String? routeName) {
+    const publicRoutes = [
+      AppRoutes.login,
+      AppRoutes.register,
+      AppRoutes.merchantRegister,
+      AppRoutes.forgotPassword,
+    ];
+    return publicRoutes.contains(routeName);
+  }
+
+  // Retourne les routes publiques
+  Route<dynamic> _getPublicRoute(RouteSettings settings) {
     switch (settings.name) {
-      case '/':
-        return MaterialPageRoute(builder: (_) => const _SplashScreenLauncher());
-      // Routes publiques
       case AppRoutes.login:
         return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());
 
@@ -111,7 +165,15 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
       case AppRoutes.forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
 
-      // Routes utilisateur protégées
+      default:
+        return MaterialPageRoute(builder: (_) => const UnifiedLoginScreen());
+    }
+  }
+
+  // Retourne les routes protégées
+  Route<dynamic> _getProtectedRoute(RouteSettings settings) {
+    switch (settings.name) {
+    // Routes utilisateur
       case AppRoutes.home:
         return MaterialPageRoute(
           builder: (_) =>
@@ -125,13 +187,6 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
             UserType.user,
           ),
         );
-
-      case AppRoutes.mapView:
-        return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const MapViewScreen(), UserType.user),
-        );
-
       case AppRoutes.merchantDetail:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
@@ -173,7 +228,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           ),
         );
 
-      // Routes marchand
+    // Routes marchand
       case AppRoutes.merchantDashboard:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
@@ -217,6 +272,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           ),
         );
 
+    // Routes communes (accessibles à tous les utilisateurs authentifiés)
       case AppRoutes.notifications:
         return MaterialPageRoute(builder: (_) => const NotificationsScreen());
 
@@ -232,7 +288,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
       case AppRoutes.about:
         return MaterialPageRoute(builder: (_) => const AboutScreen());
 
-      // Routes admin
+    // Routes admin
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
@@ -270,30 +326,6 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
   }
 }
 
-class _SplashScreenLauncher extends StatefulWidget {
-  const _SplashScreenLauncher();
-
-  @override
-  State<_SplashScreenLauncher> createState() => _SplashScreenLauncherState();
-}
-
-class _SplashScreenLauncherState extends State<_SplashScreenLauncher> {
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const AuthWrapper()));
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const SplashScreen();
-  }
-}
-
 // Écran 404
 class NotFoundScreen extends StatelessWidget {
   const NotFoundScreen({super.key});
@@ -315,16 +347,17 @@ class NotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'La page que vous recherchez n\'existe pas.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, AppRoutes.home);
+                Navigator.pushReplacementNamed(context, AppRoutes.login);
               },
-              child: const Text('Retour à l\'accueil'),
+              child: const Text('Retour à la connexion'),
             ),
           ],
         ),
