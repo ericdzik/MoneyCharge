@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:loca_charge/features/user/widgets/balance_card.dart';
-import 'package:loca_charge/features/user/widgets/transaction_history.dart';
+import 'package:locacharge/features/user/widgets/balance_card.dart';
+import 'package:locacharge/features/user/widgets/transaction_history.dart';
 
 class WalletScreen extends StatelessWidget {
   const WalletScreen({super.key});

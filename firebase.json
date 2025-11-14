@@ -1,1 +1,9 @@
-{"project_info":{"project_number":"257089745285","project_id":"moneycharges","storage_bucket":"moneycharges.firebasestorage.app"},"client":[{"client_info":{"mobilesdk_app_id":"1:257089745285:android:107d9db25c20269e4c54ec","android_client_info":{"package_name":"com.geo.moneycharge"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyC0qch0LBgk83fOcturdJ6ouvqmsUWox18"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1","flutter":{"platforms":{"android":{"default":{"projectId":"moneycharge-ebf19","appId":"1:170207846950:android:ced6ea4908aa34dae23ce7","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"moneycharge-ebf19","configurations":{"android":"1:170207846950:android:ced6ea4908aa34dae23ce7","ios":"1:170207846950:ios:b9fa085b234966b6e23ce7","macos":"1:170207846950:ios:b9fa085b234966b6e23ce7","web":"1:170207846950:web:f4f9f632ace81476e23ce7","windows":"1:170207846950:web:31abcb78a5e54efde23ce7"}}}}}}
+{
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "project_info": {
+    "project_number": "257089745285",
+    "project_id": "moneycharges",
+    "storage_bucket": "moneycharges.firebasestorage.app"
+  },"client":[{"client_info":{"mobilesdk_app_id":"1:257089745285:android:107d9db25c20269e4c54ec","android_client_info":{"package_name":"com.geo.moneycharge"}},"oauth_client":[],"api_key":[{"current_key":"AIzaSyC0qch0LBgk83fOcturdJ6ouvqmsUWox18"}],"services":{"appinvite_service":{"other_platform_oauth_client":[]}}}],"configuration_version":"1","flutter":{"platforms":{"android":{"default":{"projectId":"moneycharge-ebf19","appId":"1:170207846950:android:ced6ea4908aa34dae23ce7","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"moneycharge-ebf19","configurations":{"android":"1:170207846950:android:ced6ea4908aa34dae23ce7","ios":"1:170207846950:ios:b9fa085b234966b6e23ce7","macos":"1:170207846950:ios:b9fa085b234966b6e23ce7","web":"1:170207846950:web:f4f9f632ace81476e23ce7","windows":"1:170207846950:web:31abcb78a5e54efde23ce7"}}}}}}
