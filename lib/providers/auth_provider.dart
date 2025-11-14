@@ -47,23 +47,24 @@ class AuthProvider with ChangeNotifier {
       fb_auth.User? user,
     ) async {
       _setLoading(true);
-      _firebaseUser = user;
-      if (_firebaseUser != null) {
-        try {
+      try {
+        _firebaseUser = user;
+        if (_firebaseUser != null) {
           await _fetchUserProfile(_firebaseUser!.uid);
           if (_userType != UserType.unknown) {
             await _updateLastLogin(_firebaseUser!.uid);
           }
-        } catch (e) {
-          _error = "Erreur lors de la récupération du profil: ${e.toString()}";
+        } else {
           _userType = UserType.unknown;
           _clearProfiles();
         }
-      } else {
+      } catch (e) {
+        _error = "Erreur lors de la récupération du profil: ${e.toString()}";
         _userType = UserType.unknown;
         _clearProfiles();
+      } finally {
+        _setLoading(false);
       }
-      _setLoading(false);
     });
   }
 
