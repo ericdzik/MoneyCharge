@@ -28,7 +28,7 @@ class BackgroundImage extends StatelessWidget {
         ),
         if (overlayColor != null)
           Container(
-            color: overlayColor!.withOpacity(overlayOpacity),
+            color: overlayColor!.withAlpha((255 * overlayOpacity).round()),
           ),
       ],
     );

@@ -46,7 +46,7 @@ class PendingVerificationsScreen extends StatelessWidget {
     }
 
     void suspendMerchant(MerchantAuthModel merchant) {
-      final newStatus = !(merchant.isSuspended ?? false);
+      final newStatus = !merchant.isSuspended;
       final actionText = newStatus ? 'Suspendre' : 'Réactiver';
       showDialog(
         context: context,

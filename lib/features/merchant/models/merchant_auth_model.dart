@@ -73,10 +73,6 @@ class MerchantAuthModel {
       stockStatus = (data['serviceStockStatus'] as Map).map((key, value) => MapEntry(key.toString(), value.toString()));
     }
 
-    Map<String, dynamic>? hours;
-    if (data['openingHours'] != null && data['openingHours'] is Map) {
-      hours = Map<String, dynamic>.from(data['openingHours'] as Map);
-    }
 
     return MerchantAuthModel(
       id: snapshot.id,

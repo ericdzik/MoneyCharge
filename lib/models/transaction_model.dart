@@ -138,8 +138,6 @@ class TransactionModel {
         return 'Remboursement';
       case TransactionType.withdrawal:
         return 'Retrait';
-      default:
-        return type.name;
     }
   }
 
@@ -153,8 +151,6 @@ class TransactionModel {
         return 'Échouée';
       case TransactionStatus.cancelled:
         return 'Annulée';
-      default:
-        return status.name;
     }
   }
 }

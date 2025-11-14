@@ -524,8 +524,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         return Colors.orange;
       case TransactionType.withdrawal:
         return AppColors.primary;
-      default:
-        return AppColors.textSecondary;
+
     }
   }
 
@@ -539,8 +538,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         return Icons.undo_rounded;
       case TransactionType.withdrawal:
         return Icons.savings_outlined;
-      default:
-        return Icons.receipt_long_outlined;
     }
   }
 
@@ -553,8 +550,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       case TransactionStatus.failed:
       case TransactionStatus.cancelled:
         return Colors.red;
-      default:
-        return AppColors.textSecondary;
     }
   }
 

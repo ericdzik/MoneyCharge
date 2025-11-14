@@ -22,7 +22,7 @@ class ColorUtils {
   }
 
   static Color greenWithAlpha(double alpha) {
-    return AppColors.primary.withOpacity(alpha);
+    return AppColors.primary.withAlpha((255 * alpha).round());
   }
 
   static Color orangeWithAlpha(double alpha) {

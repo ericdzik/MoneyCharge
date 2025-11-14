@@ -652,9 +652,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
               Text('Adresse: ${merchant.address}'),
               Text('Type: ${merchant.merchantType}'),
               Text('Horaires: ${merchant.openingHours ?? 'Non spécifié'}'),
-              Text(
-                'Services: ${merchant.services?.join(', ') ?? 'Non spécifiés'}',
-              ),
+              () {
+                String servicesText = 'Non spécifiés';
+                if (merchant.services != null && merchant.services!.isNotEmpty) {
+                  servicesText = merchant.services!.join(', ');
+                }
+                return Text('Services: $servicesText');
+              }(),
               Text(
                 'Statut: ${merchant.isVerified ? "Vérifié" : "En attente de vérification"}',
               ),
@@ -748,26 +752,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       context,
       AppRoutes.adminPendingVerifications,
       arguments: {'merchants': pendingMerchants},
-    );
-  }
-
-  void _generateReports() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Génération de rapports (simulé)')),
-    );
-  }
-
-  void _manageUsers() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Gestion des utilisateurs (simulé)')),
-    );
-  }
-
-  void _showSupportTickets() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Affichage des tickets de support (simulé)'),
-      ),
     );
   }
 

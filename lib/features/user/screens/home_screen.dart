@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:loca_charge/features/user/screens/wallet_screen.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/widgets/ad_carousel_widget.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return [
       MapViewContent(onMapCreated: (controller) => _mapController = controller),
       ListViewScreen(mapController: _mapController),
+      const WalletScreen(),
       const FavoritesScreen(),
       isMerchant
           ? const MerchantProfileScreen()

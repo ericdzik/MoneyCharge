@@ -161,7 +161,6 @@ class ApiService {
       final uri = Uri.parse(
         '$baseUrl/merchants',
       ).replace(queryParameters: queryParams);
-      final cacheKey = 'merchants_${uri.query}';
 
       // Vérifier le cache
       if (useCache) {

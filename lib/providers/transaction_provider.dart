@@ -172,8 +172,4 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
-  void _setLoading(bool loading) {
-    _isLoadingTransactions = loading;
-    notifyListeners();
-  }
 }

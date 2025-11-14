@@ -187,7 +187,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       _buildInfoTile(
                         icon: Icons.phone_outlined,
                         title: 'Téléphone',
-                        value: user.phone ?? 'Non renseigné',
+                        value: user.phone.isNotEmpty ? user.phone : 'Non renseigné',
                       ),
                     ],
                   ),
@@ -494,15 +494,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Date inconnue';
-    // Using a more robust date formatting. Consider intl package for localization.
-    // For DD/MM/YYYY format:
-    final day = date.day.toString().padLeft(2, '0');
-    final month = date.month.toString().padLeft(2, '0');
-    final year = date.year.toString();
-    return '$day/$month/$year';
-  }
 
   void _showLogoutDialog(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);

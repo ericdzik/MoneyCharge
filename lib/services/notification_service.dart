@@ -5,7 +5,6 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import '../core/constants/app_colors.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_model.dart';
 import 'auth_service.dart';
@@ -18,7 +17,6 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
-  static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final AuthService _authService = AuthService();
 
   static bool _isInitialized = false;
@@ -382,7 +380,6 @@ class NotificationService {
 
   /// Sauvegarder une notification dans les SharedPreferences
   static Future<void> _saveNotification(NotificationModel notification) async {
-    final prefs = await SharedPreferences.getInstance();
     final notifications = await getStoredNotifications();
     notifications.insert(0, notification); // Ajouter au début de la liste
     await _storeNotifications(notifications);

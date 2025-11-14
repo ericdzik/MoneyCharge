@@ -702,7 +702,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       activeColor: AppColors.secondary,
                       controlAffinity: ListTileControlAffinity.leading,
                     );
-                  }),
+                  }).toList(),
                   CheckboxListTile(
                     title: const Text(
                       'Autre',

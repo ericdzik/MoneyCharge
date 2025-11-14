@@ -163,8 +163,6 @@ class TransactionCardWidget extends StatelessWidget {
         return Colors.orange; // Orange pour remboursements
       case TransactionType.withdrawal:
         return AppColors.secondary; // Autre couleur pour retraits
-      default:
-        return AppColors.onSurface; // Couleur par défaut
     }
   }
 
@@ -178,8 +176,6 @@ class TransactionCardWidget extends StatelessWidget {
         return Icons.undo_rounded;
       case TransactionType.withdrawal:
         return Icons.savings_outlined;
-      default:
-        return Icons.receipt_long_outlined; // Icône par défaut
     }
   }
 
@@ -192,8 +188,6 @@ class TransactionCardWidget extends StatelessWidget {
       case TransactionStatus.failed:
       case TransactionStatus.cancelled:
         return Colors.red; // Ou AppColors.error si défini
-      default:
-        return AppColors.textSecondary;
     }
   }
 

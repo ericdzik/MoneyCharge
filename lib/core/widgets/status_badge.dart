@@ -19,12 +19,12 @@ class StatusBadge extends StatelessWidget {
 
     switch (status) {
       case StatusType.available:
-        backgroundColor = AppColors.success.withOpacity(0.15);
+        backgroundColor = AppColors.success.withAlpha((255 * 0.15).round());
         textColor = AppColors.success;
         textValue = customText ?? 'Disponible';
         break;
       case StatusType.lowStock:
-        backgroundColor = AppColors.warning.withOpacity(0.15);
+        backgroundColor = AppColors.warning.withAlpha((255 * 0.15).round());
         textColor = AppColors.warning;
         // Correction: s'assurer que textValue est assigné ici aussi.
         // Si AppColors.warning est un jaune clair, un texte plus foncé pourrait être nécessaire pour le contraste.
@@ -33,12 +33,12 @@ class StatusBadge extends StatelessWidget {
         textValue = customText ?? 'Stock faible';
         break;
       case StatusType.outOfStock:
-        backgroundColor = AppColors.error.withOpacity(0.15);
+        backgroundColor = AppColors.error.withAlpha((255 * 0.15).round());
         textColor = AppColors.error;
         textValue = customText ?? 'Épuisé';
         break;
       case StatusType.pending:
-        backgroundColor = AppColors.secondary.withOpacity(0.15);
+        backgroundColor = AppColors.secondary.withAlpha((255 * 0.15).round());
         textColor = AppColors.secondary;
         textValue = customText ?? 'En attente';
         break;

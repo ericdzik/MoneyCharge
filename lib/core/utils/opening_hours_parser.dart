@@ -38,7 +38,6 @@ class OpeningHoursParser {
 
       final openTime = parseTime(schedule['open']);
       final closeTime = parseTime(schedule['close']);
-      final currentTime = TimeOfDay.fromDateTime(now);
 
       if (openTime != null && closeTime != null) {
         final openDateTime = DateTime(now.year, now.month, now.day, openTime.hour, openTime.minute);

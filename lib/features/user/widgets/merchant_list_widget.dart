@@ -53,7 +53,6 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
   }
 
   List<Merchant> get _visibleMerchants {
-    final startIndex = 0;
     final endIndex = (_currentPage + 1) * _pageSize;
     return widget.merchants.take(endIndex).toList();
   }

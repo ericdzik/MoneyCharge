@@ -37,7 +37,6 @@ class _MapWidgetState extends State<MapWidget> {
   Position? _currentPosition;
   Set<Marker> _markers = {};
   bool _isLoading = true;
-  String _selectedMerchantId = '';
 
   static const LatLng _defaultLocation = LatLng(6.1319, 1.2228); // Lomé, Togo
 
@@ -112,7 +111,6 @@ class _MapWidgetState extends State<MapWidget> {
   }
 
   void _onMarkerTapped(Merchant merchant) {
-    setState(() => _selectedMerchantId = merchant.id);
 
     _mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(

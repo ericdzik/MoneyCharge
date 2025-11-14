@@ -250,8 +250,6 @@ class _AddTransactionDialogState extends State<AddTransactionDialog> {
         return 'Remboursement';
       case TransactionType.withdrawal:
         return 'Retrait';
-      default:
-        return type.name;
     }
   }
 

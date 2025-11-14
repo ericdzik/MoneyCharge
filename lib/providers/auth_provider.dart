@@ -329,15 +329,12 @@ class AuthProvider with ChangeNotifier {
             .child('merchant_profile_images')
             .child('$uid.jpg');
         // Compression légère pour accélérer l'upload et le chargement
-        final compressed = await FlutterImageCompress.compressWithFile(
-          profileImageFile.path,
+        final imageBytes = await profileImageFile.readAsBytes();
+        final compressed = await FlutterImageCompress.compressWithList(
+          imageBytes,
           quality: 70,
         );
-        if (compressed != null) {
-          await ref.putData(compressed, SettableMetadata(contentType: 'image/jpeg'));
-        } else {
-          await ref.putFile(File(profileImageFile.path));
-        }
+        await ref.putData(compressed, SettableMetadata(contentType: 'image/jpeg'));
         final imageUrl = await ref.getDownloadURL();
         dataToUpdate['profileImageUrl'] = imageUrl;
       }
@@ -378,15 +375,12 @@ class AuthProvider with ChangeNotifier {
             .ref()
             .child('user_profile_images')
             .child('$uid.jpg');
-        final compressed2 = await FlutterImageCompress.compressWithFile(
-          imageFile.path,
+        final imageBytes = await imageFile.readAsBytes();
+        final compressed = await FlutterImageCompress.compressWithList(
+          imageBytes,
           quality: 70,
         );
-        if (compressed2 != null) {
-          await ref.putData(compressed2, SettableMetadata(contentType: 'image/jpeg'));
-        } else {
-          await ref.putFile(File(imageFile.path));
-        }
+        await ref.putData(compressed, SettableMetadata(contentType: 'image/jpeg'));
         final imageUrl = await ref.getDownloadURL();
         dataToUpdate['profileImageUrl'] = imageUrl;
       }
