@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/admin/widgets/merchant_table_widget.dart';
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
@@ -21,51 +22,34 @@ class PendingVerificationsScreen extends StatelessWidget {
     // et créer des fonctions qui appellent les méthodes du provider.
     final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
 
-    void verifyMerchant(MerchantAuthModel merchant) {
+    void verifyMerchant(MerchantAuthModel merchant) async {
       final newStatus = !merchant.isVerified;
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text('${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?'),
-          content: Text('Voulez-vous vraiment changer le statut de ${merchant.businessName} ?'),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(ctx).pop();
-                await merchantProvider.updateMerchantVerification(merchant.id, newStatus);
-                // On pourrait vouloir rafraîchir l'état ici, mais le provider notifie déjà
-                // et le dashboard précédent se mettra à jour. Pour cet écran, on pourrait
-                // vouloir retirer l'élément de la liste. Pour l'instant, on laisse comme ça.
-              },
-              child: Text(newStatus ? 'Vérifier' : 'Confirmer'),
-            ),
-          ],
-        ),
+      final confirmed = await DialogHelper.showConfirmation(
+        context,
+        title: '${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?',
+        message: 'Voulez-vous vraiment changer le statut de ${merchant.businessName} ?',
+        confirmText: newStatus ? 'Vérifier' : 'Confirmer',
       );
+      
+      if (confirmed == true) {
+        await merchantProvider.updateMerchantVerification(merchant.id, newStatus);
+      }
     }
 
-    void suspendMerchant(MerchantAuthModel merchant) {
+    void suspendMerchant(MerchantAuthModel merchant) async {
       final newStatus = !merchant.isSuspended;
       final actionText = newStatus ? 'Suspendre' : 'Réactiver';
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text('$actionText le marchand ?'),
-          content: Text('Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?'),
-          actions: [
-            TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Annuler')),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(ctx).pop();
-                await merchantProvider.updateMerchantSuspension(merchant.id, newStatus);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: newStatus ? Colors.red : Colors.green),
-              child: Text(actionText),
-            ),
-          ],
-        ),
+      final confirmed = await DialogHelper.showConfirmation(
+        context,
+        title: '$actionText le marchand ?',
+        message: 'Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?',
+        confirmText: actionText,
+        isDangerous: newStatus,
       );
+      
+      if (confirmed == true) {
+        await merchantProvider.updateMerchantSuspension(merchant.id, newStatus);
+      }
     }
 
     void viewMerchantDetails(MerchantAuthModel merchant) {
@@ -109,7 +93,7 @@ class PendingVerificationsScreen extends StatelessWidget {
         title: 'Vérifications en attente',
         showLogo: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -119,7 +103,7 @@ class PendingVerificationsScreen extends StatelessWidget {
           final pendingList = provider.adminMerchants.where((m) => !m.isVerified).toList();
 
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           }
 
           if (pendingList.isEmpty) {

@@ -11,9 +11,14 @@ class AlternativeAuthBackgroundWidget2 extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Image de fond avec Image.asset
+          // Image de fond avec Image.asset optimisée
           Positioned.fill(
-            child: Image.asset('assets/splash/25.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/splash/25.png',
+              fit: BoxFit.cover,
+              cacheWidth: 1080,
+              cacheHeight: 1920,
+            ),
           ),
           // Contenu principal
           child,

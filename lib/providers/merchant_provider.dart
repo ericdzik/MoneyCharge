@@ -1,15 +1,12 @@
-import 'package:flutter/foundation.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../features/user/models/merchant_model.dart'; // For user-facing merchant list
-import '../features/merchant/models/merchant_auth_model.dart'; // For admin-facing merchant list
-import '../services/notification_service.dart';
+import 'dart:async';
 import 'dart:math';
 
-import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../features/user/models/merchant_model.dart'; // For user-facing merchant list
-import '../features/merchant/models/merchant_auth_model.dart'; // For admin-facing merchant list
+import 'package:flutter/foundation.dart';
+
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/user/models/merchant_model.dart';
+import 'package:locacharge/services/notification_service.dart';
 
 class MerchantProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -102,13 +99,6 @@ class MerchantProvider with ChangeNotifier {
 
     try {
       final querySnapshot = await _firestore
-          .collection('users')
-          .where('role', isEqualTo: 'merchant')
-          // No 'isVerified' filter for admin, they see all merchants
-          .get();
-
-      // Corrected: use the local querySnapshot variable
-      final querySnapshotData = await _firestore
           .collection('users')
           .where('role', isEqualTo: 'merchant')
           // No 'isVerified' filter for admin, they see all merchants

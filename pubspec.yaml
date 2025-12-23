@@ -79,26 +79,5 @@ flutter:
   #       weight: 600
   #     - asset: assets/fonts/Inter-Bold.ttf
   #       weight: 700
-  
-
-flutter_native_splash:
-  android: true
-  ios: true
-  web: true
-
-  # Couleur fallback (couleur centrale)
-  color: "#1D4ED8"
-  image: assets/splash/logos.png
-  branding: assets/splash/branding.png
-
-  android_12:
-    color: "#1D4ED8"
-    image: assets/splash/logos.png
-    branding: assets/splash/branding.png
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/lunchIcon.png"
 
 

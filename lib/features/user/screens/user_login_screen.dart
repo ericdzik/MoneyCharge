@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../core/utils/route_guards.dart';
-import '../../../providers/auth_provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/utils/route_guards.dart';
+import 'package:locacharge/core/widgets/custom_text_field.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 
 class UnifiedLoginScreen extends StatefulWidget {
   const UnifiedLoginScreen({super.key});
@@ -77,25 +78,17 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         );
         Navigator.pushReplacementNamed(context, defaultRoute);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          'Connexion réussie en tant que ${_getRoleDisplayName(authProvider.userType)}',
         );
       } else {
         print(
           '[UnifiedLoginScreen._handleLogin] User IS NOT Authenticated. Error: ${authProvider.error}',
         );
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.error ?? 'Email ou mot de passe incorrect.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          authProvider.error ?? 'Email ou mot de passe incorrect.',
         );
       }
     } catch (e) {
@@ -103,13 +96,9 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         '[UnifiedLoginScreen._handleLogin] Caught exception during _handleLogin: ${e.toString()}',
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            authProvider.error ?? "Erreur inattendue: ${e.toString()}",
-          ),
-          backgroundColor: AppColors.error,
-        ),
+      SnackBarHelper.showError(
+        context,
+        authProvider.error ?? "Erreur inattendue: ${e.toString()}",
       );
     }
     print('-----------------------------------------------------');
@@ -135,7 +124,12 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
         children: [
           // Image de fond
           Positioned.fill(
-            child: Image.asset('assets/splash/25.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/splash/25.png',
+              fit: BoxFit.cover,
+              cacheWidth: 1080,
+              cacheHeight: 1920,
+            ),
           ),
           // Overlay bleu avec opacité
           Positioned.fill(
@@ -145,18 +139,8 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.fromRGBO(
-                      30,
-                      58,
-                      138,
-                      0.7,
-                    ), // #1E3A8A avec opacité 0.7
-                    Color.fromRGBO(
-                      29,
-                      78,
-                      216,
-                      0.7,
-                    ), // #1D4ED8 avec opacité 0.7
+                    Color.fromRGBO(0, 91, 55, 0.7), // #1E3A8A avec opacité 0.7
+                    Color.fromRGBO(0, 91, 55, 0.7), // #1D4ED8 avec opacité 0.7
                   ],
                 ),
               ),
@@ -240,15 +224,11 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                             hintText: 'votre@email.com',
                             keyboardType: TextInputType.emailAddress,
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer votre email';
-                              }
-                              if (!RegExp(
-                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                              ).hasMatch(value)) {
-                                return 'Veuillez entrer un email valide';
-                              }
-                              return null;
+                              final requiredError = FormValidators.required(
+                                'Veuillez entrer votre email',
+                              )(value);
+                              if (requiredError != null) return requiredError;
+                              return FormValidators.email(value);
                             },
                           ),
                           const SizedBox(height: 20),
@@ -273,13 +253,14 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                               },
                             ),
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer votre mot de passe';
-                              }
-                              if (value.length < 6) {
-                                return 'Le mot de passe doit contenir au moins 6 caractères';
-                              }
-                              return null;
+                              final requiredError = FormValidators.required(
+                                'Veuillez entrer votre mot de passe',
+                              )(value);
+                              if (requiredError != null) return requiredError;
+                              return FormValidators.minLength(
+                                6,
+                                'Le mot de passe doit contenir au moins 6 caractères',
+                              )(value);
                             },
                           ),
 
@@ -343,13 +324,8 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                                     ),
                                   ),
                                   child: authProvider.isLoading
-                                      ? const SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            color: AppColors.white,
-                                            strokeWidth: 2,
-                                          ),
+                                      ? const LoadingIndicator.small(
+                                          color: AppColors.white,
                                         )
                                       : Text(
                                           'Se connecter',
@@ -442,17 +418,6 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                             ],
                           ),
                         ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // Logo en bas
-                    Center(
-                      child: Image.asset(
-                        'assets/splash/24.png',
-                        height: 120,
-                        width: 120,
                       ),
                     ),
                   ],

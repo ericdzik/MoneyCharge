@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/common.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/color_utils.dart';
 import '../models/merchant_model.dart';
@@ -221,7 +221,7 @@ class _MerchantListWidgetState extends State<MerchantListWidget> {
   Widget _buildLoadingIndicator() {
     return Container(
       padding: const EdgeInsets.all(16),
-      child: const Center(child: CircularProgressIndicator()),
+      child: const LoadingIndicator(),
     );
   }
 }

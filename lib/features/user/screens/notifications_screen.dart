@@ -11,7 +11,7 @@ class NotificationsScreen extends StatelessWidget {
         title: 'Notifications',
         showLogo: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

@@ -1,51 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'core/constants/app_routes.dart';
-import 'core/constants/app_colors.dart';
-import 'core/theme/app_theme.dart';
-import 'core/utils/route_guards.dart';
-import 'providers/auth_provider.dart';
-import 'providers/location_provider.dart';
-import 'providers/merchant_provider.dart';
-import 'providers/transaction_provider.dart';
-import 'providers/favorite_merchant_provider.dart';
-import 'providers/ad_provider.dart';
-
-// Import des écrans utilisateur
-import 'features/user/screens/home_screen.dart';
-import 'features/user/screens/promotions_screen.dart';
-import 'features/user/screens/list_view_screen.dart';
-import 'features/user/screens/merchant_detail_screen.dart';
-import 'features/user/screens/user_login_screen.dart';
-import 'features/user/screens/user_register_screen.dart';
-import 'features/user/screens/forgot_password_screen.dart';
-import 'features/user/screens/user_profile_screen.dart';
-import 'features/user/screens/rental_history_screen.dart';
-import 'features/user/screens/favorites_screen.dart';
-import 'features/user/screens/edit_user_profile_screen.dart';
-
-// Import des écrans marchand
-import 'features/merchant/screens/merchant_register_screen.dart';
-import 'features/merchant/screens/merchant_dashboard_screen.dart';
-import 'features/merchant/screens/balance_management_screen.dart';
-import 'features/merchant/screens/edit_merchant_profile_screen.dart';
-import 'features/merchant/screens/merchant_reviews_screen.dart';
-
-// Import des écrans admin
-import 'features/admin/screens/admin_dashboard_screen.dart';
-import 'features/admin/screens/pending_verifications_screen.dart';
-import 'features/admin/screens/ad_screen.dart';
-import 'features/admin/screens/manage_ads_screen.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/theme/app_theme.dart';
+import 'package:locacharge/core/utils/route_guards.dart';
+import 'package:locacharge/features/admin/screens/ad_screen.dart';
+import 'package:locacharge/features/admin/screens/admin_dashboard_screen.dart';
+import 'package:locacharge/features/admin/screens/manage_ads_screen.dart';
+import 'package:locacharge/features/admin/screens/pending_verifications_screen.dart';
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/merchant/screens/edit_merchant_profile_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_dashboard_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
-import 'package:locacharge/features/user/screens/notifications_screen.dart';
-import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
-import 'package:locacharge/features/user/screens/privacy_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_register_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
+import 'package:locacharge/features/user/screens/edit_user_profile_screen.dart';
+import 'package:locacharge/features/user/screens/favorites_screen.dart';
+import 'package:locacharge/features/user/screens/forgot_password_screen.dart';
+import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
+import 'package:locacharge/features/user/screens/home_screen.dart';
+import 'package:locacharge/features/user/screens/list_view_screen.dart';
+import 'package:locacharge/features/user/screens/merchant_detail_screen.dart';
+import 'package:locacharge/features/user/screens/notifications_screen.dart';
+import 'package:locacharge/features/user/screens/privacy_screen.dart';
+import 'package:locacharge/features/user/screens/promotions_screen.dart';
+import 'package:locacharge/features/user/screens/user_login_screen.dart';
+import 'package:locacharge/features/user/screens/user_profile_screen.dart';
+import 'package:locacharge/features/user/screens/user_register_screen.dart';
+import 'package:locacharge/providers/ad_provider.dart';
+import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/providers/favorite_merchant_provider.dart';
+import 'package:locacharge/providers/location_provider.dart';
+import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
-import 'features/merchant/models/merchant_auth_model.dart';
-import 'services/navigation_service.dart';
-import 'services/notification_service.dart';
+import 'package:locacharge/providers/transaction_provider.dart';
+import 'package:locacharge/services/navigation_service.dart';
+import 'package:locacharge/services/notification_service.dart';
 
 class LocaChargeApp extends StatefulWidget {
   const LocaChargeApp({super.key});
@@ -84,7 +76,8 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
             debugShowCheckedModeBanner: false,
             // Route initiale basée sur l'état d'authentification
             home: _getInitialScreen(authProvider),
-            onGenerateRoute: (settings) => _generateRoute(settings, authProvider),
+            onGenerateRoute: (settings) =>
+                _generateRoute(settings, authProvider),
           );
         },
       ),
@@ -95,11 +88,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
   Widget _getInitialScreen(AuthProvider authProvider) {
     if (authProvider.isLoading) {
       // Afficher un écran de chargement pendant la vérification
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (!authProvider.isAuthenticated) {
@@ -119,7 +108,10 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
     }
   }
 
-  Route<dynamic> _generateRoute(RouteSettings settings, AuthProvider authProvider) {
+  Route<dynamic> _generateRoute(
+    RouteSettings settings,
+    AuthProvider authProvider,
+  ) {
     // Routes publiques (accessibles sans authentification)
     if (_isPublicRoute(settings.name)) {
       return _getPublicRoute(settings);
@@ -173,7 +165,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
   // Retourne les routes protégées
   Route<dynamic> _getProtectedRoute(RouteSettings settings) {
     switch (settings.name) {
-    // Routes utilisateur
+      // Routes utilisateur
       case AppRoutes.home:
         return MaterialPageRoute(
           builder: (_) =>
@@ -204,14 +196,6 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           ),
         );
 
-      case AppRoutes.rentalHistory:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const RentalHistoryScreen(),
-            UserType.user,
-          ),
-        );
-
       case AppRoutes.favorites:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
@@ -228,19 +212,11 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           ),
         );
 
-    // Routes marchand
+      // Routes marchand
       case AppRoutes.merchantDashboard:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             const MerchantDashboardScreen(),
-            UserType.merchant,
-          ),
-        );
-
-      case AppRoutes.balanceManagement:
-        return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const BalanceManagementScreen(),
             UserType.merchant,
           ),
         );
@@ -272,7 +248,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           ),
         );
 
-    // Routes communes (accessibles à tous les utilisateurs authentifiés)
+      // Routes communes (accessibles à tous les utilisateurs authentifiés)
       case AppRoutes.notifications:
         return MaterialPageRoute(builder: (_) => const NotificationsScreen());
 
@@ -288,7 +264,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
       case AppRoutes.about:
         return MaterialPageRoute(builder: (_) => const AboutScreen());
 
-    // Routes admin
+      // Routes admin
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
@@ -310,8 +286,10 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
 
       case AppRoutes.adminAds:
         return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const ManageAdsScreen(), UserType.admin),
+          builder: (_) => RouteGuards.requireUserType(
+            const ManageAdsScreen(),
+            UserType.admin,
+          ),
         );
 
       case AppRoutes.adminAddAd:
@@ -347,10 +325,9 @@ class NotFoundScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'La page que vous recherchez n\'existe pas.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(color: AppColors.textSecondary),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: 32),
             ElevatedButton(

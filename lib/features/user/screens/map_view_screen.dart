@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import '../../../core/widgets/custom_app_bar.dart';
-import '../../../core/constants/app_colors.dart';
-import '../models/merchant_model.dart';
-import '../../../services/location_service.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import '../../../providers/merchant_provider.dart';
-import '../../../providers/location_provider.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLngBounds
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_routes.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/core/utils/opening_hours_parser.dart';
+import 'package:locacharge/features/user/models/merchant_model.dart';
+import 'package:locacharge/providers/location_provider.dart';
+import 'package:locacharge/providers/merchant_provider.dart';
+import 'package:locacharge/services/location_service.dart';
 
 class MapViewScreen extends StatefulWidget {
   final Merchant? targetMerchant; // Marchand optionnel à cibler
@@ -396,23 +398,15 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                   }
                                   if (locationProvider.routeError != null &&
                                       mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          locationProvider.routeError!,
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
+                                    SnackBarHelper.showError(
+                                      context,
+                                      locationProvider.routeError!,
                                     );
                                   }
                                 } else if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Localisation utilisateur inconnue.',
-                                      ),
-                                      backgroundColor: Colors.orange,
-                                    ),
+                                  SnackBarHelper.showWarning(
+                                    context,
+                                    'Localisation utilisateur inconnue.',
                                   );
                                 }
                               },
@@ -443,13 +437,9 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                       merchant.name,
                                     );
                                 if (!success && mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Impossible de lancer la navigation externe.',
-                                      ),
-                                      backgroundColor: Colors.red,
-                                    ),
+                                  SnackBarHelper.showError(
+                                    context,
+                                    'Impossible de lancer la navigation externe.',
                                   );
                                 }
                               },
@@ -521,25 +511,15 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                     }
                                     if (locationProvider.routeError != null &&
                                         mounted) {
-                                      ScaffoldMessenger.of(
+                                      SnackBarHelper.showError(
                                         context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            locationProvider.routeError!,
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
+                                        locationProvider.routeError!,
                                       );
                                     }
                                   } else if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Localisation utilisateur inconnue.',
-                                        ),
-                                        backgroundColor: Colors.orange,
-                                      ),
+                                    SnackBarHelper.showWarning(
+                                      context,
+                                      'Localisation utilisateur inconnue.',
                                     );
                                   }
                                 },
@@ -572,13 +552,9 @@ class _MapViewScreenState extends State<MapViewScreen> {
                                         merchant.name,
                                       );
                                   if (!success && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Impossible de lancer la navigation externe.',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
+                                    SnackBarHelper.showError(
+                                      context,
+                                      'Impossible de lancer la navigation externe.',
                                     );
                                   }
                                 },
@@ -652,14 +628,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
   }
 
   String _formatHours(Map<String, dynamic>? hours) {
-    if (hours == null || hours.isEmpty) {
-      return 'Non disponible';
-    }
-    // Pour simplifier, on affiche le premier jour disponible.
-    // Une logique plus complexe pourrait formater tous les jours.
-    final firstDay = hours.keys.first;
-    final schedule = hours[firstDay] as Map<String, dynamic>;
-    return '$firstDay: ${schedule['open']} - ${schedule['close']}';
+    return OpeningHoursParser.formatTodayHours(hours, DateTime.now());
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
@@ -696,11 +665,9 @@ class _MapViewScreenState extends State<MapViewScreen> {
     final locationService = LocationService();
     final success = await locationService.makePhoneCall(phone);
     if (!success && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'effectuer l\'appel.'),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showError(
+        context,
+        'Impossible d\'effectuer l\'appel.',
       );
     }
   }
@@ -717,7 +684,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
       appBar: CustomAppBar(
         title: 'Carte',
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             // Effacer l'itinéraire en quittant l'écran
             Provider.of<LocationProvider>(context, listen: false).clearRoute();
@@ -779,7 +746,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                   children: [
                     if (merchantProvider.isLoading &&
                         merchantProvider.merchants.isEmpty)
-                      const Center(child: CircularProgressIndicator())
+                      const LoadingIndicator()
                     else if (merchantProvider.error != null)
                       Center(child: Text("Erreur: ${merchantProvider.error}"))
                     else if (merchantProvider.merchants.isEmpty &&
@@ -842,9 +809,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 8),
-                            Text("Calcul de l'itinéraire..."),
+                            LoadingIndicator.medium(message: "Calcul de l'itinéraire..."),
                           ],
                         ),
                       ),

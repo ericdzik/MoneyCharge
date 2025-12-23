@@ -24,7 +24,7 @@ val localProps = localProperties()
 android {
     namespace = "com.example.locacharge"
     compileSdk = 36
-    ndkVersion = "27.0.12077973"
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -58,11 +58,6 @@ android {
             isMinifyEnabled = false
             isShrinkResources = false
         }
-    }
-
-    // Optionnel : augmentation du max heap pour le dexer et le compiler
-    dexOptions {
-        javaMaxHeapSize = "8g"
     }
 }
 

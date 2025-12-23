@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
 
 class CguScreen extends StatelessWidget {
   const CguScreen({super.key});
@@ -6,8 +7,13 @@ class CguScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Conditions Générales d\'Utilisation'),
+      appBar: CustomAppBar(
+        title: 'Conditions Générales d\'Utilisation',
+        showLogo: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: const SingleChildScrollView(
         padding: EdgeInsets.all(16.0),

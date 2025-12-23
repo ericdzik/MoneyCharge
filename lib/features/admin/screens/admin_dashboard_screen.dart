@@ -1,23 +1,24 @@
-import 'package:flutter/material.dart';
-import 'package:locacharge/features/user/widgets/review_list_widget.dart';
-import 'package:provider/provider.dart'; // Added for Provider
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_routes.dart'; // Added for AppRoutes.login
-import '../models/admin_model.dart';
-import '../widgets/admin_stats_widget.dart';
-import '../widgets/merchant_table_widget.dart';
-import '../../merchant/models/merchant_auth_model.dart';
-import '../services/admin_firestore_service.dart'; // Added
-import '../../../providers/auth_provider.dart'; // Added
-import '../../../providers/merchant_provider.dart'; // Added
 import 'dart:math';
-import '../../../services/notification_service.dart';
-import '../../../core/widgets/custom_app_bar.dart';
-import 'notification_screen.dart';
-// Removed AdminMockDataService import as it's being replaced for primary data
-// import '../services/admin_mock_data_service.dart';
+
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/widgets/background_image_widget.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/features/admin/models/admin_model.dart';
+import 'package:locacharge/features/admin/screens/notification_screen.dart';
+import 'package:locacharge/features/admin/services/admin_firestore_service.dart';
+import 'package:locacharge/features/admin/widgets/admin_stats_widget.dart';
+import 'package:locacharge/features/admin/widgets/merchant_table_widget.dart';
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/user/widgets/review_list_widget.dart';
+import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/providers/merchant_provider.dart';
+import 'package:locacharge/services/notification_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -158,8 +159,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       body: Stack(
         children: [
           // Image de fond qui s'étend sous l'AppBar
-          Positioned.fill(
-            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          const Positioned.fill(
+            child: BackgroundImage(),
           ),
           // Contenu principal avec padding pour l'AppBar
           Padding(
@@ -178,7 +179,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const LoadingIndicator();
     }
     if (_dataError != null) {
       return Center(
@@ -307,9 +308,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             const CircleAvatar(
               radius: 25,
               backgroundColor: AppColors.onPrimary,
-              child: CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              ),
+              child: LoadingIndicator.small(),
             ),
             const SizedBox(width: 16),
             Text(
@@ -540,98 +539,64 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  void _verifyMerchant(MerchantAuthModel merchant) {
+  void _verifyMerchant(MerchantAuthModel merchant) async {
     final newStatus = !merchant.isVerified;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          '${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?',
-        ),
-        content: Text(
-          'Voulez-vous vraiment changer le statut de ${merchant.businessName} ?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final merchantProvider = Provider.of<MerchantProvider>(
-                context,
-                listen: false,
-              );
-              await merchantProvider.updateMerchantVerification(
-                merchant.id,
-                newStatus,
-              );
-            },
-            child: Text(newStatus ? 'Vérifier' : 'Confirmer'),
-          ),
-        ],
-      ),
+    final confirmed = await DialogHelper.showConfirmation(
+      context,
+      title: '${newStatus ? "Vérifier" : "Annuler la vérification de"} ce marchand ?',
+      message: 'Voulez-vous vraiment changer le statut de ${merchant.businessName} ?',
+      confirmText: newStatus ? 'Vérifier' : 'Confirmer',
     );
+    
+    if (confirmed == true) {
+      final merchantProvider = Provider.of<MerchantProvider>(
+        context,
+        listen: false,
+      );
+      await merchantProvider.updateMerchantVerification(
+        merchant.id,
+        newStatus,
+      );
+    }
   }
 
-  void _suspendMerchant(MerchantAuthModel merchant) {
-    final newStatus = !(merchant.isSuspended ?? false);
+  void _suspendMerchant(MerchantAuthModel merchant) async {
+    final newStatus = !merchant.isSuspended;
     final actionText = newStatus ? 'Suspendre' : 'Réactiver';
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('$actionText le marchand ?'),
-        content: Text(
-          'Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              final merchantProvider = Provider.of<MerchantProvider>(
-                context,
-                listen: false,
-              );
-              try {
-                await merchantProvider.updateMerchantSuspension(
-                  merchant.id,
-                  newStatus,
-                );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '${merchant.businessName} a été ${newStatus ? "suspendu" : "réactivé"}.',
-                      ),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Erreur: ${e.toString()}'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: newStatus ? Colors.red : AppColors.success,
-            ),
-            child: Text(actionText),
-          ),
-        ],
-      ),
+    final confirmed = await DialogHelper.showConfirmation(
+      context,
+      title: '$actionText le marchand ?',
+      message: 'Voulez-vous vraiment ${actionText.toLowerCase()} ${merchant.businessName} ?',
+      confirmText: actionText,
+      isDangerous: newStatus,
     );
+    
+    if (confirmed == true) {
+      final merchantProvider = Provider.of<MerchantProvider>(
+        context,
+        listen: false,
+      );
+      try {
+        await merchantProvider.updateMerchantSuspension(
+          merchant.id,
+          newStatus,
+        );
+        if (mounted) {
+          SnackBarHelper.showSuccess(
+            context,
+            '${merchant.businessName} a été ${newStatus ? "suspendu" : "réactivé"}.',
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          SnackBarHelper.showError(
+            context,
+            'Erreur: ${e.toString()}',
+          );
+        }
+      }
+    }
   }
 
   void _viewMerchantDetails(MerchantAuthModel merchant) {

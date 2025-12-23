@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/notification_service.dart';
+import 'snackbar_helper.dart';
 
 /// Gestionnaire d'erreurs centralisé pour l'application
 class ErrorHandler {
@@ -62,20 +63,7 @@ class ErrorHandler {
 
   /// Afficher un snackbar d'erreur
   static void showErrorSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-        ),
-      ),
-    );
+    SnackBarHelper.showError(context, message);
 
     // Déclencher également une notification d'erreur
     NotificationService.showError(

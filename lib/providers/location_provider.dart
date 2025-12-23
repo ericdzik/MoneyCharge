@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart'; // Pour LatLng et LatLngBounds
-import 'package:flutter_polyline_points/flutter_polyline_points.dart'; // Pour décoder la polyligne
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../services/location_service.dart';
-import '../services/directions_service.dart'; // Ajout du service de directions
+import 'package:locacharge/services/directions_service.dart';
+import 'package:locacharge/services/location_service.dart';
 
 class LocationProvider with ChangeNotifier {
   final LocationService _locationService = LocationService();

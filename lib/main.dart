@@ -1,26 +1,33 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:locacharge/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
-import 'firebase_options.dart';
-import 'app.dart';
-import 'services/notification_service.dart';
+
+import 'package:locacharge/app.dart';
+import 'package:locacharge/core/config/env_config.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/firebase_options.dart';
+import 'package:locacharge/providers/theme_provider.dart';
+import 'package:locacharge/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
-  WidgetsFlutterBinding.ensureInitialized();
+  // ==================== INITIALISATION ENVIRONNEMENT ====================
+  // Chargement sécurisé des variables d'environnement
+  // IMPORTANT: Doit être fait AVANT toute utilisation de clés API
+  await EnvConfig.initialize(fileName: '.env');
 
-  // Initialisation de Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // Affichage de la configuration en mode debug
+  if (EnvConfig.isDebugMode) {
+    EnvConfig.printConfiguration();
+  }
 
-  // Initialiser les notifications
+  // ==================== INITIALISATION FIREBASE ====================
+  // Firebase utilise maintenant les clés depuis EnvConfig
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // ==================== INITIALISATION NOTIFICATIONS ====================
   await NotificationService.initialize();
 
   // Configuration de l'orientation de l'écran
@@ -31,11 +38,10 @@ void main() async {
   ]);
 
   // Configuration de la barre de statut et de la barre de navigation
-  // Pour une application de type "mobile", on utilise un style clair pour la barre de statut
-  // et une barre de navigation blanche avec des icônes sombres
+  // Barre d'état verte pour correspondre à l'AppBar
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
+      statusBarColor: AppColors.primary,
       statusBarIconBrightness: Brightness.light,
       systemNavigationBarColor: Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,

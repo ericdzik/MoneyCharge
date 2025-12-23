@@ -1,0 +1,41 @@
+# Configuration Flutter Native Splash
+# Documentation: https://pub.dev/packages/flutter_native_splash
+
+flutter_native_splash:
+  # Plateformes supportées
+  android: true
+  ios: true
+  web: true
+
+  # Couleur de fond (format hex avec guillemets)
+  color: "#005b37"
+  
+  # Logo principal centré
+  image: assets/splash/logo.png
+  
+  # Branding en bas de l'écran (logo entreprise/partenaire)
+  branding: assets/splash/branding.png
+  branding_mode: bottom  # bottom, center
+  
+  # Positionnement et dimensionnement
+  android_gravity: center  # Options: center, fill, fitWidth, fitHeight
+  ios_content_mode: center  # Options: center, scaleAspectFit, scaleAspectFill
+  web_image_mode: center  # Options: center, contain, stretch, cover
+  
+  # Mode plein écran (cache barre de statut)
+  fullscreen: true
+  
+  # Configuration Android 12+ (Material You)
+  android_12:
+    color: "#005b37"
+    image: assets/splash/logo.png
+    branding: assets/splash/branding.png
+    
+    # Couleur de la fenêtre splash (recommandé pour Android 12+)
+    color_dark: "#003d25"  # Variante sombre
+    image_dark: assets/splash/logo.png  # Image pour mode sombre (optionnel)
+    branding_dark: assets/splash/branding.png  # Branding mode sombre
+    
+    # Désactive l'icône par défaut Android 12
+    icon_background_color: "#005b37"
+    icon_background_color_dark: "#003d25"

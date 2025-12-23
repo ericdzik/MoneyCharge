@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/features/user/models/review_model.dart';
 
@@ -22,7 +23,7 @@ class ReviewListWidget extends StatelessWidget {
           return const Text('Erreur lors du chargement des avis.');
         }
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator();
         }
         if (snapshot.data!.docs.isEmpty) {
           return const Text('Aucun avis pour le moment.');

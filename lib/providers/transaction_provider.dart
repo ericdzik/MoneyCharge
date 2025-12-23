@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../features/merchant/models/balance_model.dart'; // Devrait maintenant être OK
-import '../models/transaction_model.dart'; // Notre modèle centralisé
-import './auth_provider.dart';
+import 'package:flutter/foundation.dart';
+
+import 'package:locacharge/features/merchant/models/balance_model.dart';
+import 'package:locacharge/models/transaction_model.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

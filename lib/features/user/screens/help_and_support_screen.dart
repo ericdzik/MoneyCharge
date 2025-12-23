@@ -11,7 +11,7 @@ class HelpAndSupportScreen extends StatelessWidget {
         title: 'Aide et support',
         showLogo: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

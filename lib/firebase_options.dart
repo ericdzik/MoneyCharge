@@ -3,8 +3,12 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'core/config/env_config.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
+///
+/// SÉCURITÉ: Les clés API sont maintenant chargées depuis EnvConfig
+/// plutôt que d'être hardcodées dans le code source.
 ///
 /// Example:
 /// ```dart
@@ -40,48 +44,47 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAINm9WunfrRK-tjvG4pRI9c_BK9wwyFWU',
-    appId: '1:170207846950:web:f4f9f632ace81476e23ce7',
-    messagingSenderId: '170207846950',
-    projectId: 'moneycharge-ebf19',
-    authDomain: 'moneycharge-ebf19.firebaseapp.com',
-    storageBucket: 'moneycharge-ebf19.firebasestorage.app',
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: EnvConfig.firebaseApiKeyWeb,
+    appId: EnvConfig.firebaseAppIdWeb,
+    messagingSenderId: EnvConfig.firebaseMessagingSenderId,
+    projectId: EnvConfig.firebaseProjectId,
+    authDomain: EnvConfig.firebaseAuthDomain,
+    storageBucket: EnvConfig.firebaseStorageBucket,
   );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCLUw-PfRmUmRrEnlp9RSaAzWuY5ZgdEps',
-    appId: '1:170207846950:android:ced6ea4908aa34dae23ce7',
-    messagingSenderId: '170207846950',
-    projectId: 'moneycharge-ebf19',
-    storageBucket: 'moneycharge-ebf19.firebasestorage.app',
+  static FirebaseOptions get android => FirebaseOptions(
+    apiKey: EnvConfig.firebaseApiKeyAndroid,
+    appId: EnvConfig.firebaseAppIdAndroid,
+    messagingSenderId: EnvConfig.firebaseMessagingSenderId,
+    projectId: EnvConfig.firebaseProjectId,
+    storageBucket: EnvConfig.firebaseStorageBucket,
   );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBrWJSUGSWEIXE3KS78uHqRUp_hgYY5-p8',
-    appId: '1:170207846950:ios:b9fa085b234966b6e23ce7',
-    messagingSenderId: '170207846950',
-    projectId: 'moneycharge-ebf19',
-    storageBucket: 'moneycharge-ebf19.firebasestorage.app',
-    iosBundleId: 'com.example.locacharge',
+  static FirebaseOptions get ios => FirebaseOptions(
+    apiKey: EnvConfig.firebaseApiKeyIos,
+    appId: EnvConfig.firebaseAppIdIos,
+    messagingSenderId: EnvConfig.firebaseMessagingSenderId,
+    projectId: EnvConfig.firebaseProjectId,
+    storageBucket: EnvConfig.firebaseStorageBucket,
+    iosBundleId: EnvConfig.firebaseIosBundleId,
   );
 
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBrWJSUGSWEIXE3KS78uHqRUp_hgYY5-p8',
-    appId: '1:170207846950:ios:b9fa085b234966b6e23ce7',
-    messagingSenderId: '170207846950',
-    projectId: 'moneycharge-ebf19',
-    storageBucket: 'moneycharge-ebf19.firebasestorage.app',
-    iosBundleId: 'com.example.locacharge',
+  static FirebaseOptions get macos => FirebaseOptions(
+    apiKey: EnvConfig.firebaseApiKeyIos,
+    appId: EnvConfig.firebaseAppIdIos,
+    messagingSenderId: EnvConfig.firebaseMessagingSenderId,
+    projectId: EnvConfig.firebaseProjectId,
+    storageBucket: EnvConfig.firebaseStorageBucket,
+    iosBundleId: EnvConfig.firebaseIosBundleId,
   );
 
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAINm9WunfrRK-tjvG4pRI9c_BK9wwyFWU',
-    appId: '1:170207846950:web:31abcb78a5e54efde23ce7',
-    messagingSenderId: '170207846950',
-    projectId: 'moneycharge-ebf19',
-    authDomain: 'moneycharge-ebf19.firebaseapp.com',
-    storageBucket: 'moneycharge-ebf19.firebasestorage.app',
+  static FirebaseOptions get windows => FirebaseOptions(
+    apiKey: EnvConfig.firebaseApiKeyWeb,
+    appId: EnvConfig.firebaseAppIdWeb,
+    messagingSenderId: EnvConfig.firebaseMessagingSenderId,
+    projectId: EnvConfig.firebaseProjectId,
+    authDomain: EnvConfig.firebaseAuthDomain,
+    storageBucket: EnvConfig.firebaseStorageBucket,
   );
-
 }

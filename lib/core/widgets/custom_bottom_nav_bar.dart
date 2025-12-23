@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_dimensions.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -57,22 +56,16 @@ class CustomBottomNavBar extends StatelessWidget {
               index: 1,
             ),
             _buildNavItem(
-              icon: Icons.account_balance_wallet_outlined,
-              activeIcon: Icons.account_balance_wallet,
-              label: 'Portefeuille',
-              index: 2,
-            ),
-            _buildNavItem(
               icon: Icons.favorite_border,
               activeIcon: Icons.favorite,
               label: 'Favoris',
-              index: 3,
+              index: 2,
             ),
             _buildNavItem(
               icon: Icons.person_outline,
               activeIcon: Icons.person,
               label: 'Profil',
-              index: 4,
+              index: 3,
             ),
           ],
         ),

@@ -148,11 +148,6 @@ class NotificationService {
           );
         }
         break;
-      case 'balance_management':
-        NavigationService.navigatorKey.currentState?.pushNamed(
-          AppRoutes.balanceManagement,
-        );
-        break;
       case 'pending_verifications':
         NavigationService.navigatorKey.currentState?.pushNamed(
           AppRoutes.adminPendingVerifications,

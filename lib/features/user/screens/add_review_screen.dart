@@ -1,14 +1,14 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/widgets/custom_app_bar.dart';
-import '../../../core/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../core/widgets/background_image_widget.dart';
-import '../../../models/review_model.dart';
-import '../../../providers/auth_provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/core/widgets/custom_button.dart';
+import 'package:locacharge/core/widgets/custom_text_field.dart';
+import 'package:locacharge/models/review_model.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 
 class AddReviewScreen extends StatefulWidget {
   final String merchantId;
@@ -68,7 +68,7 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
       }
     } catch (e) {
       if (mounted) {
-        _showSnackBar('Erreur lors de l\'ajout de l\'avis: $e');
+        _showSnackBar('Erreur lors de l\'ajout de l\'avis: $e', isError: true);
       }
     } finally {
       if (mounted) {
@@ -77,31 +77,29 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
     }
   }
 
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (isError) {
+      SnackBarHelper.showError(context, message);
+    } else {
+      SnackBarHelper.showSuccess(context, message);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Laisser un avis',
         showLogo: false,
         backgroundColor: AppColors.primary,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: Stack(
-        children: [
-          const Positioned.fill(child: BackgroundImage()),
-          SafeArea(
-            child: Center(
-              child: Container(
+      body: SafeArea(
+        child: Center(
+          child: Container(
                 margin: const EdgeInsets.all(AppDimensions.paddingM),
                 width: double.infinity,
                 constraints: BoxConstraints(
@@ -154,11 +152,9 @@ class _AddReviewScreenState extends State<AddReviewScreen> {
               ),
             ),
           ),
-        ],
-      ),
-    );
+      );
+    }
   }
-}
 
 class _RatingSection extends StatelessWidget {
   final double rating;

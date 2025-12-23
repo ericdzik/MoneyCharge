@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Couleurs principales fournies
-  static const Color primary = Color(0xFF1E3A8A); // Bleu principal
-  static const Color primaryLight = Color(0xFF1D4ED8); // Bleu royal (alternative)
+  static const Color primary = Color(0xFF005B37); // vert principal
+  static const Color primaryLight = Color(0xFF4CAF7A); // Vert royal (alternative)
 
   // Dégradé jaune/orange
   static const Color yellow = Color(0xFFFBBF24); // Jaune
@@ -13,9 +13,9 @@ class AppColors {
   static const Color white = Color(0xFFFFFFFF);
 
   // Nuances modernes basées sur les couleurs principales
-  static const Color primaryDark = Color(0xFF1E40AF); // Bleu plus foncé
-  static const Color primaryLighter = Color(0xFF3B82F6); // Bleu plus clair
-  static const Color primaryMuted = Color(0xFF1E3A8A); // Bleu avec opacité
+  static const Color primaryDark = Color(0xFF005B37); // Vert plus foncé
+  static const Color primaryLighter = Color(0xFF4CAF7A); // Vert plus clair
+  static const Color primaryMuted = Color(0xFF3F6A57); // Bleu avec opacité
 
   // Dégradé jaune/orange étendu
   static const Color yellowLight = Color(0xFFFCD34D); // Jaune plus clair
@@ -63,7 +63,7 @@ class AppColors {
   static const Color overlay = Color(0x80000000); // Noir avec opacité
 
   // Couleurs d'authentification spécifiques
-  static const Color authBackground = primary; // Fond bleu pour l'auth
+  static const Color authBackground = primary; // Fond vert pour l'auth
   static const Color authSurface = Color(
     0xFFFFFFFF,
   ); // Surface blanche pour les formulaires

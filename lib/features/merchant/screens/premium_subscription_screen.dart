@@ -1,18 +1,29 @@
 import 'package:flutter/material.dart';
-import '../../../services/payment_service.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/config/env_config.dart';
+import 'package:locacharge/services/payment_service.dart';
 
 class PremiumSubscriptionScreen extends StatelessWidget {
   const PremiumSubscriptionScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Utilisation sécurisée des clés depuis EnvConfig
     final paymentService = PaymentService(
-        publicKey: 'pk_test_YOUR_PUBLIC_KEY',
-        secretKey: 'sk_test_YOUR_SECRET_KEY');
+      publicKey: EnvConfig.paystackPublicKey,
+      secretKey: EnvConfig.paystackSecretKey,
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Abonnement Premium'),
+      appBar: CustomAppBar(
+        title: 'Abonnement Premium',
+        showLogo: false,
+        backgroundColor: AppColors.primary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Center(
         child: Padding(

@@ -1,18 +1,18 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../providers/auth_provider.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform;
-// Added import for CustomAppBar
-import '../widgets/opening_hours_selector.dart';
+import 'package:provider/provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/widgets/custom_button.dart';
+import 'package:locacharge/core/widgets/custom_text_field.dart';
+import 'package:locacharge/features/merchant/widgets/opening_hours_selector.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 
 class MerchantRegisterScreen extends StatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -65,7 +65,6 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   bool _isBusinessOwner = false;
 
   // Map related state variables
-  GoogleMapController? _mapController;
   LatLng? _selectedLocation;
   final Set<Marker> _markers = {};
   // Default initial position, will be updated if location is fetched.
@@ -292,20 +291,16 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.onPrimary),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Stack(
         children: [
           // Image de fond
           Positioned.fill(
-            child: Image.asset('assets/splash/25.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/splash/25.png',
+              fit: BoxFit.cover,
+              cacheWidth: 1080,
+              cacheHeight: 1920,
+            ),
           ),
           // Overlay bleu avec opacité
           Positioned.fill(
@@ -315,8 +310,18 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    Color.fromRGBO(30, 58, 138, 0.7), // #1E3A8A avec opacité 0.7
-                    Color.fromRGBO(29, 78, 216, 0.7), // #1D4ED8 avec opacité 0.7
+                    Color.fromRGBO(
+                      0,
+                      91,
+                      55,
+                      0.7,
+                    ), // #1E3A8A avec opacité 0.7
+                    Color.fromRGBO(
+                      0,
+                      91,
+                      55,
+                      0.7,
+                    ) // #1D4ED8 avec opacité 0.7
                   ],
                 ),
               ),
@@ -380,7 +385,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                     // Informations du business
                     Text(
                       'Informations du Business',
-                      style: AppTextStyles.h2.copyWith(fontSize: 18),
+                      style: AppTextStyles.h2.copyWith(fontSize: 18, color: Colors.white),
                     ),
                     const SizedBox(height: 16),
 
@@ -388,12 +393,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       controller: _businessNameController,
                       labelText: 'Nom du business',
                       hintText: 'Ex: Boutique Express',
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer le nom de votre business';
-                        }
-                        return null;
-                      },
+                      validator: FormValidators.required('Veuillez entrer le nom de votre business'),
                     ),
                     const SizedBox(height: 16),
 
@@ -403,15 +403,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       hintText: 'business@example.com',
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre email';
-                        }
-                        if (!RegExp(
-                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                        ).hasMatch(value)) {
-                          return 'Veuillez entrer un email valide';
-                        }
-                        return null;
+                        final requiredError = FormValidators.required('Veuillez entrer votre email')(value);
+                        if (requiredError != null) return requiredError;
+                        return FormValidators.email(value);
                       },
                     ),
                     const SizedBox(height: 16),
@@ -421,12 +415,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       labelText: 'Téléphone',
                       hintText: '+225 0123456789',
                       keyboardType: TextInputType.phone,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre numéro de téléphone';
-                        }
-                        return null;
-                      },
+                      validator: FormValidators.required('Veuillez entrer votre numéro de téléphone'),
                     ),
                     const SizedBox(height: 16),
 
@@ -435,12 +424,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       labelText: 'Adresse complète',
                       hintText: '123 Rue du Commerce, Ville',
                       maxLines: 2,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Veuillez entrer votre adresse';
-                        }
-                        return null;
-                      },
+                      validator: FormValidators.required('Veuillez entrer votre adresse'),
                     ),
                   const SizedBox(height: 24),
 
@@ -448,7 +432,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   Text(
                     'Localisation sur la carte',
                     style: AppTextStyles.body1.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w600, color: Colors.white
                     ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
@@ -466,19 +450,11 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       ),
                       child: _isFetchingInitialLocation
                           ? const Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  CircularProgressIndicator(),
-                                  SizedBox(height: AppDimensions.paddingS),
-                                  Text('Chargement de la carte...'),
-                                ],
-                              ),
+                              child: LoadingIndicator.medium(message: 'Chargement de la carte...'),
                             )
                           : GoogleMap(
                               initialCameraPosition: _cameraPosition,
                               onMapCreated: (GoogleMapController controller) {
-                                _mapController = controller;
                                 // Animate camera to the fetched position if it changed from default
                                 if (_cameraPosition.target !=
                                     const LatLng(5.359952, -4.008256)) {
@@ -580,40 +556,57 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   Text(
                     'Quel type de marchand êtes-vous ?',
                     style: AppTextStyles.body1.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w600, color: Colors.white
                     ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
                   Row(
-                    children: [
-                      Expanded(
-                        child: RadioListTile<String>(
-                          title: const Text('Boutique (Fixe)'),
-                          value: 'fixed',
-                          groupValue: _merchantProfileType,
-                          onChanged: (value) {
-                            setState(() {
-                              _merchantProfileType = value!;
-                            });
-                          },
-                          activeColor: AppColors.secondary,
-                        ),
-                      ),
-                      Expanded(
-                        child: RadioListTile<String>(
-                          title: const Text('Ambulant (Mobile)'),
-                          value: 'mobile',
-                          groupValue: _merchantProfileType,
-                          onChanged: (value) {
-                            setState(() {
-                              _merchantProfileType = value!;
-                            });
-                          },
-                          activeColor: AppColors.secondary,
-                        ),
-                      ),
-                    ],
+                  children: [
+                  Expanded(
+                  child: RadioListTile<String>(
+                  title: const Text(
+                  'Boutique (Fixe)',
+                  style: TextStyle(
+                  color: Colors.white,      // Texte blanc
+                  overflow: TextOverflow.visible,
                   ),
+                  ),
+                  value: 'fixed',
+                  groupValue: _merchantProfileType,
+                  onChanged: (value) {
+                  setState(() {
+                  _merchantProfileType = value!;
+                  });
+                  },
+                  activeColor: AppColors.secondary,
+                  dense: false,
+                  contentPadding: EdgeInsets.zero,
+                  ),
+                  ),
+                  Expanded(
+                  child: RadioListTile<String>(
+                  title: const Text(
+                  'Ambulant (Mobile)',
+                  style: TextStyle(
+                  color: Colors.white,       // Texte blanc
+                  overflow: TextOverflow.visible,
+                  ),
+                  ),
+                  value: 'mobile',
+                  groupValue: _merchantProfileType,
+                  onChanged: (value) {
+                  setState(() {
+                  _merchantProfileType = value!;
+                  });
+                  },
+                  activeColor: AppColors.secondary,
+                  dense: false,
+                  contentPadding: EdgeInsets.zero,
+                  ),
+                  ),
+                  ],
+                  ),
+
                   const SizedBox(height: 24),
                   // End of Merchant Profile Type Selection
 
@@ -621,7 +614,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   Text(
                     'Horaires d\'ouverture',
                     style: AppTextStyles.body1.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w600, color: Colors.white
                     ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
@@ -683,7 +676,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   Text(
                     'Services Proposés',
                     style: AppTextStyles.body1.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w600, color: Colors.white
                     ),
                   ),
                   const SizedBox(height: AppDimensions.paddingS),
@@ -746,7 +739,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                   // Informations de connexion
                   Text(
                     'Informations de Connexion',
-                    style: AppTextStyles.h2.copyWith(fontSize: 18),
+                    style: AppTextStyles.h2.copyWith(fontSize: 18, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
 
@@ -769,13 +762,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       },
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez entrer un mot de passe';
-                      }
-                      if (value.length < 6) {
-                        return 'Le mot de passe doit contenir au moins 6 caractères';
-                      }
-                      return null;
+                      final requiredError = FormValidators.required('Veuillez entrer un mot de passe')(value);
+                      if (requiredError != null) return requiredError;
+                      return FormValidators.minLength(6, 'Le mot de passe doit contenir au moins 6 caractères')(value);
                     },
                   ),
                   const SizedBox(height: 16),
@@ -1031,11 +1020,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
     // Ajout d'une vérification de nullité pour le currentState du formulaire
     if (_formKey.currentState == null || !_formKey.currentState!.validate()) {
       print("[RegisterAttempt] FAILED: Form validation failed or form key is null.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez corriger les erreurs dans le formulaire.'),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showError(
+        context,
+        'Veuillez corriger les erreurs dans le formulaire.',
       );
       return;
     }
@@ -1043,11 +1030,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     if (!_acceptTerms) {
       print("[RegisterAttempt] FAILED: Terms not accepted.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez accepter les conditions d\'utilisation'),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarHelper.showWarning(
+        context,
+        'Veuillez accepter les conditions d\'utilisation',
       );
       return;
     }
@@ -1055,11 +1040,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     if (_openingHours.isEmpty) {
       print("[RegisterAttempt] FAILED: Opening hours are empty.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez définir au moins un jour d\'ouverture.'),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarHelper.showWarning(
+        context,
+        'Veuillez définir au moins un jour d\'ouverture.',
       );
       return;
     }
@@ -1067,11 +1050,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     if (!_isBusinessOwner) {
       print("[RegisterAttempt] FAILED: Not confirmed as business owner.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez confirmer être le propriétaire du business'),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarHelper.showWarning(
+        context,
+        'Veuillez confirmer être le propriétaire du business',
       );
       return;
     }
@@ -1081,11 +1062,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     if (_selectedLocation == null) {
       print("[RegisterAttempt] FAILED: Location not selected.");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez sélectionner un emplacement sur la carte.'),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarHelper.showWarning(
+        context,
+        'Veuillez sélectionner un emplacement sur la carte.',
       );
       return;
     }
@@ -1107,13 +1086,9 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
     // Validation: s'assurer qu'au moins un service est sélectionné ou que "Autre" est rempli
     if (finalServices.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Veuillez sélectionner au moins un service ou préciser le service "Autre".',
-          ),
-          backgroundColor: Colors.orange,
-        ),
+      SnackBarHelper.showWarning(
+        context,
+        'Veuillez sélectionner au moins un service ou préciser le service "Autre".',
       );
       return;
     }
@@ -1150,33 +1125,23 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       // Pour l'instant, on considère que si pas d'erreur, c'est "envoyé".
       // L'état isAuthenticated sera mis à jour par authStateChanges si l'utilisateur est connecté.
       if (authProvider.error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
-            ),
-            backgroundColor: AppColors.success,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
         );
         // Rediriger vers la page de connexion ou une page d'attente de validation.
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.error ?? 'Erreur lors de l\'inscription.',
-            ),
-            backgroundColor: Colors.red,
-          ),
+        SnackBarHelper.showError(
+          context,
+          authProvider.error ?? 'Erreur lors de l\'inscription.',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? e.toString()),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showError(
+        context,
+        authProvider.error ?? e.toString(),
       );
     }
   }

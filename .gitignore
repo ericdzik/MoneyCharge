@@ -47,8 +47,23 @@ app.*.map.json
 # iOS secrets
 /ios/Runner/Secrets.xcconfig
 
-# Environment variables
+# ==================== ENVIRONNEMENT & SECRETS ====================
+# Fichier contenant toutes les clés API - NE JAMAIS COMMITER
 .env
+.env.local
+.env.*.local
+
+# Fichiers de backup potentiellement créés
+.env.backup
+.env.old
+
+# ==================== FICHIERS DE CONFIGURATION SENSIBLES ====================
+# AndroidManifest avec clés API (si modifié manuellement)
+# android/app/src/main/AndroidManifest.xml
+
+# Google Services (contient des IDs Firebase)
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
 
 # Temporary files for verification
 jules-scratch/

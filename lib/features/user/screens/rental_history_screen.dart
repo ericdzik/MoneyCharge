@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/widgets/status_badge.dart';
-import '../../../core/widgets/custom_app_bar.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/core/widgets/status_badge.dart';
 
 class RentalHistoryScreen extends StatefulWidget {
   const RentalHistoryScreen({super.key});
@@ -48,14 +50,10 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return ScaffoldWithBackground(
+      backgroundConfig: const BackgroundConfig(),
       appBar: CustomAppBar(title: 'Historique des locations', showLogo: false),
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
-          ),
-          _rentals.isEmpty
+      body: _rentals.isEmpty
               ? _buildEmptyState()
               : Column(
                   children: [
@@ -75,8 +73,6 @@ class _RentalHistoryScreenState extends State<RentalHistoryScreen> {
                     ),
                   ],
                 ),
-        ],
-      ),
     );
   }
 

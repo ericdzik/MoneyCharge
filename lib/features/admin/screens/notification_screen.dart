@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../../core/widgets/custom_app_bar.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../services/notification_service.dart';
-import '../../../models/notification_model.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/models/notification_model.dart';
+import 'package:locacharge/services/notification_service.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -52,7 +53,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
         future: _notificationsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           }
 
           if (snapshot.hasError) {

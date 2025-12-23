@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/common.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../../../core/constants/app_dimensions.dart';
 import '../models/merchant_model.dart';
@@ -235,10 +235,8 @@ class _MapLoadingWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.primary.withOpacity(0.1),
-      child: const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      ),
+      color: AppColors.primary.withValues(alpha: 0.1),
+      child: const LoadingIndicator(),
     );
   }
 }

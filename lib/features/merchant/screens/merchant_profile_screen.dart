@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
@@ -29,7 +29,7 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
           final merchant = authProvider.merchantProfile;
 
           if (authProvider.isLoading && merchant == null) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           }
 
           if (merchant == null) {
@@ -257,45 +257,19 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Déconnexion'),
-        content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              await authProvider.logout();
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AppRoutes.login,
-                  (route) => false,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.paddingM,
-                vertical: AppDimensions.paddingS,
-              ),
-              textStyle: AppTextStyles.button,
-            ),
-            child: const Text('Déconnexion'),
-          ),
-        ],
-      ),
-    );
+    final confirmed = await DialogHelper.showLogoutConfirmation(context);
+    
+    if (confirmed == true && mounted) {
+      await authProvider.logout();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          AppRoutes.login,
+          (route) => false,
+        );
+      }
+    }
   }
 }

@@ -25,7 +25,6 @@ class AppRoutes {
   static const String stockManagement = '/merchant/stock';
   static const String merchantProfile = '/merchant/profile';
   static const String merchantAnalytics = '/merchant/analytics';
-  static const String balanceManagement = '/merchant/balance';
   static const String merchantReviews = '/merchant/reviews';
   static const String premiumSubscription = '/merchant/premium';
 

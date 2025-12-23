@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/widgets/custom_app_bar.dart';
+
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/widgets/background_image_widget.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
 
 class AdminAnalyticsScreen extends StatefulWidget {
   const AdminAnalyticsScreen({super.key});
@@ -46,8 +48,8 @@ class _AdminAnalyticsScreenState extends State<AdminAnalyticsScreen> {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
+          const Positioned.fill(
+            child: BackgroundImage(),
           ),
           SingleChildScrollView(
             padding: const EdgeInsets.all(AppDimensions.paddingL),

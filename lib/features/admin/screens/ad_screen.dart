@@ -1,7 +1,10 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+
+import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
@@ -32,10 +35,9 @@ class _AdScreenState extends State<AdScreen> {
   Future<void> _addAd() async {
     if (_formKey.currentState!.validate()) {
       if (_image == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Veuillez sélectionner une image.'),
-          ),
+        SnackBarHelper.showWarning(
+          context,
+          'Veuillez sélectionner une image.',
         );
         return;
       }
@@ -50,17 +52,15 @@ class _AdScreenState extends State<AdScreen> {
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Publicité ajoutée avec succès !'),
-            ),
+          SnackBarHelper.showSuccess(
+            context,
+            'Publicité ajoutée avec succès !',
           );
           Navigator.of(context).pop();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(adProvider.error ?? 'Erreur lors de l\'ajout de la publicité.'),
-            ),
+          SnackBarHelper.showError(
+            context,
+            adProvider.error ?? 'Erreur lors de l\'ajout de la publicité.',
           );
         }
       }
@@ -84,7 +84,7 @@ class _AdScreenState extends State<AdScreen> {
         title: 'Ajouter une publicité',
         showLogo: false,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),

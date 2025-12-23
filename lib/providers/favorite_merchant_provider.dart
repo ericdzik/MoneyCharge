@@ -1,7 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../features/user/models/merchant_model.dart';
+
+import 'package:locacharge/features/user/models/merchant_model.dart';
 
 class FavoriteMerchantProvider with ChangeNotifier {
   static const String _favoritesKey = 'favorite_merchant_ids';

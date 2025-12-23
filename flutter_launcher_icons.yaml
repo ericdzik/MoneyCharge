@@ -1,0 +1,42 @@
+# Configuration Flutter Launcher Icons
+# Documentation: https://pub.dev/packages/flutter_launcher_icons
+
+flutter_launcher_icons:
+  # Configuration Android
+  android: true
+  
+  # Adaptive Icons Android (recommandé pour Android 8.0+)
+  # Utilise l'icône complète comme foreground avec fond de couleur
+  adaptive_icon_background: "#005b37"  # Couleur de fond adaptative
+  adaptive_icon_foreground: "assets/icon/icon.png"  # Logo au premier plan
+  
+  # Configuration iOS
+  ios: true
+  
+  # Supprime le canal alpha pour conformité App Store
+  remove_alpha_ios: true
+  
+  # Image source principale (fallback)
+  image_path: "assets/icon/icon.png"
+  
+  # SDK Android minimum
+  min_sdk_android: 21  # Android 5.0 Lollipop
+  
+  # Configuration Web (PWA)
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#005b37"
+    theme_color: "#005b37"
+  
+  # Configuration Windows (optionnel)
+  windows:
+    generate: false
+  
+  # Configuration macOS (optionnel)
+  macos:
+    generate: false
+  
+  # Configuration Linux (optionnel) 
+  linux:
+    generate: false

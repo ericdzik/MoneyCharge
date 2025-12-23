@@ -1,16 +1,18 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/widgets/background_image_widget.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/core/widgets/profile_avatar.dart';
-import 'package:locacharge/core/widgets/background_image_widget.dart';
 import 'package:locacharge/providers/auth_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
 
 class EditUserProfileScreen extends StatefulWidget {
   const EditUserProfileScreen({super.key});
@@ -77,11 +79,9 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Erreur lors du recadrage : $e"),
-          backgroundColor: AppColors.error,
-        ),
+      SnackBarHelper.showError(
+        context,
+        "Erreur lors du recadrage : $e",
       );
     }
   }
@@ -100,28 +100,22 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
         if (!mounted) return;
 
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profil mis à jour !'),
-              backgroundColor: AppColors.success,
-            ),
+          SnackBarHelper.showSuccess(
+            context,
+            'Profil mis à jour !',
           );
           Navigator.of(context).pop();
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authProvider.error ?? 'Erreur inconnue'),
-              backgroundColor: AppColors.error,
-            ),
+          SnackBarHelper.showError(
+            context,
+            authProvider.error ?? 'Erreur inconnue',
           );
         }
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Erreur: $e"),
-            backgroundColor: AppColors.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          "Erreur: $e",
         );
       }
     }
@@ -133,12 +127,12 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
     final user = authProvider.appUserProfile;
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: CustomAppBar(
         title: 'Modifier le Profil',
         showLogo: false,
+        backgroundColor: AppColors.primary,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -147,7 +141,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
         height: double.infinity,
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/splash/33.png'), // Remplacez par votre image
+            image: AssetImage(kDefaultBackgroundImage),
             fit: BoxFit.cover,
           ),
         ),
@@ -176,8 +170,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
                 CustomTextField(
                   controller: _nameController,
                   labelText: 'Nom complet',
-                  validator: (value) =>
-                  value == null || value.isEmpty ? 'Entrez votre nom' : null,
+                  validator: FormValidators.required('Entrez votre nom'),
                 ),
                 const SizedBox(height: AppDimensions.paddingM),
                 CustomTextField(

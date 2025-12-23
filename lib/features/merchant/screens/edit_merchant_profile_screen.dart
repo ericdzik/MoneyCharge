@@ -1,20 +1,22 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
+import 'package:locacharge/core/widgets/profile_avatar.dart';
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/widgets/opening_hours_selector.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:locacharge/services/storage_service.dart';
-import 'package:provider/provider.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:locacharge/core/widgets/profile_avatar.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
 
 class EditMerchantProfileScreen extends StatefulWidget {
   final MerchantAuthModel merchant;
@@ -202,19 +204,15 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
 
       if (mounted) { // Vérifier si le widget est toujours monté avant d'utiliser BuildContext
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profil mis à jour avec succès !'),
-              backgroundColor: AppColors.success,
-            ),
+          SnackBarHelper.showSuccess(
+            context,
+            'Profil mis à jour avec succès !',
           );
           Navigator.pop(context);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(authProvider.error ?? 'Erreur lors de la mise à jour du profil.'),
-              backgroundColor: Colors.red, // Utilisation de Colors.red directement
-            ),
+          SnackBarHelper.showError(
+            context,
+            authProvider.error ?? 'Erreur lors de la mise à jour du profil.',
           );
         }
       }
@@ -276,7 +274,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
               fit: BoxFit.cover,
               width: double.infinity,
               height: double.infinity,
-              placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+              placeholder: (context, url) => const LoadingIndicator.small(),
               errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
             Positioned(
@@ -333,8 +331,9 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Erreur lors de la sélection d'images: $e")),
+      SnackBarHelper.showError(
+        context,
+        "Erreur lors de la sélection d'images: $e",
       );
     } finally {
       setState(() {
@@ -351,7 +350,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
         showLogo: false,
         backgroundColor: AppColors.primary,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -442,7 +441,7 @@ class _EditMerchantProfileScreenState extends State<EditMerchantProfileScreen> {
               ),
               if (_isUploading) const Padding(
                 padding: EdgeInsets.only(top: 8.0),
-                child: Center(child: CircularProgressIndicator()),
+                child: LoadingIndicator.small(),
               ),
               const SizedBox(height: AppDimensions.paddingXL),
 

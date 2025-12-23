@@ -1,23 +1,25 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../../providers/auth_provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../models/merchant_auth_model.dart';
-import '../widgets/merchant_header_widget.dart';
-import '../widgets/dashboard_stats_widget.dart';
-import '../../../core/constants/app_routes.dart';
-import 'edit_merchant_profile_screen.dart';
-import 'merchant_reviews_screen.dart';
-import '../../../providers/transaction_provider.dart';
 import 'dart:async';
-import 'package:geolocator/geolocator.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../models/transaction_model.dart';
-import '../../admin/screens/notification_screen.dart';
-import '../../../services/notification_service.dart';
 import 'dart:math';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/features/admin/screens/notification_screen.dart';
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/merchant/screens/edit_merchant_profile_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
+import 'package:locacharge/features/merchant/widgets/dashboard_stats_widget.dart';
+import 'package:locacharge/features/merchant/widgets/merchant_header_widget.dart';
+import 'package:locacharge/models/transaction_model.dart';
+import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/providers/transaction_provider.dart';
+import 'package:locacharge/services/notification_service.dart';
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -59,12 +61,15 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
 
     if ((authProvider.isLoading || transactionProvider.isLoadingTransactions) &&
         currentMerchant == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(body: LoadingIndicator());
     }
 
     if (currentMerchant == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Erreur Profil Marchand")),
+        appBar: CustomAppBar(
+          title: 'Erreur Profil Marchand',
+          showLogo: false,
+        ),
         body: const Center(
           child: Padding(
             padding: EdgeInsets.all(AppDimensions.paddingL),
@@ -77,16 +82,14 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       );
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Image de fond qui occupe tout l'écran
-          Positioned.fill(
-            child: Image.asset('assets/splash/33.png', fit: BoxFit.cover),
-          ),
-
-          // Contenu principal sans SafeArea sur le Stack
-          Column(
+    return ScaffoldWithBackground(
+      backgroundConfig: const BackgroundConfig(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _sendTestNotification,
+        tooltip: 'Envoyer une notification de test',
+        child: const Icon(Icons.notification_add),
+      ),
+      body: Column(
             children: [
               // Header sans SafeArea supplémentaire
               MerchantHeaderWidget(
@@ -178,13 +181,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               ),
             ],
           ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendTestNotification,
-        tooltip: 'Envoyer une notification de test',
-        child: const Icon(Icons.notification_add),
-      ),
     );
   }
 
@@ -233,29 +229,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           childAspectRatio: childAspectRatio,
           children: [
             _buildActionCard(
-              title: 'Gérer le solde',
-              subtitle: 'Transactions et inventaire',
-              icon: Icons.account_balance_wallet,
-              color: AppColors.primary,
-              onTap: () =>
-                  Navigator.pushNamed(context, AppRoutes.balanceManagement),
-            ),
-            _buildActionCard(
-              title: 'Transactions',
-              subtitle: 'Voir l\'historique',
-              icon: Icons.receipt_long,
-              color: AppColors.primary,
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Navigation vers l\'historique des transactions (TODO)',
-                    ),
-                  ),
-                );
-              },
-            ),
-            _buildActionCard(
               title: 'Profil',
               subtitle: 'Modifier les informations',
               icon: Icons.person,
@@ -276,10 +249,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
               icon: Icons.support_agent,
               color: Colors.orange,
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Navigation vers le support (TODO)'),
-                  ),
+                SnackBarHelper.showInfo(
+                  context,
+                  'Navigation vers le support (TODO)',
                 );
               },
             ),
@@ -398,11 +370,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
 
     if (transactionProvider.isLoadingTransactions &&
         transactionProvider.recentTransactions.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: CircularProgressIndicator(),
-        ),
+      return const Padding(
+        padding: EdgeInsets.all(16.0),
+        child: LoadingIndicator(),
       );
     }
 
@@ -592,8 +562,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('La permission de localisation est requise pour activer le suivi.')),
+        SnackBarHelper.showWarning(
+          context,
+          'La permission de localisation est requise pour activer le suivi.',
         );
         return;
       }
@@ -633,7 +604,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     super.dispose();
   }
 
-  void _handleLogout(BuildContext dialogContext) {
+  void _handleLogout(BuildContext dialogContext) async {
     if (_isTrackingPosition) {
       _togglePositionTracking(false);
     }
@@ -641,33 +612,18 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       dialogContext,
       listen: false,
     );
-    showDialog(
-      context: dialogContext,
-      builder: (BuildContext alertContext) => AlertDialog(
-        title: const Text('Déconnexion'),
-        content: const Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(alertContext),
-            child: const Text('Annuler'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(alertContext);
-              await authProvider.logout();
-              if (mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  dialogContext,
-                  AppRoutes.login,
-                      (route) => false,
-                );
-              }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            child: const Text('Déconnexion'),
-          ),
-        ],
-      ),
-    );
+    
+    final confirmed = await DialogHelper.showLogoutConfirmation(dialogContext);
+    
+    if (confirmed == true && mounted) {
+      await authProvider.logout();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(
+          dialogContext,
+          AppRoutes.login,
+          (route) => false,
+        );
+      }
+    }
   }
 }

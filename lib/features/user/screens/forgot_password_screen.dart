@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
-import '../../../core/constants/app_routes.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../providers/auth_provider.dart';
+
+import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/widgets/custom_text_field.dart';
+import 'package:locacharge/providers/auth_provider.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -28,20 +29,16 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Stack(
         children: [
           // Image de fond
           Positioned.fill(
-            child: Image.asset('assets/splash/25.png', fit: BoxFit.cover),
+            child: Image.asset(
+              'assets/splash/25.png',
+              fit: BoxFit.cover,
+              cacheWidth: 1080,
+              cacheHeight: 1920,
+            ),
           ),
           // Overlay bleu avec opacité
           Positioned.fill(
@@ -148,15 +145,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               hintText: 'votre@email.com',
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Veuillez entrer votre email';
-                                }
-                                if (!RegExp(
-                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                ).hasMatch(value)) {
-                                  return 'Veuillez entrer un email valide';
-                                }
-                                return null;
+                                final requiredError = FormValidators.required('Veuillez entrer votre email')(value);
+                                if (requiredError != null) return requiredError;
+                                return FormValidators.email(value);
                               },
                             ),
                             const SizedBox(height: 32),
@@ -196,13 +187,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                       ),
                                     ),
                                     child: authProvider.isLoading
-                                        ? const SizedBox(
-                                            width: 24,
-                                            height: 24,
-                                            child: CircularProgressIndicator(
-                                              color: AppColors.white,
-                                              strokeWidth: 2,
-                                            ),
+                                        ? const LoadingIndicator.small(
+                                            color: AppColors.white,
                                           )
                                         : Text(
                                             'Envoyer le lien',
@@ -404,29 +390,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         setState(() {
           _isEmailSent = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email de réinitialisation envoyé avec succès.'),
-            backgroundColor: AppColors.success,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          'Email de réinitialisation envoyé avec succès.',
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.error ?? 'Erreur lors de l\'envoi de l\'email.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          authProvider.error ?? 'Erreur lors de l\'envoi de l\'email.',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? e.toString()),
-          backgroundColor: AppColors.error,
-        ),
+      SnackBarHelper.showError(
+        context,
+        authProvider.error ?? e.toString(),
       );
     }
   }
@@ -440,29 +418,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
 
       if (authProvider.error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email de réinitialisation renvoyé avec succès.'),
-            backgroundColor: AppColors.success,
-          ),
+        SnackBarHelper.showSuccess(
+          context,
+          'Email de réinitialisation renvoyé avec succès.',
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              authProvider.error ?? 'Erreur lors du renvoi de l\'email.',
-            ),
-            backgroundColor: AppColors.error,
-          ),
+        SnackBarHelper.showError(
+          context,
+          authProvider.error ?? 'Erreur lors du renvoi de l\'email.',
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.error ?? e.toString()),
-          backgroundColor: AppColors.error,
-        ),
+      SnackBarHelper.showError(
+        context,
+        authProvider.error ?? e.toString(),
       );
     }
   }

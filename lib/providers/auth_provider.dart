@@ -1,15 +1,15 @@
-import 'dart:async'; // Pour StreamSubscription
-import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart'
-    as fb_auth; // Pour l'objet User de Firebase
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-import '../features/merchant/models/merchant_auth_model.dart';
-import '../features/admin/models/admin_model.dart';
-import '../features/user/models/user_model.dart';
-import '../services/auth_service.dart';
+
+import 'package:locacharge/features/admin/models/admin_model.dart';
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/user/models/user_model.dart';
+import 'package:locacharge/services/auth_service.dart';
 
 enum UserType { user, merchant, admin, unknown }
 
@@ -191,6 +191,13 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
+      // Réinitialiser immédiatement l'état local avant la déconnexion Firebase
+      _firebaseUser = null;
+      _userType = UserType.unknown;
+      _clearProfiles();
+      notifyListeners(); // Notifier immédiatement
+      
+      // Puis déconnecter de Firebase
       await _authService.logout();
     } catch (e) {
       _error = e.toString();

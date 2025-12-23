@@ -1,9 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:locacharge/providers/ad_provider.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
+
+import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/providers/ad_provider.dart';
 
 class ManageAdsScreen extends StatefulWidget {
   const ManageAdsScreen({super.key});
@@ -32,7 +34,7 @@ class _ManageAdsScreenState extends State<ManageAdsScreen> {
       body: Consumer<AdProvider>(
         builder: (context, adProvider, child) {
           if (adProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const LoadingIndicator();
           }
 
           if (adProvider.error != null) {
@@ -56,13 +58,7 @@ class _ManageAdsScreenState extends State<ManageAdsScreen> {
                     child: CachedNetworkImage(
                       imageUrl: ad.imageUrl,
                       fit: BoxFit.cover,
-                      placeholder: (context, url) => const Center(
-                        child: SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ),
+                      placeholder: (context, url) => const LoadingIndicator.small(),
                       errorWidget: (context, url, error) => const Icon(Icons.error),
                     ),
                   ),
@@ -71,22 +67,12 @@ class _ManageAdsScreenState extends State<ManageAdsScreen> {
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
                     onPressed: () async {
-                      final confirm = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('Confirmer la suppression'),
-                          content: const Text('Voulez-vous vraiment supprimer cette publicité ?'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              child: const Text('Annuler'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              child: const Text('Supprimer'),
-                            ),
-                          ],
-                        ),
+                      final confirm = await DialogHelper.showConfirmation(
+                        context,
+                        title: 'Confirmer la suppression',
+                        message: 'Voulez-vous vraiment supprimer cette publicité ?',
+                        confirmText: 'Supprimer',
+                        isDangerous: true,
                       );
 
                       if (confirm == true) {

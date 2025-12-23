@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
+import '../../../core/common.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
@@ -474,11 +474,9 @@ class MerchantDetailsCard extends StatelessWidget {
     final success = await locationService.makePhoneCall(merchant.phone);
 
     if (!success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'effectuer l\'appel'),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showError(
+        context,
+        'Impossible d\'effectuer l\'appel',
       );
     }
   }
@@ -492,11 +490,9 @@ class MerchantDetailsCard extends StatelessWidget {
     );
 
     if (!success && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Impossible d\'ouvrir la navigation'),
-          backgroundColor: Colors.red,
-        ),
+      SnackBarHelper.showError(
+        context,
+        'Impossible de lancer la navigation',
       );
     }
   }

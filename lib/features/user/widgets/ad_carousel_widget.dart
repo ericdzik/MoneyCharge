@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:locacharge/core/common.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/models/ad_model.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -57,7 +58,7 @@ class _AdCarouselWidgetState extends State<AdCarouselWidget> {
     return Consumer<AdProvider>(
       builder: (context, adProvider, child) {
         if (adProvider.isLoading && adProvider.ads.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
+          return const LoadingIndicator();
         }
 
         if (adProvider.error != null) {
@@ -130,10 +131,9 @@ class AdCard extends StatelessWidget {
         if (await canLaunchUrl(url)) {
           await launchUrl(url);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Impossible d\'ouvrir le lien ${ad.url}'),
-            ),
+          SnackBarHelper.showError(
+            context,
+            'Impossible d\'ouvrir le lien ${ad.url}',
           );
         }
       },
@@ -149,9 +149,7 @@ class AdCard extends StatelessWidget {
             imageUrl: ad.imageUrl,
             fit: BoxFit.cover,
             width: 250,
-            placeholder: (context, url) => const Center(
-              child: CircularProgressIndicator(),
-            ),
+            placeholder: (context, url) => const LoadingIndicator.small(),
             errorWidget: (context, url, error) => const Center(
               child: Icon(Icons.error),
             ),
