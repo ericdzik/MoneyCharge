@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/widgets/background_image_widget.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
 import 'package:locacharge/core/widgets/custom_text_field.dart';
@@ -139,21 +138,11 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(kDefaultBackgroundImage),
-            fit: BoxFit.cover,
-          ),
-        ),
+        color: AppColors.background,
         child: user == null
             ? const Center(child: Text('Utilisateur non trouvé.'))
             : SingleChildScrollView(
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + kToolbarHeight + AppDimensions.paddingL,
-            left: AppDimensions.paddingL,
-            right: AppDimensions.paddingL,
-            bottom: AppDimensions.paddingL,
-          ),
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
           child: Form(
             key: _formKey,
             child: Column(

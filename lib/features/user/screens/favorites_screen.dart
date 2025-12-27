@@ -41,17 +41,20 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
     return Scaffold(
       drawer: const CustomDrawer(),
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          UnifiedSliverAppBar(
-            opacity: _appBarOpacity,
-            title: 'Mes Favoris',
-            subtitle: '',
-            icon: Icons.favorite_rounded,
-          ),
-          SliverToBoxAdapter(
-            child: Consumer<FavoriteMerchantProvider>(
+      body: MediaQuery.removePadding(
+        context: context,
+        removeTop: true,
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            UnifiedSliverAppBar(
+              opacity: _appBarOpacity,
+              title: 'Mes Favoris',
+              subtitle: '',
+              icon: Icons.favorite_rounded,
+            ),
+            SliverToBoxAdapter(
+              child: Consumer<FavoriteMerchantProvider>(
               builder: (context, favoriteProvider, child) {
                 if (favoriteProvider.isLoading) {
                   return const SizedBox(
@@ -61,7 +64,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                 }
 
                 if (favoriteProvider.favoriteMerchantIds.isEmpty) {
-                  return _EmptyFavoritesState();
+                  return const _EmptyFavoritesState();
                 }
 
                 return Consumer<MerchantProvider>(
@@ -95,7 +98,7 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                         .toList();
 
                     if (favoriteMerchants.isEmpty) {
-                      return _EmptyFavoritesState();
+                      return const _EmptyFavoritesState();
                     }
 
                     return Column(
@@ -142,9 +145,10 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   },
                 );
               },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -189,6 +193,8 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _EmptyFavoritesState extends StatelessWidget {
+  const _EmptyFavoritesState({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Padding(

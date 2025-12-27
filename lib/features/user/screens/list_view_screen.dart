@@ -80,9 +80,12 @@ class _ListViewScreenState extends State<ListViewScreen> {
       backgroundColor: AppColors.background,
       body: Consumer<MerchantProvider>(
         builder: (context, merchantProvider, child) {
-          return CustomScrollView(
-            controller: _scrollController,
-            slivers: [
+          return MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
                 UnifiedSliverAppBar(
                   opacity: _appBarOpacity,
                   title: 'Points de service',
@@ -159,6 +162,7 @@ class _ListViewScreenState extends State<ListViewScreen> {
                   ),
                 ),
             ],
+            ),
           );
         },
       ),

@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:locacharge/core/common.dart';
@@ -172,12 +173,17 @@ class _SliverAppBar extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 0,
       pinned: true,
-      backgroundColor: Colors.white.withValues(alpha: opacity),
+      backgroundColor: AppColors.primary,
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: AppColors.primary,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
       elevation: opacity > 0.5 ? 4 : 0,
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.3 * (1 - opacity)),
+          color: Colors.white.withOpacity(0.18),
           shape: BoxShape.circle,
         ),
         child: IconButton(
@@ -188,7 +194,7 @@ class _SliverAppBar extends StatelessWidget {
       actions: [
         _FavoriteButton(merchantId: merchant.id),
         IconButton(
-          icon: Icon(Icons.share, color: Colors.black.withValues(alpha: 0.5 + opacity * 0.5)),
+          icon: const Icon(Icons.share, color: Colors.white),
           onPressed: onShare,
         ),
       ],

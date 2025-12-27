@@ -5,8 +5,11 @@ import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/core/widgets/custom_button.dart';
+import 'package:locacharge/core/utils/url_utils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
 
 class MerchantProfileScreen extends StatefulWidget {
   const MerchantProfileScreen({super.key});
@@ -16,6 +19,44 @@ class MerchantProfileScreen extends StatefulWidget {
 }
 
 class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
+  Widget _fallbackInitials(MerchantAuthModel merchant) {
+    final initial = merchant.businessName.isNotEmpty
+        ? merchant.businessName[0].toUpperCase()
+        : 'M';
+    return Container(
+      color: Colors.white,
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: AppTextStyles.h1.copyWith(
+          fontSize: 36,
+          color: AppColors.primary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMerchantImage(MerchantAuthModel merchant) {
+    final imageUrl = merchant.profileImageUrl ?? '';
+
+    if (imageUrl.isEmpty) {
+      return _fallbackInitials(merchant);
+    }
+
+    return CachedNetworkImage(
+      imageUrl: normalizeFirebaseStorageUrl(imageUrl),
+      fit: BoxFit.cover,
+      placeholder: (context, url) => Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: const CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      errorWidget: (context, url, error) => _fallbackInitials(merchant),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,20 +110,13 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: Colors.white,
-                        backgroundImage: merchant.profileImageUrl != null
-                            ? NetworkImage(merchant.profileImageUrl!)
-                            : null,
-                        child: merchant.profileImageUrl == null
-                            ? Text(
-                                merchant.businessName.isNotEmpty
-                                    ? merchant.businessName[0].toUpperCase()
-                                    : 'M',
-                                style: AppTextStyles.h1.copyWith(
-                                  fontSize: 36,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
+                        child: ClipOval(
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: _buildMerchantImage(merchant),
+                          ),
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.paddingM),
                       Text(

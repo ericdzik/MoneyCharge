@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:locacharge/core/common.dart';
 
@@ -24,11 +25,19 @@ class UnifiedSliverAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isExpanded = opacity < 0.5;
+    final SystemUiOverlayStyle overlayStyle = SystemUiOverlayStyle(
+      // Transparent to let the gradient/background show under the status bar
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: isExpanded ? Brightness.light : Brightness.dark,
+      statusBarBrightness: isExpanded ? Brightness.dark : Brightness.light,
+    );
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
       elevation: opacity > 0.5 ? 4 : 0,
       backgroundColor: Colors.white.withOpacity(opacity),
+      systemOverlayStyle: overlayStyle,
       leading: showMenu
           ? Container(
               margin: const EdgeInsets.all(8),
@@ -62,14 +71,7 @@ class UnifiedSliverAppBar extends StatelessWidget {
         ),
         background: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color,
-                color.withOpacity(0.85),
-              ],
-            ),
+            color: color,
           ),
           child: SafeArea(
             child: Column(

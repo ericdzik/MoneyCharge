@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 
@@ -36,44 +37,52 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         );
 
     final statusBarHeight = MediaQuery.of(context).padding.top;
+    final Color bg = backgroundColor ?? AppColors.primary;
 
-    return Container(
-      padding: EdgeInsets.only(top: statusBarHeight),
-      decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.primary,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: bg,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Row(
-          children: [
-            if (leading != null) leading!,
-            Expanded(
-              child: Center(
-                child: showLogo
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // const SimIcon(),
-                          const SizedBox(width: AppDimensions.paddingS),
-                          Flexible(
-                            child: Text(
-                              title,
-                              overflow: TextOverflow.ellipsis,
-                              style: titleStyle,
+      child: Container(
+        padding: EdgeInsets.only(top: statusBarHeight),
+        decoration: BoxDecoration(
+          color: bg,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: Row(
+            children: [
+              if (leading != null) leading!,
+              Expanded(
+                child: Center(
+                  child: showLogo
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // const SimIcon(),
+                            const SizedBox(width: AppDimensions.paddingS),
+                            Flexible(
+                              child: Text(
+                                title,
+                                overflow: TextOverflow.ellipsis,
+                                style: titleStyle,
+                              ),
                             ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                        style: titleStyle,
-                      ),
+                          ],
+                        )
+                      : Text(
+                          title,
+                          overflow: TextOverflow.ellipsis,
+                          style: titleStyle,
+                        ),
+                ),
               ),
-            ),
-            if (actions != null) 
-              Row(children: actions!.take(3).toList()),
-          ],
+              if (actions != null) 
+                Row(children: actions!.take(3).toList()),
+            ],
+          ),
         ),
       ),
     );

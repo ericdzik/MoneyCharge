@@ -38,15 +38,8 @@ void main() async {
   ]);
 
   // Configuration de la barre de statut et de la barre de navigation
-  // Barre d'état verte pour correspondre à l'AppBar
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: AppColors.primary,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.white,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
+  // Remettre la barre d'état à son style par défaut du système
+  // (ne pas forcer de couleur/brightness ici)
 
   runApp(
     ChangeNotifierProvider(

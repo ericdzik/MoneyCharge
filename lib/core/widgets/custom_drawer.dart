@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/providers/auth_provider.dart';
@@ -9,19 +10,43 @@ import 'package:locacharge/services/navigation_service.dart';
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
 
+  Widget _buildAvatarImage(
+    bool isMerchant,
+    dynamic merchant,
+    dynamic user,
+  ) {
+    final imageUrl = isMerchant
+        ? (merchant?.profileImageUrl ?? '')
+        : (user?.profileImageUrl ?? '');
+
+    if (imageUrl.isEmpty) {
+      return Icon(
+        Icons.person,
+        size: 40,
+        color: Colors.grey,
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: normalizeFirebaseStorageUrl(imageUrl),
+      fit: BoxFit.cover,
+      placeholder: (context, url) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+      errorWidget: (context, url, error) => Icon(
+        Icons.person,
+        size: 40,
+        color: Colors.grey,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.primary,
-              AppColors.primary.withValues(alpha: 0.8),
-            ],
-          ),
+          color: AppColors.primary,
         ),
         child: SafeArea(
           child: Consumer<AuthProvider>(
@@ -47,23 +72,18 @@ class CustomDrawer extends StatelessWidget {
                               },
                               child: CircleAvatar(
                                 radius: 40.0,
-                                backgroundImage: (isMerchant
-                                        ? merchant?.profileImageUrl
-                                        : user?.profileImageUrl) != null
-                                    ? NetworkImage(isMerchant
-                                        ? merchant!.profileImageUrl!
-                                        : user!.profileImageUrl!)
-                                    : null,
-                                child: (isMerchant
-                                            ? merchant?.profileImageUrl
-                                            : user?.profileImageUrl) ==
-                                        null
-                                    ? const Icon(
-                                        Icons.person,
-                                        size: 40,
-                                        color: Colors.grey,
-                                      )
-                                    : null,
+                                backgroundColor: AppColors.onPrimary,
+                                child: ClipOval(
+                                  child: SizedBox(
+                                    width: 80,
+                                    height: 80,
+                                    child: _buildAvatarImage(
+                                      isMerchant,
+                                      merchant,
+                                      user,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                             // Bouton d'édition

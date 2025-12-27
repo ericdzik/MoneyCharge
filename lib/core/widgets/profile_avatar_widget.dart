@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/app_colors.dart';
+import 'package:locacharge/core/utils/url_utils.dart';
 
 class ProfileAvatar extends StatelessWidget {
   final String? imageUrl;
@@ -21,9 +22,9 @@ class ProfileAvatar extends StatelessWidget {
         child: SizedBox(
           width: size,
           height: size,
-          child: imageUrl != null
+            child: imageUrl != null
               ? CachedNetworkImage(
-                  imageUrl: imageUrl!,
+                imageUrl: normalizeFirebaseStorageUrl(imageUrl!),
                   fit: BoxFit.cover,
                   placeholder: (context, url) => const SizedBox(),
                   errorWidget: (context, url, error) =>

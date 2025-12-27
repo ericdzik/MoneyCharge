@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/widgets/unified_sliver_app_bar.dart';
 import 'package:locacharge/features/user/screens/cgu_screen.dart';
+import 'package:locacharge/features/user/models/user_model.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -18,6 +20,49 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   final ScrollController _scrollController = ScrollController();
   double _headerOpacity = 0.0;
+
+  Widget _buildUserAvatar(User user) {
+    final imageUrl = user.profileImageUrl ?? '';
+
+    if (imageUrl.isEmpty) {
+      return CircleAvatar(
+        radius: 50,
+        backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+        child: Icon(
+          Icons.person,
+          size: 50,
+          color: AppColors.primary,
+        ),
+      );
+    }
+
+    return CircleAvatar(
+      radius: 50,
+      backgroundColor: Colors.white,
+      child: ClipOval(
+        child: SizedBox(
+          width: 100,
+          height: 100,
+          child: CachedNetworkImage(
+            imageUrl: normalizeFirebaseStorageUrl(imageUrl),
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Center(
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: const CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+            errorWidget: (context, url, error) => Icon(
+              Icons.person,
+              size: 50,
+              color: AppColors.primary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -63,9 +108,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             );
           }
 
-          return CustomScrollView(
-            controller: _scrollController,
-            slivers: [
+          return MediaQuery.removePadding(
+            context: context,
+            removeTop: true,
+            child: CustomScrollView(
+              controller: _scrollController,
+              slivers: [
               UnifiedSliverAppBar(
                 opacity: _headerOpacity,
                 title: 'Mon profil',
@@ -76,9 +124,41 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 child: Column(
                   children: [
                     const SizedBox(height: AppDimensions.paddingL),
+                    // Avatar utilisateur
+                    _buildUserAvatar(user),
+                    const SizedBox(height: AppDimensions.paddingM),
+                    // Nom
+                    Text(
+                      user.name,
+                      style: AppTextStyles.h2.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppDimensions.paddingXS),
+                    // Email
+                    Text(
+                      user.email,
+                      style: AppTextStyles.body1.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppDimensions.paddingM),
+                    // Bouton modifier profil
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppDimensions.paddingM,
+                      ),
+                      child: CustomButton(
+                        text: 'Modifier le profil',
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.editProfile,
+                            arguments: user,
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(height: AppDimensions.paddingL),
@@ -92,6 +172,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
             ],
+            ),
           );
         },
       ),
@@ -263,7 +344,10 @@ class _DeleteAccountButton extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.error,
           side: BorderSide(color: AppColors.error),
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingM),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.paddingL,
+            vertical: AppDimensions.paddingM,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
           ),

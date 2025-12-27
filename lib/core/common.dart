@@ -10,6 +10,7 @@ export 'utils/image_picker_helper.dart';
 export 'utils/snackbar_helper.dart';
 export 'utils/dialog_helper.dart';
 export 'utils/form_validators.dart';
+export 'utils/url_utils.dart';
 export 'config/env_config.dart';
 
 // ==================== WIDGETS ====================

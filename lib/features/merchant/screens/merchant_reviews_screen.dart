@@ -7,6 +7,8 @@ import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/models/review_model.dart';
+import 'package:locacharge/core/utils/url_utils.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class MerchantReviewsScreen extends StatefulWidget {
   final String merchantId;
@@ -346,12 +348,28 @@ class _ReviewCard extends StatelessWidget {
               CircleAvatar(
                 radius: 20,
                 backgroundColor: AppColors.primary.withOpacity(0.1),
-                backgroundImage: review.userProfileImageUrl != null
-                    ? NetworkImage(review.userProfileImageUrl!)
-                    : null,
-                child: review.userProfileImageUrl == null
-                    ? Icon(Icons.person, color: AppColors.primary)
-                    : null,
+                child: ClipOval(
+                  child: SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: review.userProfileImageUrl != null
+                        ? CachedNetworkImage(
+                            imageUrl: normalizeFirebaseStorageUrl(
+                              review.userProfileImageUrl!,
+                            ),
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => const SizedBox(),
+                            errorWidget: (context, url, error) => Icon(
+                              Icons.person,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : Icon(
+                            Icons.person,
+                            color: AppColors.primary,
+                          ),
+                  ),
+                ),
               ),
               const SizedBox(width: AppDimensions.paddingM),
               Expanded(
