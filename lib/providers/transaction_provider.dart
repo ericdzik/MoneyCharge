@@ -33,6 +33,63 @@ class TransactionProvider with ChangeNotifier {
       .where((t) => t.status == TransactionStatus.completed && t.type == TransactionType.sale)
       .length;
 
+  double get previousRevenue {
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    return _merchantTransactions
+        .where((t) => 
+            t.status == TransactionStatus.completed && 
+            t.type == TransactionType.sale &&
+            t.timestamp.toDate().isBefore(yesterday))
+        .fold(0.0, (sum, t) => sum + t.netAmount);
+  }
+
+  int get previousTransactionsCount {
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+    return _merchantTransactions
+        .where((t) => 
+            t.status == TransactionStatus.completed && 
+            t.type == TransactionType.sale &&
+            t.timestamp.toDate().isBefore(yesterday))
+        .length;
+  }
+
+  List<double> get last7DaysRevenue {
+    final now = DateTime.now();
+    final revenues = <double>[];
+    
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      final dayStart = DateTime(day.year, day.month, day.day);
+      final dayEnd = dayStart.add(const Duration(days: 1));
+      
+      final dayRevenue = _merchantTransactions
+          .where((t) => 
+              t.status == TransactionStatus.completed && 
+              t.type == TransactionType.sale &&
+              t.timestamp.toDate().isAfter(dayStart) &&
+              t.timestamp.toDate().isBefore(dayEnd))
+          .fold(0.0, (sum, t) => sum + t.netAmount);
+      
+      revenues.add(dayRevenue);
+    }
+    
+    return revenues;
+  }
+
+  List<String> get last7DaysLabels {
+    final now = DateTime.now();
+    final labels = <String>[];
+    
+    for (int i = 6; i >= 0; i--) {
+      final day = now.subtract(Duration(days: i));
+      labels.add('${day.day}/${day.month}');
+    }
+    
+    return labels;
+  }
+
   List<TransactionModel> get recentTransactions {
     return _merchantTransactions.take(5).toList();
   }
@@ -52,6 +109,9 @@ class TransactionProvider with ChangeNotifier {
       return;
     }
 
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (_isLoadingTransactions) return;
+
     _isLoadingTransactions = true;
     _transactionsError = null;
     notifyListeners();
@@ -67,6 +127,7 @@ class TransactionProvider with ChangeNotifier {
           .map((doc) => TransactionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
           .toList();
 
+      _transactionsError = null;
     } catch (e) {
       print("Error in fetchMerchantTransactions: $e");
       _transactionsError = "Erreur lors de la récupération des transactions: ${e.toString()}";
@@ -148,6 +209,9 @@ class TransactionProvider with ChangeNotifier {
   }
 
   Future<void> fetchTransactions(String userId) async {
+    // Éviter les appels multiples si déjà en cours de chargement
+    if (_isLoadingTransactions) return;
+
     _isLoadingTransactions = true;
     _transactionsError = null;
     notifyListeners();
@@ -163,6 +227,7 @@ class TransactionProvider with ChangeNotifier {
           .map((doc) => TransactionModel.fromFirestore(doc as DocumentSnapshot<Map<String, dynamic>>))
           .toList();
 
+      _transactionsError = null;
     } catch (e) {
       print("Error in fetchTransactions: $e");
       _transactionsError = "Erreur lors de la récupération des transactions: ${e.toString()}";

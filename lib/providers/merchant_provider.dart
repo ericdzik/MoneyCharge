@@ -5,12 +5,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/services/notification_service.dart';
 
 class MerchantProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   StreamSubscription? _merchantsSubscription;
+  LocationProvider? _locationProvider;
 
   List<Merchant> _allLoadedMerchants = []; // For user view (verified merchants, type Merchant)
   List<Merchant> _filteredMerchants = []; // For user view (filtered list of Merchant)
@@ -29,6 +31,21 @@ class MerchantProvider with ChangeNotifier {
   String _searchQuery = '';
   String? _selectedCategory;
   bool _filterOpen = false;
+  double? _maxDistanceInKm;
+
+  MerchantProvider(this._locationProvider) {
+    _locationProvider?.addListener(_onLocationChanged);
+  }
+
+  void update(LocationProvider locationProvider) {
+    if (_locationProvider != locationProvider) {
+      _locationProvider?.removeListener(_onLocationChanged);
+      _locationProvider = locationProvider;
+      _locationProvider?.addListener(_onLocationChanged);
+      _applyInternalFilters(); // Apply filters immediately if location provider changes
+    }
+  }
+
 
   // Getters publics
   List<Merchant> get merchants => _filteredMerchants; // For user-facing filtered list
@@ -36,22 +53,32 @@ class MerchantProvider with ChangeNotifier {
 
   bool get isLoading => _isLoading;
   String? get error => _error;
+  double? get maxDistanceInKm => _maxDistanceInKm;
+  String? get selectedCategory => _selectedCategory;
+  bool get filterOpen => _filterOpen;
 
   @override
   void dispose() {
     _merchantsSubscription?.cancel();
+    _locationProvider?.removeListener(_onLocationChanged);
     super.dispose();
+  }
+  
+  void _onLocationChanged() {
+    debugPrint('[MerchantProvider] Location changed, re-applying filters.');
+    _applyInternalFilters();
+    notifyListeners();
+  }
+  
+  void filterByDistance(double? distance) {
+    _maxDistanceInKm = distance;
+    _applyInternalFilters();
+    notifyListeners();
   }
 
   // Getters pour l'état actuel des filtres (for user view)
   String? get activeMerchantTypeFilter => _activeMerchantTypeFilter;
   List<String> get activeServiceFilters => List.unmodifiable(_activeServiceFilters);
-  String? get activeStockServiceFilter => _activeStockServiceFilter;
-  bool get onlyShowAvailableStockForService => _onlyShowAvailableStockForService;
-  String? get activeStockStatusFilter => _activeStockStatusFilter;
-  String get searchQuery => _searchQuery;
-  String? get selectedCategory => _selectedCategory;
-  bool get filterOpen => _filterOpen;
 
   List<String> get uniqueServiceCategories {
     return ["Recharge de crédit", "Transfert d'argent", "Achat de carte SIM"];
@@ -175,6 +202,20 @@ class MerchantProvider with ChangeNotifier {
 
     if (_filterOpen) {
       tempList.retainWhere((m) => m.isOpen);
+    }
+
+    if (_maxDistanceInKm != null && _locationProvider?.currentPosition != null) {
+      tempList.retainWhere((m) {
+        final distanceInMeters = _locationProvider!.calculateDistance(
+          _locationProvider!.currentPosition!.latitude,
+          _locationProvider!.currentPosition!.longitude,
+          m.latitude,
+          m.longitude,
+        );
+        final distanceInKm = distanceInMeters / 1000;
+        m.clientCalculatedDistance = distanceInKm;
+        return distanceInKm <= _maxDistanceInKm!;
+      });
     }
 
     _filteredMerchants = tempList;

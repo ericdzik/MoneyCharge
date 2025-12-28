@@ -129,6 +129,22 @@ class AuthProvider with ChangeNotifier {
     _adminProfile = null;
   }
 
+  Future<void> refreshMerchantProfile() async {
+    if (_firebaseUser == null || _userType != UserType.merchant) return;
+    
+    // Éviter les appels multiples
+    if (_isLoading) return;
+    
+    _setLoading(true);
+    try {
+      await _fetchUserProfile(_firebaseUser!.uid);
+    } catch (e) {
+      _error = "Erreur lors du rafraîchissement du profil: ${e.toString()}";
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   @override
   void dispose() {
     _authStateSubscription?.cancel();

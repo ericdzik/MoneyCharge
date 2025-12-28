@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
@@ -16,6 +17,9 @@ import 'package:locacharge/features/merchant/screens/edit_merchant_profile_scree
 import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
 import 'package:locacharge/features/merchant/widgets/dashboard_stats_widget.dart';
 import 'package:locacharge/features/merchant/widgets/merchant_header_widget.dart';
+import 'package:locacharge/features/merchant/widgets/stock_alerts_widget.dart';
+import 'package:locacharge/features/merchant/widgets/advanced_metrics_widget.dart';
+import 'package:locacharge/features/merchant/widgets/export_data_widget.dart';
 import 'package:locacharge/models/transaction_model.dart';
 import 'package:locacharge/providers/auth_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
@@ -38,19 +42,27 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        final authProvider = Provider.of<AuthProvider>(context, listen: false);
-        if (authProvider.merchantProfile != null) {
-          Provider.of<TransactionProvider>(
-            context,
-            listen: false,
-          ).fetchMerchantTransactions(authProvider);
-        } else {
-          print(
-            "[MerchantDashboardScreen] initState: merchantProfile est null, impossible de fetch les transactions.",
-          );
-        }
+        _initializeData();
       }
     });
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.merchantProfile != null && mounted) {
+        await Provider.of<TransactionProvider>(
+          context,
+          listen: false,
+        ).fetchMerchantTransactions(authProvider);
+      } else {
+        print(
+          "[MerchantDashboardScreen] initState: merchantProfile est null, impossible de fetch les transactions.",
+        );
+      }
+    } catch (e) {
+      print("[MerchantDashboardScreen] Erreur lors de l'initialisation: $e");
+    }
   }
 
   @override
@@ -82,105 +94,357 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       );
     }
 
-    return ScaffoldWithBackground(
-      backgroundConfig: const BackgroundConfig(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendTestNotification,
-        tooltip: 'Envoyer une notification de test',
-        child: const Icon(Icons.notification_add),
-      ),
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
-            children: [
-              // Header sans SafeArea supplémentaire
-              MerchantHeaderWidget(
-                merchant: currentMerchant,
-                onLogout: () => _handleLogout(context),
-                onNotificationsTapped: _showNotifications,
-              ),
+        children: [
+          // Header sans SafeArea supplémentaire
+          MerchantHeaderWidget(
+            merchant: currentMerchant,
+            onLogout: () => _handleLogout(context),
+            onNotificationsTapped: _showNotifications,
+          ),
 
-              // Contenu scrollable
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    if (authProvider.merchantProfile != null) {
-                      await Provider.of<TransactionProvider>(
-                        context,
-                        listen: false,
-                      ).fetchMerchantTransactions(authProvider);
-                    }
-                  },
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppDimensions.paddingL),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+          // Contenu scrollable
+          Expanded(
+            child: Container(
+              color: Colors.grey.shade50,
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  if (!mounted) return;
+                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                  if (authProvider.merchantProfile != null && mounted) {
+                    await Provider.of<TransactionProvider>(
+                      context,
+                      listen: false,
+                    ).fetchMerchantTransactions(authProvider);
+                  }
+                },
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppDimensions.paddingL),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Alertes de stock
+                      StockAlertsWidget(
+                        merchant: currentMerchant,
+                        onManageStock: () {
+                          Navigator.pushNamed(context, AppRoutes.stockManagement);
+                        },
+                      ),
+                      
+                      Text(
+                        'Aperçu',
+                        style: AppTextStyles.h2
+                            .copyWith(fontSize: 20, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 16),
+                      Builder(
+                        builder: (context) {
+                          final int totalServicesCount =
+                              currentMerchant.services?.length ?? 0;
+                          final int activeServicesCount =
+                              currentMerchant.serviceStockStatus?.entries
+                                  .where(
+                                    (entry) =>
+                                entry.value.toLowerCase() ==
+                                    'disponible'
+                              )
+                                  .length ??
+                                  0;
+
+                          return DashboardStatsWidget(
+                            totalServices: totalServicesCount,
+                            activeServices: activeServicesCount,
+                            totalRevenue: transactionProvider.totalRevenue,
+                            previousRevenue: transactionProvider.previousRevenue,
+                            totalTransactions: transactionProvider
+                                .totalSalesTransactionsCount,
+                            previousTransactions: transactionProvider.previousTransactionsCount,
+                            averageRating: currentMerchant.averageRating,
+                            reviewCount: currentMerchant.reviewCount,
+                            revenueChart: transactionProvider.last7DaysRevenue,
+                            chartLabels: transactionProvider.last7DaysLabels,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      
+                      // Métriques avancées
+                      if (transactionProvider.merchantTransactions.isNotEmpty) ...[
                         Text(
-                          'Aperçu',
+                          'Analyses détaillées',
                           style: AppTextStyles.h2
-                              .copyWith(fontSize: 20, color: Colors.white),
+                              .copyWith(fontSize: 20, color: Colors.black87),
                         ),
                         const SizedBox(height: 16),
-                        Builder(
-                          builder: (context) {
-                            final int totalServicesCount =
-                                currentMerchant.services?.length ?? 0;
-                            final int activeServicesCount =
-                                currentMerchant.serviceStockStatus?.entries
-                                    .where(
-                                      (entry) =>
-                                  entry.value.toLowerCase() ==
-                                      'disponible',
-                                )
-                                    .length ??
-                                    0;
-
-                            return DashboardStatsWidget(
-                              totalServices: totalServicesCount,
-                              activeServices: activeServicesCount,
-                              totalRevenue: transactionProvider.totalRevenue,
-                              totalTransactions: transactionProvider
-                                  .totalSalesTransactionsCount,
-                              averageRating: currentMerchant.averageRating,
-                              reviewCount: currentMerchant.reviewCount,
-                            );
-                          },
+                        AdvancedMetricsWidget(
+                          transactions: transactionProvider.merchantTransactions,
+                          services: currentMerchant.services ?? [],
                         ),
                         const SizedBox(height: 32),
-                        if (transactionProvider.transactionsError != null)
-                          Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppDimensions.paddingM,
-                            ),
-                            child: Text(
-                              "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
-                              style: AppTextStyles.body2
-                                  .copyWith(color: Colors.redAccent),
-                            ),
-                          ),
-                        Text(
-                          'Actions rapides',
-                          style: AppTextStyles.h2
-                              .copyWith(fontSize: 20, color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildQuickActions(currentMerchant),
-                        const SizedBox(height: 32),
-                        if (currentMerchant.profileType == 'mobile')
-                          _buildLiveLocationCard(),
-                        Text(
-                          'Activité récente',
-                          style: AppTextStyles.h2
-                              .copyWith(fontSize: 20, color: Colors.white),
-                        ),
-                        const SizedBox(height: 16),
-                        _buildRecentActivity(),
                       ],
-                    ),
+                      
+                      if (transactionProvider.transactionsError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            bottom: AppDimensions.paddingM,
+                          ),
+                          child: Text(
+                            "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
+                            style: AppTextStyles.body2
+                                .copyWith(color: Colors.redAccent),
+                          ),
+                        ),
+                      Text(
+                        'Actions rapides',
+                        style: AppTextStyles.h2
+                            .copyWith(fontSize: 20, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildQuickActions(currentMerchant),
+                      const SizedBox(height: 32),
+                      if (currentMerchant.profileType == 'mobile')
+                        _buildLiveLocationCard(),
+                      Text(
+                        'Activité récente',
+                        style: AppTextStyles.h2
+                            .copyWith(fontSize: 20, color: Colors.black87),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildRecentActivity(),
+                      // Ajouter un padding en bas pour éviter que le contenu soit masqué par la nav bar
+                      const SizedBox(height: 20),
+                    ],
                   ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Container(
+          height: 70,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavBarItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: 'Accueil',
+                isActive: true,
+                onTap: () {
+                  // Déjà sur l'accueil
+                },
+              ),
+              _buildNavBarItem(
+                icon: Icons.credit_card_outlined,
+                activeIcon: Icons.credit_card,
+                label: 'Carte',
+                isActive: false,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.merchantCard);
+                },
+              ),
+              _buildNavBarItem(
+                icon: Icons.point_of_sale_outlined,
+                activeIcon: Icons.point_of_sale,
+                label: 'Ventes',
+                isActive: false,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.salesScreen);
+                },
+              ),
+              _buildNavBarItem(
+                icon: Icons.inventory_2_outlined,
+                activeIcon: Icons.inventory_2,
+                label: 'Stock',
+                isActive: false,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.stockManagement);
+                },
+              ),
+              _buildNavBarItem(
+                icon: Icons.more_horiz,
+                activeIcon: Icons.more_horiz,
+                label: 'Plus',
+                isActive: false,
+                onTap: () {
+                  _showMoreOptions();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavBarItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isActive ? activeIcon : icon,
+                color: isActive ? AppColors.primary : Colors.grey.shade600,
+                size: 22,
+              ),
+              const SizedBox(height: 2),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isActive ? AppColors.primary : Colors.grey.shade600,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showMoreOptions() {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final currentMerchant = authProvider.merchantProfile;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Plus d\'options',
+              style: AppTextStyles.h3.copyWith(fontSize: 18),
+            ),
+            const SizedBox(height: 20),
+            _buildMoreOption(
+              icon: Icons.reviews_outlined,
+              title: 'Avis clients',
+              subtitle: 'Voir les retours clients',
+              onTap: () {
+                Navigator.pop(context);
+                if (currentMerchant != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MerchantReviewsScreen(
+                        merchantId: currentMerchant.id,
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
+            _buildMoreOption(
+              icon: Icons.support_agent_outlined,
+              title: 'Support',
+              subtitle: 'Contacter l\'assistance',
+              onTap: () {
+                Navigator.pop(context);
+                SnackBarHelper.showInfo(
+                  context,
+                  'Navigation vers le support (TODO)',
+                );
+              },
+            ),
+            if (currentMerchant != null && !currentMerchant.isPremium)
+              _buildMoreOption(
+                icon: Icons.star_outline,
+                title: 'Devenir Premium',
+                subtitle: 'Accès aux fonctionnalités exclusives',
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, AppRoutes.premiumSubscription);
+                },
+              ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoreOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          icon,
+          color: AppColors.primary,
+          size: 24,
+        ),
+      ),
+      title: Text(
+        title,
+        style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: AppTextStyles.caption.copyWith(color: Colors.grey.shade600),
+      ),
+      onTap: onTap,
+      contentPadding: EdgeInsets.zero,
     );
   }
 
@@ -202,45 +466,57 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   Widget _buildQuickActions(MerchantAuthModel merchant) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        int crossAxisCount;
-        double childAspectRatio;
-
-        if (screenWidth < 360) {
-          crossAxisCount = 1;
-          childAspectRatio = 2.8;
-        } else if (screenWidth < 600) {
-          crossAxisCount = 2;
-          childAspectRatio = 1.3;
-        } else if (screenWidth < 900) {
-          crossAxisCount = 3;
-          childAspectRatio = 1.2;
-        } else {
-          crossAxisCount = 4;
-          childAspectRatio = 1.2;
-        }
+        // For a 2-column layout, we can calculate a suitable aspect ratio.
+        // Let's aim for a card height of around 120-140 pixels.
+        // The width of each card will be (constraints.maxWidth - spacing) / 2.
+        const double crossAxisSpacing = 16;
+        const double mainAxisSpacing = 16;
+        final double itemWidth = (constraints.maxWidth - crossAxisSpacing) / 2;
+        const double itemHeight = 130;
+        final double childAspectRatio = itemWidth / itemHeight;
 
         return GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+          crossAxisCount: 2,
+          crossAxisSpacing: crossAxisSpacing,
+          mainAxisSpacing: mainAxisSpacing,
           childAspectRatio: childAspectRatio,
           children: [
             _buildActionCard(
-              title: 'Profil',
-              subtitle: 'Modifier les informations',
+              title: 'Nouvelle Facture',
+              subtitle: 'Créer une facture',
+              icon: Icons.receipt_long,
+              color: Colors.green,
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.createInvoice);
+              },
+            ),
+            _buildActionCard(
+              title: 'Mon Profil',
+              subtitle: 'Gérer mon profil',
               icon: Icons.person,
+              color: Colors.indigo,
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.merchantProfile);
+              },
+            ),
+            _buildActionCard(
+              title: 'Vente Rapide',
+              subtitle: 'Transaction directe',
+              icon: Icons.point_of_sale,
               color: Colors.blue,
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        EditMerchantProfileScreen(merchant: merchant),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.salesScreen);
+              },
+            ),
+            _buildActionCard(
+              title: 'Gestion Stock',
+              subtitle: 'Gérer disponibilité',
+              icon: Icons.inventory_2,
+              color: Colors.purple,
+              onTap: () {
+                Navigator.pushNamed(context, AppRoutes.stockManagement);
               },
             ),
             _buildActionCard(
@@ -301,7 +577,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       child: Container(
         padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.9),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           boxShadow: [
             BoxShadow(
@@ -400,10 +676,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
 
     return Column(
-      children: transactionProvider.recentTransactions.map<Widget>((
-          transaction,
-          ) {
-        String description =
+      children: transactionProvider.recentTransactions.map<Widget>((transaction) {
+        String description = 
             '${transaction.typeDisplay}: ${transaction.serviceName} - ${transaction.amount.toStringAsFixed(0)} FCFA';
         if (transaction.userId != null && transaction.userId!.isNotEmpty) {
           description += ' (Client: ${transaction.userId!.substring(0, 5)}...)';
@@ -494,7 +768,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         return Colors.orange;
       case TransactionType.withdrawal:
         return AppColors.primary;
-
+      default:
+        return Colors.grey;
     }
   }
 
@@ -508,6 +783,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         return Icons.undo_rounded;
       case TransactionType.withdrawal:
         return Icons.savings_outlined;
+      default:
+        return Icons.help;
     }
   }
 
@@ -556,38 +833,54 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   }
 
   void _togglePositionTracking(bool value) async {
+    if (!mounted) return;
+    
     if (value) {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-        SnackBarHelper.showWarning(
-          context,
-          'La permission de localisation est requise pour activer le suivi.',
-        );
+        if (mounted) {
+          SnackBarHelper.showWarning(
+            context,
+            'La permission de localisation est requise pour activer le suivi.',
+          );
+        }
         return;
       }
 
-      setState(() {
-        _isTrackingPosition = true;
-      });
-      _positionUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
-        _updatePositionInFirestore();
-      });
+      if (mounted) {
+        setState(() {
+          _isTrackingPosition = true;
+        });
+        _positionUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+          if (mounted) {
+            _updatePositionInFirestore();
+          } else {
+            timer.cancel();
+          }
+        });
+      }
     } else {
-      setState(() {
-        _isTrackingPosition = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isTrackingPosition = false;
+        });
+      }
       _positionUpdateTimer?.cancel();
     }
   }
 
   Future<void> _updatePositionInFirestore() async {
+    if (!mounted) return;
+    
     try {
       final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      if (!mounted) return;
+      
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.userId != null) {
+      if (authProvider.userId != null && mounted) {
         await FirebaseFirestore.instance.collection('users').doc(authProvider.userId).update({
           'latitude': position.latitude,
           'longitude': position.longitude,

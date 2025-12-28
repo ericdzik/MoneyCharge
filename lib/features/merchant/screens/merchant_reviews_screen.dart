@@ -76,6 +76,12 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
                 expandedHeight: 140,
                 elevation: 0,
                 backgroundColor: AppColors.primary,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                ),
                 flexibleSpace: FlexibleSpaceBar(
                   title: const Text('Avis des clients'),
                   background: Container(
@@ -87,6 +93,10 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
                           AppColors.primary,
                           AppColors.primary.withOpacity(0.85),
                         ],
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(16),
+                        bottomRight: Radius.circular(16),
                       ),
                     ),
                   ),

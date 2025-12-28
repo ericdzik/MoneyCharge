@@ -5,6 +5,7 @@ import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/core/theme/app_theme.dart';
 import 'package:locacharge/core/utils/route_guards.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/admin/screens/ad_screen.dart';
 import 'package:locacharge/features/admin/screens/admin_dashboard_screen.dart';
 import 'package:locacharge/features/admin/screens/manage_ads_screen.dart';
@@ -12,9 +13,14 @@ import 'package:locacharge/features/admin/screens/pending_verifications_screen.d
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/screens/edit_merchant_profile_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_dashboard_screen.dart';
+import 'package:locacharge/features/merchant/screens/merchant_card_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_register_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
+import 'package:locacharge/features/merchant/screens/stock_management_screen.dart';
+import 'package:locacharge/features/merchant/screens/sales_screen.dart';
+import 'package:locacharge/features/merchant/screens/create_invoice_screen.dart';
+import 'package:locacharge/features/merchant/models/invoice_model.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
 import 'package:locacharge/features/user/screens/edit_user_profile_screen.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
@@ -36,6 +42,7 @@ import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
+import 'package:locacharge/providers/invoice_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
 import 'package:locacharge/services/notification_service.dart';
 
@@ -60,8 +67,13 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
-        ChangeNotifierProvider(create: (_) => MerchantProvider()),
+        ChangeNotifierProxyProvider<LocationProvider, MerchantProvider>(
+          create: (context) => MerchantProvider(null),
+          update: (context, locationProvider, merchantProvider) =>
+              merchantProvider!..update(locationProvider),
+        ),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        ChangeNotifierProvider(create: (_) => InvoiceProvider()),
         ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()),
         ChangeNotifierProvider(create: (_) => AdProvider()),
       ],
@@ -221,6 +233,14 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           ),
         );
 
+      case AppRoutes.merchantCard:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const MerchantCardScreen(),
+            UserType.merchant,
+          ),
+        );
+
       case AppRoutes.merchantReviews:
         final args = settings.arguments as Map<String, dynamic>?;
         final merchantId = args?['merchantId'] as String;
@@ -244,6 +264,31 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             const MerchantProfileScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.stockManagement:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const StockManagementScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.salesScreen:
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            const SalesScreen(),
+            UserType.merchant,
+          ),
+        );
+
+      case AppRoutes.createInvoice:
+        final invoice = settings.arguments as InvoiceModel?;
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            CreateInvoiceScreen(invoice: invoice),
             UserType.merchant,
           ),
         );
@@ -311,7 +356,10 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Page non trouvée')),
+      appBar: const CustomAppBar(
+        title: 'Page non trouvée',
+        showLogo: false,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

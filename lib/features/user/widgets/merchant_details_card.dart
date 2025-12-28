@@ -3,6 +3,7 @@ import '../../../core/common.dart';
 import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
+import 'package:locacharge/core/utils/opening_hours_parser.dart';
 
 class MerchantDetailsCard extends StatelessWidget {
   final Merchant merchant;
@@ -192,7 +193,7 @@ class MerchantDetailsCard extends StatelessWidget {
               children: [
                 // Informations de contact et horaires
                 _buildInfoSection([
-                  _buildInfoRow(Icons.access_time, 'Horaires', merchant.hours as String),
+                  _buildInfoRow(Icons.access_time, 'Horaires', OpeningHoursParser.formatTodayHours(merchant.hours, DateTime.now())),
                   _buildInfoRow(Icons.phone, 'Téléphone', merchant.phone),
                   _buildInfoRow(
                     Icons.directions_walk,

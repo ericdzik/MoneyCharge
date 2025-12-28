@@ -22,7 +22,11 @@ class AppRoutes {
 
   // Routes marchand
   static const String merchantDashboard = '/merchant/dashboard';
+  static const String merchantCard = '/merchant/card';
   static const String stockManagement = '/merchant/stock';
+  static const String salesScreen = '/merchant/sales';
+  static const String createInvoice = '/merchant/invoice/create';
+  static const String invoicesList = '/merchant/invoices';
   static const String merchantProfile = '/merchant/profile';
   static const String merchantAnalytics = '/merchant/analytics';
   static const String merchantReviews = '/merchant/reviews';

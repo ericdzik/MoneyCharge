@@ -174,6 +174,12 @@ class _SliverAppBar extends StatelessWidget {
       pinned: true,
       backgroundColor: Colors.white.withValues(alpha: opacity),
       elevation: opacity > 0.5 ? 4 : 0,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(

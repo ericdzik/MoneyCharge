@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_background_widget.dart';
+import 'custom_app_bar.dart';
 
 /// Exemple d'utilisation du widget AuthBackgroundWidget
 ///
@@ -12,10 +13,10 @@ class AuthBackgroundExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlternativeAuthBackgroundWidget2(
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Exemple Auth Background'),
+        appBar: const CustomAppBar(
+          title: 'Exemple Auth Background',
+          showLogo: false,
           backgroundColor: Colors.transparent,
-          elevation: 0,
         ),
         body: const Center(
           child: Column(
@@ -51,10 +52,10 @@ class AuthBackgroundCustomExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlternativeAuthBackgroundWidget2(
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Exemple Personnalisé'),
+        appBar: const CustomAppBar(
+          title: 'Exemple Personnalisé',
+          showLogo: false,
           backgroundColor: Colors.transparent,
-          elevation: 0,
         ),
         body: const Center(
           child: Text(
@@ -75,10 +76,10 @@ class CustomAuthBackgroundExample extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlternativeAuthBackgroundWidget2(
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Exemple Custom'),
+        appBar: const CustomAppBar(
+          title: 'Exemple Custom',
+          showLogo: false,
           backgroundColor: Colors.transparent,
-          elevation: 0,
         ),
         body: const Center(
           child: Text(

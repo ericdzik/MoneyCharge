@@ -29,6 +29,12 @@ class UnifiedSliverAppBar extends StatelessWidget {
       pinned: true,
       elevation: opacity > 0.5 ? 4 : 0,
       backgroundColor: Colors.white.withOpacity(opacity),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(16),
+          bottomRight: Radius.circular(16),
+        ),
+      ),
       leading: showMenu
           ? Container(
               margin: const EdgeInsets.all(8),
@@ -69,6 +75,10 @@ class UnifiedSliverAppBar extends StatelessWidget {
                 color,
                 color.withOpacity(0.85),
               ],
+            ),
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(16),
+              bottomRight: Radius.circular(16),
             ),
           ),
           child: SafeArea(

@@ -23,6 +23,10 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
         title: 'Profil Commerçant',
         showLogo: false,
         backgroundColor: AppColors.primary,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
@@ -145,28 +149,6 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
                 ),
                 const SizedBox(height: AppDimensions.paddingXL),
 
-                // Actions
-                _buildSection(
-                  title: 'Actions',
-                  children: [
-                    _buildActionTile(
-                      icon: Icons.history_outlined,
-                      title: 'Historique des locations',
-                      onTap: () {
-                        // TODO: Implement navigation
-                      },
-                    ),
-                    _buildActionTile(
-                      icon: Icons.bar_chart_outlined,
-                      title: 'Statistiques',
-                      onTap: () {
-                        // TODO: Implement navigation
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppDimensions.paddingXL),
-
                 CustomButton(
                   text: 'Se déconnecter',
                   onPressed: () => _showLogoutDialog(context),
@@ -241,19 +223,6 @@ class _MerchantProfileScreenState extends State<MerchantProfileScreen> {
       leading: Icon(icon, color: AppColors.primary),
       title: Text(title, style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600)),
       subtitle: Text(value, style: AppTextStyles.body1),
-    );
-  }
-
-  Widget _buildActionTile({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-  }) {
-    return ListTile(
-      leading: Icon(icon, color: AppColors.primary),
-      title: Text(title, style: AppTextStyles.body1),
-      trailing: const Icon(Icons.chevron_right),
-      onTap: onTap,
     );
   }
 
