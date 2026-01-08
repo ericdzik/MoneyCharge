@@ -7,11 +7,11 @@ import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/widgets/background_image_widget.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/admin/models/admin_model.dart';
 import 'package:locacharge/features/admin/screens/notification_screen.dart';
 import 'package:locacharge/features/admin/services/admin_firestore_service.dart';
+import 'package:locacharge/features/admin/widgets/admin_app_bar.dart';
 import 'package:locacharge/features/admin/widgets/admin_stats_widget.dart';
 import 'package:locacharge/features/admin/widgets/merchant_table_widget.dart';
 import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
@@ -134,46 +134,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: false,
-      appBar: CustomAppBar(
-        title: 'Dashboard Admin',
-        backgroundColor: AppColors.primary,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.white),
-            tooltip: 'Rafraîchir',
-            onPressed: _loadAllAdminData,
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications, color: AppColors.white),
-            tooltip: 'Notifications',
-            onPressed: _showNotifications,
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.white),
-            tooltip: 'Déconnexion',
-            onPressed: () => _handleLogout(context),
-          ),
-        ],
-        showLogo: false,
+      appBar: AdminAppBar(
+        admin: _admin,
+        isLoading: _isLoading,
+        onRefresh: _loadAllAdminData,
+        onNotifications: _showNotifications,
+        onLogout: () => _handleLogout(context),
       ),
-      body: Stack(
-        children: [
-          // Image de fond qui s'étend sous l'AppBar
-          const Positioned.fill(
-            child: BackgroundImage(),
-          ),
-          // Contenu principal avec padding pour l'AppBar
-          Padding(
-            padding: EdgeInsets.only(top: kToolbarHeight + MediaQuery.of(context).padding.top),
-            child: _buildBody(),
-          ),
-        ],
+      body: Container(
+        color: Colors.white, // Fond blanc propre
+        child: SafeArea(
+          child: _buildBody(),
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _sendTestNotification,
-        tooltip: 'Envoyer une notification de test',
-        child: const Icon(Icons.notification_add),
-      ),
+      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
 
@@ -205,174 +179,116 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         ),
       );
     }
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(AppDimensions.paddingL),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildAdminHeader(),
-          const SizedBox(height: 24),
-          Text(
-            'Statistiques de la plateforme',
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.grey.shade50,
+            Colors.white,
+          ],
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Statistiques de la plateforme
+            _buildSectionHeader(
+              title: 'Statistiques de la plateforme',
+              subtitle: 'Vue d\'ensemble des performances',
+              icon: Icons.analytics_outlined,
             ),
-          ),
-          const SizedBox(height: 16),
-          // Décommentons AdminStatsWidget
-          AdminStatsWidget(
-            totalUsers: _platformStats['totalUsers']?.toInt() ?? 0,
-            totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0,
-            activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0,
-            totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0,
-            totalTransactions:
-                _platformStats['totalTransactions']?.toInt() ?? 0,
-            pendingVerifications:
-                _platformStats['pendingVerifications']?.toInt() ?? 0,
-          ),
-          // const Text("AdminStatsWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)), // On enlève le message temporaire
-          const SizedBox(height: 32),
-          Text(
-            'Actions rapides',
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 16),
+            AdminStatsWidget(
+              totalUsers: _platformStats['totalUsers']?.toInt() ?? 0,
+              totalMerchants: _platformStats['totalMerchants']?.toInt() ?? 0,
+              activeMerchants: _platformStats['activeMerchants']?.toInt() ?? 0,
+              totalRevenue: _platformStats['totalRevenue']?.toDouble() ?? 0.0,
+              totalTransactions:
+                  _platformStats['totalTransactions']?.toInt() ?? 0,
+              pendingVerifications:
+                  _platformStats['pendingVerifications']?.toInt() ?? 0,
             ),
-          ),
-          const SizedBox(height: 16),
-          _buildQuickActions(),
-          const SizedBox(height: 32),
-          Text(
-            'Gestion des marchands',
-            style: AppTextStyles.h2.copyWith(
-              fontSize: 20,
-              color: AppColors.white,
-              fontWeight: FontWeight.bold,
+            const SizedBox(height: 32),
+            
+            // Actions rapides avec nouveau design
+            _buildSectionHeader(
+              title: 'Actions rapides',
+              subtitle: 'Accès direct aux fonctions principales',
+              icon: Icons.flash_on_outlined,
             ),
-          ),
-          const SizedBox(height: 16),
-          // Décommentons MerchantTableWidget
-          MerchantTableWidget(
-            merchants: _merchants,
-            onVerify: _verifyMerchant,
-            onSuspend: _suspendMerchant,
-            onViewDetails: _viewMerchantDetails,
-          ),
-          // const Text("MerchantTableWidget a été commenté temporairement", style: TextStyle(color: Colors.orange)), // On enlève le message temporaire
-        ],
+            const SizedBox(height: 16),
+            _buildQuickActions(),
+            const SizedBox(height: 32),
+            
+            // Gestion des marchands
+            _buildSectionHeader(
+              title: 'Gestion des marchands',
+              subtitle: 'Supervision et validation des comptes',
+              icon: Icons.store_mall_directory_outlined,
+            ),
+            const SizedBox(height: 16),
+            MerchantTableWidget(
+              merchants: _merchants,
+              onVerify: _verifyMerchant,
+              onSuspend: _suspendMerchant,
+              onViewDetails: _viewMerchantDetails,
+            ),
+            
+            // Padding en bas pour éviter que le contenu soit masqué par la nav bar
+            const SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildAdminHeader() {
-    if (_admin == null && !_isLoading) {
-      // If not loading and admin is still null, show error/placeholder
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 25,
-              backgroundColor: AppColors.onPrimary,
-              child: Icon(Icons.person_outline, color: AppColors.primary),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'Profil Admin non disponible',
-              style: AppTextStyles.h2.copyWith(
-                color: AppColors.onPrimary,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-      );
-    } else if (_admin == null && _isLoading) {
-      // If loading and admin is null
-      return Container(
-        // Placeholder while loading specifically for admin header
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const CircleAvatar(
-              radius: 25,
-              backgroundColor: AppColors.onPrimary,
-              child: LoadingIndicator.small(),
-            ),
-            const SizedBox(width: 16),
-            Text(
-              'Chargement...',
-              style: AppTextStyles.h2.copyWith(
-                color: AppColors.onPrimary,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    // If _admin is not null
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 25,
-            backgroundColor: AppColors.onPrimary,
-            child: Text(
-              _admin!.name.isNotEmpty ? _admin!.name[0] : 'A',
-              style: AppTextStyles.h2.copyWith(
-                color: AppColors.primary,
-                fontSize: 20,
-              ),
-            ),
+  Widget _buildSectionHeader({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _admin!.name,
-                  style: AppTextStyles.h2.copyWith(
-                    color: AppColors.onPrimary,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _admin!.roleText,
-                  style: AppTextStyles.body2.copyWith(
-                    color: AppColors.onPrimary.withOpacity(0.8),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Dernière connexion: ${_formatDate(_admin!.lastLoginAt)}',
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.onPrimary.withOpacity(0.6),
-                  ),
-                ),
-              ],
-            ),
+          child: Icon(
+            icon,
+            color: AppColors.primary,
+            size: 20,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.h2.copyWith(
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -380,83 +296,54 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     final pendingVerifications =
         _platformStats['pendingVerifications']?.toInt() ?? 0;
 
+    final actions = [
+      {
+        'title': 'Vérifications',
+        'subtitle': '$pendingVerifications en attente',
+        'icon': Icons.verified_user,
+        'color': Colors.orange,
+        'onTap': _showPendingVerifications,
+      },
+      {
+        'title': 'Publicités',
+        'subtitle': 'Gérer les publicités',
+        'icon': Icons.campaign,
+        'color': Colors.purple,
+        'onTap': () => Navigator.pushNamed(context, AppRoutes.adminAds),
+      },
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenWidth = constraints.maxWidth;
-        int crossAxisCount;
-        double childAspectRatio;
+        
+        // Calculer la largeur optimale pour chaque carte
+        final cardSpacing = 16.0;
+        final totalSpacing = cardSpacing * (actions.length - 1);
+        final availableWidth = screenWidth - totalSpacing;
+        final cardWidth = availableWidth / actions.length;
 
-        if (screenWidth < 360) {
-          // Very small screens
-          crossAxisCount = 1;
-          childAspectRatio = 2.8;
-        } else if (screenWidth < 600) {
-          // Small screens (typical phones portrait)
-          crossAxisCount = 2;
-          childAspectRatio = 1.5;
-        } else if (screenWidth < 900) {
-          // Medium screens (tablets portrait, large phones landscape)
-          crossAxisCount = 3;
-          childAspectRatio = 1.2;
-        } else if (screenWidth < 1200) {
-          // Large screens (tablets landscape)
-          crossAxisCount = 4;
-          childAspectRatio = 1.3;
-        } else {
-          // Extra large screens
-          crossAxisCount = 5;
-          childAspectRatio = 1.3;
-        }
-
-        // Ajustement pour éviter que les cartes ne soient trop larges sur les écrans très larges
-        // en limitant le nombre de colonnes si nécessaire, ou en ajustant l'aspect ratio.
-        // Par exemple, si crossAxisCount devient trop élevé, les cartes peuvent devenir trop minces.
-        // Pour cet exemple, nous allons garder les valeurs ci-dessus.
-
-        return GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: childAspectRatio,
-          children: [
-            _buildActionCard(
-              title: 'Vérifications',
-              subtitle: '$pendingVerifications en attente',
-              icon: Icons.verified_user,
-              color: Colors.orange,
-              onTap: _showPendingVerifications,
-            ),
-            _buildActionCard(
-              title: 'Publicités',
-              subtitle: 'Gérer les publicités',
-              icon: Icons.campaign,
-              color: Colors.purple,
-              onTap: () => Navigator.pushNamed(context, AppRoutes.adminAds),
-            ),
-            // _buildActionCard(
-            //   title: 'Rapports',
-            //   subtitle: 'Générer des rapports',
-            //   icon: Icons.assessment,
-            //   color: Colors.blue,
-            //   onTap: _generateReports,
-            // ),
-            // _buildActionCard(
-            //   title: 'Utilisateurs',
-            //   subtitle: 'Gérer les utilisateurs',
-            //   icon: Icons.people,
-            //   color: AppColors.primary,
-            //   onTap: _manageUsers,
-            // ),
-            // _buildActionCard(
-            //   title: 'Support',
-            //   subtitle: 'Tickets support',
-            //   icon: Icons.support_agent,
-            //   color: Colors.green,
-            //   onTap: _showSupportTickets,
-            // ),
-          ],
+        // Pas de hauteur fixe - laisse le contenu déterminer la hauteur
+        return Row(
+          children: actions.asMap().entries.map((entry) {
+            final index = entry.key;
+            final action = entry.value;
+            
+            return Expanded(
+              child: Container(
+                margin: EdgeInsets.only(
+                  right: index < actions.length - 1 ? cardSpacing : 0,
+                ),
+                child: _buildActionCard(
+                  title: action['title'] as String,
+                  subtitle: action['subtitle'] as String,
+                  icon: action['icon'] as IconData,
+                  color: action['color'] as Color,
+                  onTap: action['onTap'] as VoidCallback,
+                ),
+              ),
+            );
+          }).toList(),
         );
       },
     );
@@ -469,68 +356,80 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    final bool isVerySmallScreen = MediaQuery.of(context).size.width < 360;
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(isVerySmallScreen ? 8 : 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border.withOpacity(0.5)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.08),
-              blurRadius: 6,
-              offset: const Offset(0, 1),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: EdgeInsets.all(isVerySmallScreen ? 8 : 10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+            // Icône en haut, centrée
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 18, // Icône réduite
+                ),
               ),
+            ),
+            
+            const SizedBox(height: 12),
+            
+            // Titre avec plus d'espace
+            Text(
+              title,
+              style: AppTextStyles.h3.copyWith(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            
+            const SizedBox(height: 6),
+            
+            // Sous-titre avec plus d'espace
+            Text(
+              subtitle,
+              style: AppTextStyles.body2.copyWith(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.3,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            
+            const SizedBox(height: 8),
+            
+            // Flèche en bas à droite
+            Align(
+              alignment: Alignment.centerRight,
               child: Icon(
-                icon,
-                color: color,
-                size: isVerySmallScreen ? 24 : 28,
-              ),
-            ),
-            SizedBox(height: isVerySmallScreen ? 6 : 8),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  title,
-                  style: AppTextStyles.h3.copyWith(
-                    fontSize: isVerySmallScreen ? 13 : 15,
-                  ),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
-              ),
-            ),
-            SizedBox(height: isVerySmallScreen ? 3 : 4),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  subtitle,
-                  style: AppTextStyles.caption.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: isVerySmallScreen ? 10 : 11,
-                  ),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                ),
+                Icons.arrow_forward_ios,
+                color: AppColors.textSecondary,
+                size: 12,
               ),
             ),
           ],
@@ -732,5 +631,102 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     if (date == null) return 'Jamais';
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} '
         'à ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -3),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Container(
+          height: 75,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildNavBarItem(
+                icon: Icons.home_outlined,
+                activeIcon: Icons.home,
+                label: 'Accueil',
+                isActive: true,
+                onTap: () {
+                  // Déjà sur l'accueil
+                },
+              ),
+              _buildNavBarItem(
+                icon: Icons.verified_user_outlined,
+                activeIcon: Icons.verified_user,
+                label: 'Vérifications',
+                isActive: false,
+                onTap: () {
+                  _showPendingVerifications();
+                },
+              ),
+              _buildNavBarItem(
+                icon: Icons.campaign_outlined,
+                activeIcon: Icons.campaign,
+                label: 'Publicités',
+                isActive: false,
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.adminAds);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavBarItem({
+    required IconData icon,
+    required IconData activeIcon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isActive ? activeIcon : icon,
+                color: isActive ? AppColors.primary : Colors.grey.shade600,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isActive ? AppColors.primary : Colors.grey.shade600,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                ),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

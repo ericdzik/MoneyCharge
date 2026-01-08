@@ -6,12 +6,17 @@ import 'package:provider/provider.dart';
 import 'package:locacharge/app.dart';
 import 'package:locacharge/core/config/env_config.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/services/error_handler_service.dart';
 import 'package:locacharge/firebase_options.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // ==================== INITIALISATION GESTIONNAIRE D'ERREURS ====================
+  // Initialiser le gestionnaire d'erreurs en premier pour capturer toutes les erreurs
+  ErrorHandlerService.initialize();
 
   // ==================== INITIALISATION ENVIRONNEMENT ====================
   // Chargement sécurisé des variables d'environnement

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
 
 /// Helper professionnel pour les dialogues réutilisables
 /// 
@@ -39,7 +40,7 @@ class DialogHelper {
               if (icon != null) ...[
                 Icon(
                   icon,
-                  color: isDangerous ? Colors.red : null,
+                  color: isDangerous ? AppColors.error : AppColors.primary,
                   size: 28,
                 ),
                 const SizedBox(width: 12),
@@ -50,7 +51,7 @@ class DialogHelper {
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: isDangerous ? Colors.red : null,
+                    color: isDangerous ? AppColors.error : AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -58,19 +59,30 @@ class DialogHelper {
           ),
           content: Text(
             message,
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+            ),
           ),
+          backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
               child: Text(
                 cancelText,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: AppColors.gray600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -78,8 +90,8 @@ class DialogHelper {
               onPressed: () => Navigator.pop(dialogContext, true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: isDangerous
-                    ? Colors.red
-                    : (confirmColor ?? Theme.of(context).primaryColor),
+                    ? AppColors.error
+                    : (confirmColor ?? AppColors.primary),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -88,6 +100,7 @@ class DialogHelper {
                   horizontal: 24,
                   vertical: 12,
                 ),
+                elevation: 2,
               ),
               child: Text(
                 confirmText,
@@ -105,14 +118,84 @@ class DialogHelper {
 
   /// Affiche un dialogue de déconnexion
   static Future<bool?> showLogoutConfirmation(BuildContext context) {
-    return showConfirmation(
-      context,
-      title: 'Déconnexion',
-      message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
-      confirmText: 'Se déconnecter',
-      cancelText: 'Annuler',
-      icon: Icons.logout,
-      isDangerous: true,
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.logout,
+                color: AppColors.primary,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Déconnexion',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Êtes-vous sûr de vouloir vous déconnecter ?',
+            style: TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          backgroundColor: AppColors.surface,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
+              child: Text(
+                'Annuler',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.gray600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                elevation: 2,
+              ),
+              child: const Text(
+                'Se déconnecter',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -166,7 +249,11 @@ class DialogHelper {
           title: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 28),
+                Icon(
+                  icon, 
+                  size: 28,
+                  color: AppColors.primary,
+                ),
                 const SizedBox(width: 12),
               ],
               Expanded(
@@ -175,6 +262,7 @@ class DialogHelper {
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -182,8 +270,12 @@ class DialogHelper {
           ),
           content: Text(
             message,
-            style: const TextStyle(fontSize: 16),
+            style: const TextStyle(
+              fontSize: 16,
+              color: AppColors.textSecondary,
+            ),
           ),
+          backgroundColor: AppColors.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -191,6 +283,8 @@ class DialogHelper {
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext),
               style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -198,6 +292,7 @@ class DialogHelper {
                   horizontal: 24,
                   vertical: 12,
                 ),
+                elevation: 2,
               ),
               child: Text(
                 buttonText,
@@ -266,13 +361,17 @@ class DialogHelper {
         return PopScope(
           canPop: barrierDismissible,
           child: AlertDialog(
+            backgroundColor: AppColors.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const CircularProgressIndicator(),
+                CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 3,
+                ),
                 const SizedBox(height: 24),
                 Text(
                   message,
@@ -280,6 +379,7 @@ class DialogHelper {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -323,16 +423,24 @@ class DialogHelper {
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
+          backgroundColor: AppColors.surface,
           content: Form(
             key: formKey,
             child: TextFormField(
               controller: controller,
               decoration: InputDecoration(
                 hintText: hint,
+                hintStyle: TextStyle(color: AppColors.gray400),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
                 ),
               ),
               keyboardType: keyboardType,
@@ -347,11 +455,18 @@ class DialogHelper {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
               child: Text(
                 cancelText,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: AppColors.gray600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -362,6 +477,8 @@ class DialogHelper {
                 }
               },
               style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -369,6 +486,7 @@ class DialogHelper {
                   horizontal: 24,
                   vertical: 12,
                 ),
+                elevation: 2,
               ),
               child: Text(
                 confirmText,
@@ -402,16 +520,22 @@ class DialogHelper {
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
           ),
+          backgroundColor: AppColors.surface,
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: List.generate(
               options.length,
               (index) => RadioListTile<int>(
-                title: Text(options[index]),
+                title: Text(
+                  options[index],
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
                 value: index,
                 groupValue: selectedIndex,
+                activeColor: AppColors.primary,
                 onChanged: (value) => Navigator.pop(dialogContext, value),
               ),
             ),
@@ -422,11 +546,18 @@ class DialogHelper {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+              ),
               child: Text(
                 'Annuler',
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.grey[600],
+                  color: AppColors.gray600,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
@@ -464,7 +595,7 @@ class DialogHelper {
                     if (icon != null) ...[
                       Icon(
                         icon,
-                        color: isDangerous ? Colors.red : null,
+                        color: isDangerous ? AppColors.error : AppColors.primary,
                         size: 32,
                       ),
                       const SizedBox(width: 16),
@@ -475,7 +606,7 @@ class DialogHelper {
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
-                          color: isDangerous ? Colors.red : null,
+                          color: isDangerous ? AppColors.error : AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -487,6 +618,7 @@ class DialogHelper {
                   style: const TextStyle(
                     fontSize: 16,
                     height: 1.5,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -497,6 +629,7 @@ class DialogHelper {
                         onPressed: () => Navigator.pop(sheetContext, false),
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(color: AppColors.gray300),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -506,6 +639,7 @@ class DialogHelper {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -516,12 +650,13 @@ class DialogHelper {
                         onPressed: () => Navigator.pop(sheetContext, true),
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              isDangerous ? Colors.red : Theme.of(context).primaryColor,
+                              isDangerous ? AppColors.error : AppColors.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
+                          elevation: 2,
                         ),
                         child: Text(
                           confirmText,

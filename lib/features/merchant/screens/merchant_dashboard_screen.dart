@@ -241,8 +241,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       ),
       child: SafeArea(
         child: Container(
-          height: 70,
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+          height: 80, // Augmenté de 70 à 80 pour plus d'espace
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -893,7 +893,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
 
   @override
   void dispose() {
+    // Annuler le timer de position de manière sécurisée
     _positionUpdateTimer?.cancel();
+    _positionUpdateTimer = null;
     super.dispose();
   }
 

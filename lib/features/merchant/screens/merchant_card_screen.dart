@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/utils/render_helper.dart';
 import 'package:locacharge/features/user/widgets/map_widget.dart';
 import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
 import 'package:locacharge/features/user/widgets/filter_widget.dart';
@@ -29,6 +30,7 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
   GoogleMapController? _mapController;
   Merchant? _selectedMerchant;
   bool _isInitialized = false;
+  bool _showInfoMessage = true;
 
   @override
   void initState() {
@@ -62,7 +64,7 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            Navigator.pop(context);
+            RenderHelper.safePop(context);
           },
         ),
       ),
@@ -113,7 +115,7 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
                   child: MerchantDetailsCard(
                     merchant: _selectedMerchant!,
                     onClose: () {
-                      setState(() {
+                      RenderHelper.safeSetState(this, () {
                         _selectedMerchant = null;
                       });
                     },
@@ -152,7 +154,7 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
                 ),
 
               // Message d'information pour les marchands
-              _buildInfoMessage(),
+              if (_showInfoMessage) _buildInfoMessage(),
             ],
           );
         },
@@ -187,7 +189,9 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
         }
       },
       onMapCreated: (controller) {
-        _mapController = controller;
+        if (mounted) {
+          _mapController = controller;
+        }
       },
       showUserLocation: true,
       initialPosition: locationProvider.latitude != null && locationProvider.longitude != null
@@ -234,7 +238,9 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
                 size: 18,
               ),
               onPressed: () {
-                // Cacher le message (tu peux ajouter une logique de préférence)
+                RenderHelper.safeSetState(this, () {
+                  _showInfoMessage = false;
+                });
               },
             ),
           ],
@@ -244,7 +250,10 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
   }
 
   void _recenterMap(LocationProvider locationProvider) {
-    if (_mapController != null && locationProvider.latitude != null && locationProvider.longitude != null) {
+    if (_mapController != null && 
+        locationProvider.latitude != null && 
+        locationProvider.longitude != null &&
+        mounted) {
       _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(
           LatLng(
@@ -259,7 +268,9 @@ class _MerchantCardScreenState extends State<MerchantCardScreen> {
 
   @override
   void dispose() {
+    // Nettoyer le contrôleur de carte de manière sécurisée
     _mapController?.dispose();
+    _mapController = null;
     super.dispose();
   }
 }

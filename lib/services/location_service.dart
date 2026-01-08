@@ -1,7 +1,9 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb; // Import kIsWeb for web check
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:locacharge/core/services/intent_service.dart';
+import 'package:locacharge/core/config/phone_config.dart';
 
 class LocationService {
   Future<LocationPermission> checkPermission() async {
@@ -234,18 +236,123 @@ String calculateDrivingTime(double distanceInMeters) {
 
   Future<bool> makePhoneCall(String phoneNumber) async {
     try {
-      final phoneUri = Uri(scheme: 'tel', path: phoneNumber.replaceAll(RegExp(r'\s+'), '')); // Remove spaces for safety
-      print('[LocationService] Attempting phone call. Target URI: ${phoneUri.toString()}');
-      if (await canLaunchUrl(phoneUri)) {
-        print('[LocationService] Can launch phone URI. Attempting launch...');
-        bool success = await launchUrl(phoneUri);
-        print('[LocationService] Launch success for phone URI: $success');
-        return success;
+      // Obtenir les variantes du numéro à essayer
+      List<String> phoneVariants = PhoneConfig.getPhoneNumberVariants(phoneNumber);
+      
+      if (phoneVariants.isEmpty) {
+        print('[LocationService] Aucune variante de numéro valide pour: $phoneNumber');
+        return false;
       }
-      print('[LocationService] Could not launch phone dialer for: $phoneNumber');
+      
+      print('[LocationService] Tentative d\'appel avec les variantes: $phoneVariants');
+      
+      // Essayer différentes approches selon la plateforme
+      if (kIsWeb) {
+        print('[LocationService] Web platform - phone calls not supported');
+        return false;
+      }
+      
+      // Essayer chaque variante jusqu'à ce qu'une fonctionne
+      for (String variant in phoneVariants) {
+        bool success = false;
+        
+        if (Platform.isAndroid) {
+          success = await _makePhoneCallAndroid(variant, phoneNumber);
+        } else if (Platform.isIOS) {
+          success = await _makePhoneCallIOS(variant, phoneNumber);
+        }
+        
+        if (success) {
+          print('[LocationService] Succès avec la variante: $variant');
+          return true;
+        }
+      }
+      
+      print('[LocationService] Échec avec toutes les variantes pour: $phoneNumber');
       return false;
+      
     } catch (e) {
       print('[LocationService] Erreur lors de l\'appel: $e');
+      return false;
+    }
+  }
+
+  Future<bool> _makePhoneCallAndroid(String phoneNumber, String originalNumber) async {
+    // Méthode 1: Essayer le service natif Android d'abord
+    try {
+      print('[LocationService] Android - Trying native intent service for: $phoneNumber');
+      bool nativeResult = await IntentService.makePhoneCallNative(phoneNumber);
+      if (nativeResult) {
+        print('[LocationService] Native intent service success');
+        return true;
+      }
+    } catch (e) {
+      print('[LocationService] Native intent service failed: $e');
+    }
+
+    // Méthode 2: Essayer d'ouvrir le dialer natif
+    try {
+      print('[LocationService] Android - Trying native dialer for: $phoneNumber');
+      bool dialerResult = await IntentService.openDialer(phoneNumber);
+      if (dialerResult) {
+        print('[LocationService] Native dialer success');
+        return true;
+      }
+    } catch (e) {
+      print('[LocationService] Native dialer failed: $e');
+    }
+
+    // Méthode 3: Intent ACTION_CALL (nécessite permission CALL_PHONE)
+    try {
+      final callUri = Uri(scheme: 'tel', path: phoneNumber);
+      print('[LocationService] Android - Trying ACTION_CALL intent: ${callUri.toString()}');
+      
+      if (await canLaunchUrl(callUri)) {
+        bool success = await launchUrl(callUri, mode: LaunchMode.externalApplication);
+        if (success) {
+          print('[LocationService] ACTION_CALL success');
+          return true;
+        }
+      }
+    } catch (e) {
+      print('[LocationService] ACTION_CALL failed: $e');
+    }
+
+    // Méthode 4: Intent ACTION_DIAL (ne nécessite pas de permission)
+    try {
+      final dialUri = Uri.parse('tel:$phoneNumber');
+      print('[LocationService] Android - Trying ACTION_DIAL intent: ${dialUri.toString()}');
+      
+      if (await canLaunchUrl(dialUri)) {
+        bool success = await launchUrl(dialUri, mode: LaunchMode.externalApplication);
+        if (success) {
+          print('[LocationService] ACTION_DIAL success');
+          return true;
+        }
+      }
+    } catch (e) {
+      print('[LocationService] ACTION_DIAL failed: $e');
+    }
+
+    print('[LocationService] All Android phone call methods failed for: $phoneNumber');
+    return false;
+  }
+
+  Future<bool> _makePhoneCallIOS(String phoneNumber, String originalNumber) async {
+    try {
+      final phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+      print('[LocationService] iOS - Attempting phone call: ${phoneUri.toString()}');
+      
+      if (await canLaunchUrl(phoneUri)) {
+        bool success = await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
+        print('[LocationService] iOS phone call success: $success');
+        return success;
+      }
+      
+      print('[LocationService] iOS - Cannot launch phone URI');
+      return false;
+    } catch (e) {
+      print('[LocationService] iOS phone call error: $e');
       return false;
     }
   }
