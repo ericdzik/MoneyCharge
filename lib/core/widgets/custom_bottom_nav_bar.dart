@@ -44,28 +44,34 @@ class CustomBottomNavBar extends StatelessWidget {
           ),
           items: [
             _buildNavItem(
+              icon: Icons.home_outlined,
+              activeIcon: Icons.home,
+              label: 'Accueil',
+              index: 0,
+            ),
+            _buildNavItem(
               icon: Icons.map_outlined,
               activeIcon: Icons.map,
               label: 'Carte',
-              index: 0,
+              index: 1,
             ),
             _buildNavItem(
               icon: Icons.list_alt_outlined,
               activeIcon: Icons.list_alt,
               label: 'Liste',
-              index: 1,
+              index: 2,
             ),
             _buildNavItem(
               icon: Icons.favorite_border,
               activeIcon: Icons.favorite,
               label: 'Favoris',
-              index: 2,
+              index: 3,
             ),
             _buildNavItem(
               icon: Icons.person_outline,
               activeIcon: Icons.person,
               label: 'Profil',
-              index: 3,
+              index: 4,
             ),
           ],
         ),

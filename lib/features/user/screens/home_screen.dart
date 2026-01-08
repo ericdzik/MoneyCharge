@@ -9,6 +9,7 @@ import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dar
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/list_view_screen.dart';
 import 'package:locacharge/features/user/screens/user_profile_screen.dart';
+import 'package:locacharge/features/user/screens/home_feed_screen.dart';
 import 'package:locacharge/features/user/widgets/filter_widget.dart';
 import 'package:locacharge/features/user/widgets/map_widget.dart';
 import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<Widget> _buildScreens(bool isMerchant) {
     return [
+      const HomeFeedScreen(), // New Accueil tab
       MapViewContent(onMapCreated: (controller) => _mapController = controller),
       ListViewScreen(mapController: _mapController),
       const FavoritesScreen(),
@@ -47,15 +49,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       drawer: const CustomDrawer(),
-      body: _currentIndex == 0
-          ? _buildMapView(screens[0])
+      body: _currentIndex == 1 // Map is now at index 1
+          ? _buildMapView(screens[1])
           : SafeArea(child: screens[_currentIndex]),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
     );
-
   }
 
   Widget _buildMapView(Widget mapContent) {

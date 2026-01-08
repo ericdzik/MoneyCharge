@@ -34,7 +34,11 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
-    _calculateTravelTimes();
+    
+    // Retarder le calcul des temps de trajet après la construction du widget
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _calculateTravelTimes();
+    });
   }
 
   void _handleScroll() {
@@ -50,34 +54,45 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   }
 
   Future<void> _calculateTravelTimes() async {
-    final locationProvider = context.read<LocationProvider>();
-
-    if (locationProvider.currentPosition == null) {
-      await locationProvider.initialize();
-    }
-
     if (!mounted) return;
+    
+    try {
+      final locationProvider = Provider.of<LocationProvider>(context, listen: false);
 
-    final position = locationProvider.currentPosition;
-    if (position != null) {
-      final distance = _locationService.calculateDistance(
-        position.latitude,
-        position.longitude,
-        widget.merchant.latitude,
-        widget.merchant.longitude,
-      );
-
-      if (mounted) {
-        setState(() {
-          _walkingTime = _locationService.calculateWalkingTime(distance);
-          _drivingTime = _locationService.calculateDrivingTime(distance);
-        });
+      if (locationProvider.currentPosition == null) {
+        await locationProvider.initialize();
       }
-    } else {
+
+      if (!mounted) return;
+
+      final position = locationProvider.currentPosition;
+      if (position != null) {
+        final distance = _locationService.calculateDistance(
+          position.latitude,
+          position.longitude,
+          widget.merchant.latitude,
+          widget.merchant.longitude,
+        );
+
+        if (mounted) {
+          setState(() {
+            _walkingTime = _locationService.calculateWalkingTime(distance);
+            _drivingTime = _locationService.calculateDrivingTime(distance);
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _walkingTime = 'Position ?';
+            _drivingTime = 'Position ?';
+          });
+        }
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
-          _walkingTime = 'Position ?';
-          _drivingTime = 'Position ?';
+          _walkingTime = 'Erreur';
+          _drivingTime = 'Erreur';
         });
       }
     }

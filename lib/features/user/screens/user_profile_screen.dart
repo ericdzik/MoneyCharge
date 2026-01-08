@@ -83,10 +83,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                     const SizedBox(height: AppDimensions.paddingL),
                     _ActionsSection(),
-                    const SizedBox(height: AppDimensions.paddingL),
-                    _DeleteAccountButton(
-                      onDelete: () => _showDeleteAccountDialog(context),
-                    ),
                     const SizedBox(height: AppDimensions.paddingXL),
                   ],
                 ),
@@ -98,23 +94,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context) async {
-    final confirmed = await DialogHelper.showConfirmation(
-      context,
-      title: 'Supprimer le compte',
-      message:
-          'Cette action est irréversible. Toutes vos données seront supprimées définitivement.',
-      confirmText: 'Supprimer',
-      isDangerous: true,
-    );
-
-    if (confirmed == true && mounted) {
-      SnackBarHelper.showWarning(
-        context,
-        'La fonctionnalité de suppression de compte nécessite une implémentation backend et une gestion de la réauthentification.',
-      );
-    }
-  }
 }
 
 // ============================================================================
@@ -243,32 +222,6 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(width: AppDimensions.paddingM),
         Text(title, style: AppTextStyles.h2),
       ],
-    );
-  }
-}
-
-class _DeleteAccountButton extends StatelessWidget {
-  final VoidCallback onDelete;
-
-  const _DeleteAccountButton({required this.onDelete});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM),
-      child: OutlinedButton.icon(
-        onPressed: onDelete,
-        icon: const Icon(Icons.delete_outline_rounded),
-        label: const Text('Supprimer mon compte'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.error,
-          side: BorderSide(color: AppColors.error),
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.paddingM),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          ),
-        ),
-      ),
     );
   }
 }

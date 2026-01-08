@@ -19,6 +19,7 @@ class AppRoutes {
   static const String help = '/help';
   static const String privacy = '/privacy';
   static const String about = '/about';
+  static const String advertisementDetail = '/advertisement-detail';
 
   // Routes marchand
   static const String merchantDashboard = '/merchant/dashboard';

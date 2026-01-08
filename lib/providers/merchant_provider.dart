@@ -35,6 +35,8 @@ class MerchantProvider with ChangeNotifier {
 
   MerchantProvider(this._locationProvider) {
     _locationProvider?.addListener(_onLocationChanged);
+    // Commencer à écouter les marchands automatiquement
+    listenToMerchants();
   }
 
   void update(LocationProvider locationProvider) {

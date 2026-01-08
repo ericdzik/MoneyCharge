@@ -22,6 +22,7 @@ import 'package:locacharge/features/merchant/screens/sales_screen.dart';
 import 'package:locacharge/features/merchant/screens/create_invoice_screen.dart';
 import 'package:locacharge/features/merchant/models/invoice_model.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
+import 'package:locacharge/features/user/screens/advertisement_detail_screen.dart';
 import 'package:locacharge/features/user/screens/edit_user_profile_screen.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/forgot_password_screen.dart';
@@ -196,6 +197,16 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
             MerchantDetailScreen(merchant: args?['merchant']),
+            UserType.user,
+          ),
+        );
+
+      case AppRoutes.advertisementDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final advertisement = args?['advertisement'];
+        return MaterialPageRoute(
+          builder: (_) => RouteGuards.requireUserType(
+            AdvertisementDetailScreen(advertisement: advertisement),
             UserType.user,
           ),
         );

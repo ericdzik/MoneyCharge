@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -254,6 +255,15 @@ class LocationProvider with ChangeNotifier {
 
   void _setLoadingLocation(bool loading) { // Renommé
     _isLoadingLocation = loading;
-    notifyListeners();
+    
+    // Vérifier si nous sommes en phase de construction
+    try {
+      notifyListeners();
+    } catch (e) {
+      // Si nous sommes en phase de construction, retarder la notification
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    }
   }
 }

@@ -49,6 +49,9 @@ dependencies:
   card_swiper: ^3.0.1
   fl_chart: ^0.68.0
 
+  # Téléchargement et stockage
+  path_provider: ^2.1.1
+
 dev_dependencies:
   # Outils de développement et de test
   flutter_test:
