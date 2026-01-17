@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/models/notification_model.dart';
 import 'package:locacharge/services/notification_service.dart';
 

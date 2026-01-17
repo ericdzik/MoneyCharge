@@ -3,9 +3,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_bottom_nav_bar.dart';
 import 'package:locacharge/core/utils/opening_hours_parser.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
@@ -13,7 +10,7 @@ import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/list_view_screen.dart';
 import 'package:locacharge/features/user/screens/user_profile_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/services/location_service.dart';
@@ -21,7 +18,7 @@ import 'package:locacharge/services/location_service.dart';
 class MapViewScreen extends StatefulWidget {
   final Merchant? targetMerchant; // Marchand optionnel à cibler
 
-  const MapViewScreen({Key? key, this.targetMerchant}) : super(key: key);
+  const MapViewScreen({super.key, this.targetMerchant});
 
   @override
   State<MapViewScreen> createState() => _MapViewScreenState();

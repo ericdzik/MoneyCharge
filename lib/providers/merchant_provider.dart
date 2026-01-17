@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/services/notification_service.dart';

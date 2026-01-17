@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/features/admin/models/admin_model.dart';
+import 'package:locacharge/features/auth/models/admin_model.dart';
 
 class AdminAppBar extends StatelessWidget implements PreferredSizeWidget {
   final AdminModel? admin;

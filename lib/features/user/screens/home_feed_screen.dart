@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/features/user/models/content_item_model.dart';
 import 'package:locacharge/features/user/models/advertisement_model.dart';
@@ -9,6 +8,9 @@ import 'package:locacharge/features/user/widgets/nearby_merchants_section.dart';
 import 'package:locacharge/features/user/services/feed_manager.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
+import 'package:locacharge/models/ad_model.dart';
+import 'package:locacharge/features/user/screens/advertisement_detail_screen.dart';
 
 class HomeFeedScreen extends StatefulWidget {
   const HomeFeedScreen({Key? key}) : super(key: key);
@@ -41,16 +43,15 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
     if (!_isInitialized) {
       _isInitialized = true;
       final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-      
-      print('🔧 Initializing FeedManager with MerchantProvider...');
+      // Initialisation du FeedManager
       _feedManager.initialize(merchantProvider);
-      
+
       // S'assurer que les marchands sont chargés
       if (merchantProvider.merchants.isEmpty && !merchantProvider.isLoading) {
-        print('🔄 Rechargement forcé...');
+        // print('🔄 Rechargement forcé...');
         merchantProvider.listenToMerchants();
       }
-      
+
       // Load initial content après un petit délai
       Future.delayed(const Duration(milliseconds: 100), () {
         _feedManager.loadInitialContent();
@@ -108,9 +109,15 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
 
     // Séparer les publicités et les marchands
     final advertisements = feedManager.contentItems
+<<<<<<< HEAD
         .whereType<AdvertisementContentItem>()
         .map((item) => item.advertisement)
         .toList();
+=======
+      .whereType<AdvertisementContentItem>()
+      .map((item) => item.ad)
+      .toList();
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
 
     final merchants = feedManager.contentItems
         .whereType<MerchantContentItem>()
@@ -122,6 +129,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+<<<<<<< HEAD
             // Carrousel de bannières publicitaires
             if (advertisements.isNotEmpty) ...[
               const SizedBox(height: AppDimensions.paddingM),
@@ -139,6 +147,94 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
               onMerchantTap: _handleMerchantTap,
               radiusKm: 3.0,
               isLoading: feedManager.isLoading && merchants.isEmpty,
+=======
+            // Carrousel de bannières publicitaires (implémentation locale)
+            if (advertisements.isNotEmpty) ...[
+              const SizedBox(height: AppDimensions.paddingM),
+              SizedBox(
+                height: 160,
+                child: PageView.builder(
+                  controller: PageController(viewportFraction: 0.9),
+                  itemCount: advertisements.length,
+                  onPageChanged: (index) =>
+                      _feedManager.trackAdvertisementImpression(advertisements[index].id),
+                  itemBuilder: (context, index) {
+                    final ad = advertisements[index];
+                    return GestureDetector(
+                      onTap: () => _handleAdvertisementTap(ad),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.network(ad.imageUrl, fit: BoxFit.cover),
+                            Positioned(
+                              left: 12,
+                              bottom: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.45),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  ad.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.body1.copyWith(color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+
+            // Section des marchands à proximité (implémentation locale)
+            const SizedBox(height: AppDimensions.paddingL),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM),
+              child: Text('Marchands à proximité', style: AppTextStyles.h3),
+            ),
+            const SizedBox(height: AppDimensions.paddingS),
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: merchants.length,
+              itemBuilder: (context, index) {
+                final m = merchants[index].merchant;
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.paddingM,
+                    vertical: 4,
+                  ),
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                    child: Icon(Icons.store, color: AppColors.primary),
+                  ),
+                  title: Text(m.name),
+                  subtitle: Text((m.isVerified == true) ? 'Vérifié' : 'Non vérifié'),
+                  onTap: () => _handleMerchantTap(merchants[index]),
+                );
+              },
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
             ),
             
             // Espace en bas pour éviter que le contenu soit coupé
@@ -270,20 +366,33 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
     await _feedManager.refreshContent();
   }
 
+<<<<<<< HEAD
   void _handleAdvertisementTap(Advertisement advertisement) {
+=======
+  void _handleAdvertisementTap(Ad advertisement) {
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
     // Track click
     _feedManager.trackAdvertisementClick(advertisement.id);
     
     // Navigate to advertisement detail screen
+<<<<<<< HEAD
     Navigator.pushNamed(
       context,
       AppRoutes.advertisementDetail,
       arguments: {'advertisement': advertisement},
+=======
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdvertisementDetailScreen(advertisement: advertisement),
+      ),
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
     );
   }
 
   void _handleMerchantTap(MerchantContentItem merchant) async {
     try {
+<<<<<<< HEAD
       // Récupérer l'objet Merchant complet depuis le MerchantProvider
       final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
       final fullMerchant = merchantProvider.getMerchantById(merchant.merchantId);
@@ -305,6 +414,16 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
       }
     } catch (e) {
       print('Erreur lors de la navigation vers les détails du marchand: $e');
+=======
+      // L'objet Merchant complet est déjà disponible dans MerchantContentItem
+      final fullMerchant = merchant.merchant;
+      Navigator.pushNamed(
+        context,
+        AppRoutes.merchantDetail,
+        arguments: {'merchant': fullMerchant},
+      );
+    } catch (e) {
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Erreur lors du chargement'),
@@ -314,6 +433,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
     }
   }
 
+<<<<<<< HEAD
   void _handleItemTap(ContentItem item) {
     switch (item.type) {
       case ContentType.advertisement:
@@ -345,6 +465,8 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
     print('Opening URL: $url');
   }
 
+=======
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
   Widget _buildDrawer() {
     return Drawer(
       backgroundColor: Colors.white,

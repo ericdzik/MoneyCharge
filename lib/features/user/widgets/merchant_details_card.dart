@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/common.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import 'package:locacharge/core/utils/opening_hours_parser.dart';

@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:locacharge/features/user/models/user_model.dart';
-import '../models/admin_model.dart';
+import 'package:locacharge/features/auth/models/user_model.dart';
+import 'package:locacharge/features/auth/models/admin_model.dart';
 // Import User model if you have one for 'role' == 'user'
 // For now, we'll count documents directly.
 

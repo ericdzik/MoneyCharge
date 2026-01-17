@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../../core/common.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/constants/app_dimensions.dart';
 import '../models/merchant_model.dart';
 import '../../../services/location_service.dart';
 import '../../../core/utils/marker_utils.dart';

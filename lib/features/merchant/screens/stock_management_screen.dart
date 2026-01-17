@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/models/custom_service_model.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/invoice_provider.dart';
 
 class StockManagementScreen extends StatefulWidget {
@@ -330,7 +330,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
             style: AppTextStyles.h2.copyWith(fontSize: 18),
           ),
           const SizedBox(height: 16),
-          ...services.map((service) => _buildServiceItem(service)).toList(),
+          ...services.map((service) => _buildServiceItem(service)),
         ],
       ),
     );
@@ -468,7 +468,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
                 )
               else
                 ...invoiceProvider.customServices.map((service) => 
-                  _buildCustomServiceItem(service)).toList(),
+                  _buildCustomServiceItem(service)),
             ],
           ),
         );
@@ -715,8 +715,7 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
       builder: (context) => _ServiceDialog(
         service: service,
         onServiceSaved: (updatedService) {
-          final invoiceProvider = Provider.of<InvoiceProvider>(context, listen: false);
-          // TODO: Implémenter la mise à jour
+          // TODO: Implémenter la mise à jour du service
         },
       ),
     );

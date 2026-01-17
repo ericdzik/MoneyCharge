@@ -6,13 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/widgets/background_image_widget.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
-import 'package:locacharge/core/widgets/custom_button.dart';
-import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/core/widgets/profile_avatar.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
 class EditUserProfileScreen extends StatefulWidget {
   const EditUserProfileScreen({super.key});

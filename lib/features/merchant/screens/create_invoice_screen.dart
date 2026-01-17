@@ -4,8 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/features/merchant/models/invoice_model.dart';
-import 'package:locacharge/features/merchant/models/custom_service_model.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/invoice_provider.dart';
 
 class CreateInvoiceScreen extends StatefulWidget {
@@ -256,7 +255,7 @@ class _CreateInvoiceScreenState extends State<CreateInvoiceScreen> {
               final index = entry.key;
               final item = entry.value;
               return _buildItemCard(item, index);
-            }).toList(),
+            }),
         ],
       ),
     );

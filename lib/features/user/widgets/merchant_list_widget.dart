@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../../core/common.dart';
-import '../../../core/constants/app_text_styles.dart';
 import '../../../core/utils/color_utils.dart';
 import '../models/merchant_model.dart';
 

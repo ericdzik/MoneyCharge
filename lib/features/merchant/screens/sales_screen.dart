@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/models/transaction_model.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
 import 'package:locacharge/providers/invoice_provider.dart';
 
@@ -170,7 +170,7 @@ class _SalesScreenState extends State<SalesScreen> {
                     ),
                     const SizedBox(height: 8),
                     ...invoiceProvider.customServices.map((service) => 
-                      _buildCustomServiceOption(service)).toList(),
+                      _buildCustomServiceOption(service)),
                   ],
                 );
               }
@@ -619,7 +619,6 @@ class _SalesScreenState extends State<SalesScreen> {
       final amount = double.parse(_amountController.text);
       final service = _services.firstWhere((s) => s['name'] == _selectedService);
       final commission = amount * service['commission'];
-      final netAmount = amount - commission;
 
       // Créer la transaction
       final success = await transactionProvider.addTransaction(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -7,23 +6,16 @@ import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/features/admin/screens/notification_screen.dart';
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
-import 'package:locacharge/features/merchant/screens/edit_merchant_profile_screen.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
 import 'package:locacharge/features/merchant/widgets/dashboard_stats_widget.dart';
 import 'package:locacharge/features/merchant/widgets/merchant_header_widget.dart';
 import 'package:locacharge/features/merchant/widgets/stock_alerts_widget.dart';
 import 'package:locacharge/features/merchant/widgets/advanced_metrics_widget.dart';
-import 'package:locacharge/features/merchant/widgets/export_data_widget.dart';
 import 'package:locacharge/models/transaction_model.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
-import 'package:locacharge/services/notification_service.dart';
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -448,13 +440,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     );
   }
 
-  void _sendTestNotification() {
-    NotificationService.showNotification(
-      id: Random().nextInt(1000),
-      title: 'Notification de test (Marchand)',
-      body: 'Ceci est une notification de test pour le marchand.',
-    );
-  }
+  // Removed unused test notification method
 
   void _showNotifications() {
     Navigator.push(
@@ -768,8 +754,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         return Colors.orange;
       case TransactionType.withdrawal:
         return AppColors.primary;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -783,8 +767,6 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         return Icons.undo_rounded;
       case TransactionType.withdrawal:
         return Icons.savings_outlined;
-      default:
-        return Icons.help;
     }
   }
 

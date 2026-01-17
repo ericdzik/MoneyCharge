@@ -76,8 +76,8 @@ class OpeningHoursParser {
       return 'Fermé aujourd\'hui';
     }
 
-    String _two(int n) => n.toString().padLeft(2, '0');
-    String fmt(TimeOfDay t) => '${_two(t.hour)}:${_two(t.minute)}';
+    String two(int n) => n.toString().padLeft(2, '0');
+    String fmt(TimeOfDay t) => '${two(t.hour)}:${two(t.minute)}';
     final parts = ranges.map((r) => '${fmt(r.startTime)}-${fmt(r.endTime)}').join(', ');
     return '$dayLabel: $parts';
   }

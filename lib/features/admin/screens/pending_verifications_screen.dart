@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/admin/widgets/merchant_table_widget.dart';
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:provider/provider.dart';

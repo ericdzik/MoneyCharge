@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../models/merchant_auth_model.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 
 class StockAlertsWidget extends StatelessWidget {
   final MerchantAuthModel merchant;
@@ -82,7 +81,7 @@ class StockAlertsWidget extends StatelessWidget {
                 ),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ),
     );

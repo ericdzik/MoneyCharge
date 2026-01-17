@@ -134,7 +134,7 @@ class ExportDataWidget extends StatelessWidget {
 
   void _exportToCSV(BuildContext context) {
     // TODO: Implémenter l'export CSV
-    final csvData = _generateCSVData();
+    // Générer les données CSV (non utilisées pour l'instant)
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -151,6 +151,7 @@ class ExportDataWidget extends StatelessWidget {
     );
   }
 
+  // ignore: unused_element
   String _generateCSVData() {
     final buffer = StringBuffer();
     
@@ -161,7 +162,7 @@ class ExportDataWidget extends StatelessWidget {
     for (final transaction in transactions) {
       final date = DateFormat('dd/MM/yyyy HH:mm').format(transaction.timestamp.toDate());
       final type = transaction.typeDisplay;
-      final service = transaction.serviceName ?? 'N/A';
+      final service = transaction.serviceName;
       final amount = transaction.amount.toStringAsFixed(2);
       final commission = transaction.commission.toStringAsFixed(2);
       final net = transaction.netAmount.toStringAsFixed(2);

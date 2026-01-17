@@ -7,8 +7,9 @@ flutter_launcher_icons:
   
   # Adaptive Icons Android (recommandé pour Android 8.0+)
   # Utilise l'icône complète comme foreground avec fond de couleur
-  adaptive_icon_background: "#005b37"  # Couleur de fond adaptative
+  adaptive_icon_background: "#FFFFFF"  # Couleur de fond adaptative
   adaptive_icon_foreground: "assets/icon/icon.png"  # Logo au premier plan
+  adaptive_icon_foreground_inset: 16  # Marge autour du logo
   
   # Configuration iOS
   ios: true
@@ -26,8 +27,8 @@ flutter_launcher_icons:
   web:
     generate: true
     image_path: "assets/icon/icon.png"
-    background_color: "#005b37"
-    theme_color: "#005b37"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
   
   # Configuration Windows (optionnel)
   windows:

@@ -7,15 +7,15 @@ class MerchantAuthModel {
   final String phone;
   final String address;
   final Map<String, dynamic>? openingHours;
-  final List<String>? services; // Modifié
+  final List<String>? services;
   final bool isVerified;
   final DateTime createdAt;
   final DateTime? lastLoginAt;
   final double? latitude;
   final double? longitude;
-  final String merchantType; // Ajouté
+  final String merchantType;
   final String? profileType;
-  final Map<String, String>? serviceStockStatus; // Ajouté
+  final Map<String, String>? serviceStockStatus;
   final List<String>? imageUrls;
   final String? profileImageUrl;
   final bool isSuspended;
@@ -30,16 +30,16 @@ class MerchantAuthModel {
     required this.phone,
     required this.address,
     this.openingHours,
-    this.services, // Modifié
+    this.services,
     this.isVerified = false,
     this.isSuspended = false,
     required this.createdAt,
     this.lastLoginAt,
     this.latitude,
     this.longitude,
-    required this.merchantType, // Ajouté
+    required this.merchantType,
     this.profileType,
-    this.serviceStockStatus, // Ajouté
+    this.serviceStockStatus,
     this.imageUrls,
     this.profileImageUrl,
     this.averageRating = 0.0,
@@ -60,8 +60,6 @@ class MerchantAuthModel {
     List<String>? servicesList;
     if (data['services'] != null) {
       if (data['services'] is String) {
-        // Gérer le cas où c'est une chaîne (ancien format potentiel)
-        // On pourrait la splitter par un délimiteur ou la mettre dans une liste d'un seul élément
         servicesList = [data['services'] as String];
       } else if (data['services'] is List) {
         servicesList = (data['services'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
@@ -73,24 +71,23 @@ class MerchantAuthModel {
       stockStatus = (data['serviceStockStatus'] as Map).map((key, value) => MapEntry(key.toString(), value.toString()));
     }
 
-
     return MerchantAuthModel(
       id: snapshot.id,
       email: data['email'] as String? ?? '',
-      businessName: data['name'] as String? ?? '', // Firestore 'name' field
+      businessName: data['name'] as String? ?? '',
       phone: data['phone'] as String? ?? '',
       address: data['address'] as String? ?? '',
       openingHours: openingHoursData,
-      services: servicesList, // Modifié
+      services: servicesList,
       isVerified: data['isVerified'] as bool? ?? false,
       isSuspended: data['isSuspended'] as bool? ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate(),
       latitude: (data['latitude'] as num?)?.toDouble(),
       longitude: (data['longitude'] as num?)?.toDouble(),
-      merchantType: data['merchantType'] as String? ?? 'boutique', // Ajouté avec défaut
+      merchantType: data['merchantType'] as String? ?? 'boutique',
       profileType: data['profileType'] as String?,
-      serviceStockStatus: stockStatus, // Ajouté
+      serviceStockStatus: stockStatus,
       imageUrls: (data['imageUrls'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       profileImageUrl: data['profileImageUrl'] as String?,
       averageRating: (data['averageRating'] as num?)?.toDouble() ?? 0.0,
@@ -103,21 +100,20 @@ class MerchantAuthModel {
     return {
       'id': id,
       'email': email,
-      // Utiliser 'name' pour businessName si c'est la convention dans Firestore pour ce modèle
       'name': businessName,
       'phone': phone,
       'address': address,
       'openingHours': openingHours,
-      'services': services, // Sera une liste
+      'services': services,
       'isVerified': isVerified,
       'isSuspended': isSuspended,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastLoginAt': lastLoginAt != null ? Timestamp.fromDate(lastLoginAt!) : null,
       'latitude': latitude,
       'longitude': longitude,
-      'merchantType': merchantType, // Ajouté
+      'merchantType': merchantType,
       'profileType': profileType,
-      'serviceStockStatus': serviceStockStatus, // Ajouté
+      'serviceStockStatus': serviceStockStatus,
       'imageUrls': imageUrls,
       'profileImageUrl': profileImageUrl,
       'averageRating': averageRating,
@@ -133,16 +129,16 @@ class MerchantAuthModel {
     String? phone,
     String? address,
     Map<String, dynamic>? openingHours,
-    List<String>? services, // Modifié
+    List<String>? services,
     bool? isVerified,
     bool? isSuspended,
     DateTime? createdAt,
     DateTime? lastLoginAt,
     double? latitude,
     double? longitude,
-    String? merchantType, // Ajouté
+    String? merchantType,
     String? profileType,
-    Map<String, String>? serviceStockStatus, // Ajouté
+    Map<String, String>? serviceStockStatus,
     List<String>? imageUrls,
     String? profileImageUrl,
     double? averageRating,

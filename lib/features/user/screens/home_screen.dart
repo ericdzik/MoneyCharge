@@ -3,7 +3,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/widgets/custom_bottom_nav_bar.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
@@ -14,7 +13,7 @@ import 'package:locacharge/features/user/widgets/filter_widget.dart';
 import 'package:locacharge/features/user/widgets/map_widget.dart';
 import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
 import 'package:locacharge/providers/ad_provider.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 

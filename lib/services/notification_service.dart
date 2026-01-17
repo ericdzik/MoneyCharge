@@ -7,7 +7,7 @@ import '../core/constants/app_colors.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/notification_model.dart';
-import 'auth_service.dart';
+import 'package:locacharge/features/auth/services/auth_service.dart';
 import 'dart:convert';
 import 'navigation_service.dart';
 import '../core/constants/app_routes.dart';

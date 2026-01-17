@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/models/review_model.dart';
 
 class MerchantReviewsScreen extends StatefulWidget {

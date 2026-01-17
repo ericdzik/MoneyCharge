@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
 

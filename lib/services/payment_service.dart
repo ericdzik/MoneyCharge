@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_paystack_plus/flutter_paystack_plus.dart';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'notification_service.dart';
 
 class PaymentService {

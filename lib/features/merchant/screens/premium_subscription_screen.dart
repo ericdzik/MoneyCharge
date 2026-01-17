@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/config/env_config.dart';
 import 'package:locacharge/services/payment_service.dart';
 
 class PremiumSubscriptionScreen extends StatelessWidget {

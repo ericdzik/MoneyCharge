@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:locacharge/features/merchant/models/balance_model.dart';
 import 'package:locacharge/models/transaction_model.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
 class TransactionProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

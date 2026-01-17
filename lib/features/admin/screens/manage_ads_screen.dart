@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 
 class ManageAdsScreen extends StatefulWidget {

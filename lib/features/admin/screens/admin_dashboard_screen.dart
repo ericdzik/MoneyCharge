@@ -1,24 +1,18 @@
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
-import 'package:locacharge/features/admin/models/admin_model.dart';
+import 'package:locacharge/features/auth/models/admin_model.dart';
 import 'package:locacharge/features/admin/screens/notification_screen.dart';
 import 'package:locacharge/features/admin/services/admin_firestore_service.dart';
 import 'package:locacharge/features/admin/widgets/admin_app_bar.dart';
 import 'package:locacharge/features/admin/widgets/admin_stats_widget.dart';
 import 'package:locacharge/features/admin/widgets/merchant_table_widget.dart';
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/user/widgets/review_list_widget.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
-import 'package:locacharge/services/notification_service.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -315,13 +309,8 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final screenWidth = constraints.maxWidth;
-        
-        // Calculer la largeur optimale pour chaque carte
+        // Espacement entre les cartes
         final cardSpacing = 16.0;
-        final totalSpacing = cardSpacing * (actions.length - 1);
-        final availableWidth = screenWidth - totalSpacing;
-        final cardWidth = availableWidth / actions.length;
 
         // Pas de hauteur fixe - laisse le contenu déterminer la hauteur
         return Row(
@@ -619,13 +608,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  void _sendTestNotification() {
-    NotificationService.showNotification(
-      id: Random().nextInt(1000),
-      title: 'Notification de test',
-      body: 'Ceci est une notification de test pour vérifier le système.',
-    );
-  }
+  // Removed unused test notification method
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'Jamais';

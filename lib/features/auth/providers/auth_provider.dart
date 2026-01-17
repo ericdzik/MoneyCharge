@@ -6,10 +6,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-import 'package:locacharge/features/admin/models/admin_model.dart';
-import 'package:locacharge/features/merchant/models/merchant_auth_model.dart';
-import 'package:locacharge/features/user/models/user_model.dart';
-import 'package:locacharge/services/auth_service.dart';
+import 'package:locacharge/features/auth/models/admin_model.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
+import 'package:locacharge/features/auth/models/user_model.dart';
+import 'package:locacharge/features/auth/services/auth_service.dart';
 
 enum UserType { user, merchant, admin, unknown }
 
@@ -410,7 +410,8 @@ class AuthProvider with ChangeNotifier {
       }
 
       await _firestore.collection('users').doc(uid).update(dataToUpdate);
-      await _fetchUserProfile(uid); // Recharger pour la cohérence
+      await _fetchUserProfile(uid);
+
       _setLoading(false);
       return true;
     } catch (e) {
@@ -421,45 +422,33 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> updateUserToPremium() async {
-    _setLoading(true);
-    _error = null;
-
-    if (_firebaseUser == null) {
-      _error = "Aucun utilisateur connecté pour la mise à jour.";
-      _setLoading(false);
-      return;
-    }
-    final uid = _firebaseUser!.uid;
-
+    if (_firebaseUser == null) return;
     try {
-      await _firestore.collection('users').doc(uid).update({
+      await _firestore.collection('users').doc(_firebaseUser!.uid).update({
         'isPremium': true,
-        'premiumSince': FieldValue.serverTimestamp(),
+        'premiumActivatedAt': FieldValue.serverTimestamp(),
       });
-      await _fetchUserProfile(uid); // Recharger pour la cohérence
+      await _fetchUserProfile(_firebaseUser!.uid);
     } catch (e) {
-      _error = "Erreur lors du passage au statut premium: ${e.toString()}";
-    } finally {
-      _setLoading(false);
+      print('Erreur lors de la mise à jour premium: $e');
     }
-  }
-
-  void _setLoading(bool loading) {
-    if (_isLoading == loading) return;
-    _isLoading = loading;
-    notifyListeners();
   }
 
   UserType _parseUserType(String? role) {
-    switch (role?.toLowerCase()) {
-      case 'merchant':
-        return UserType.merchant;
+    switch (role) {
       case 'admin':
         return UserType.admin;
+      case 'merchant':
+        return UserType.merchant;
       case 'user':
         return UserType.user;
       default:
         return UserType.unknown;
     }
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
   }
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+// Removed unused import: services
 
 /// Service pour gérer les erreurs de l'application
 class ErrorHandlerService {

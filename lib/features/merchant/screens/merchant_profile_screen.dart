@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/core/widgets/custom_button.dart';
-import 'package:locacharge/providers/auth_provider.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
 class MerchantProfileScreen extends StatefulWidget {
   const MerchantProfileScreen({super.key});

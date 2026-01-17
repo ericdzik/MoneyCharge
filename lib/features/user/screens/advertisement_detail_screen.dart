@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/features/user/models/advertisement_model.dart';
+import 'package:locacharge/models/ad_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 class AdvertisementDetailScreen extends StatelessWidget {
-  final Advertisement advertisement;
+  // Accepte les deux types pour compatibilité
+  final dynamic advertisement;
 
   const AdvertisementDetailScreen({
     Key? key,
@@ -37,7 +39,11 @@ class AdvertisementDetailScreen extends StatelessWidget {
         children: [
           // Image principale en plein écran
           Expanded(
+<<<<<<< HEAD
             child: Container(
+=======
+            child: SizedBox(
+>>>>>>> 8579596d (Commit de toutes les modifications récentes :)
               width: double.infinity,
               child: InteractiveViewer(
                 child: Image.network(
@@ -259,11 +265,12 @@ class AdvertisementDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             _buildExplanationItem(
               icon: Icons.location_on,
-              text: advertisement.targetLocation != null
+              text: (advertisement.targetLocation != null)
                   ? 'Basée sur votre localisation'
                   : 'Publicité générale',
             ),
-            if (advertisement.targetingCriteria.isNotEmpty) ...[
+            if ((advertisement.targetingCriteria != null && advertisement.targetingCriteria.isNotEmpty) ||
+                (advertisement is Ad)) ...[
               const SizedBox(height: 8),
               _buildExplanationItem(
                 icon: Icons.person,

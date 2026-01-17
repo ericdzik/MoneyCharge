@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/widgets/unified_sliver_app_bar.dart';
 import 'package:locacharge/features/user/screens/cgu_screen.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final bool showBackground;

@@ -5,9 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
-import 'package:locacharge/core/widgets/custom_button.dart';
-import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 
 class AdScreen extends StatefulWidget {

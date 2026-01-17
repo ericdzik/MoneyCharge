@@ -11,10 +11,10 @@ flutter_native_splash:
   color: "#005b37"
   
   # Logo principal centré
-  image: assets/splash/logo.png
+  image: assets/splash/new-icon.png
   
   # Branding en bas de l'écran (logo entreprise/partenaire)
-  branding: assets/splash/branding.png
+  branding: assets/splash/new-branding.png
   branding_mode: bottom  # bottom, center
   
   # Positionnement et dimensionnement
@@ -28,13 +28,13 @@ flutter_native_splash:
   # Configuration Android 12+ (Material You)
   android_12:
     color: "#005b37"
-    image: assets/splash/logo.png
-    branding: assets/splash/branding.png
+    image: assets/splash/new-icon.png
+    branding: assets/splash/new-branding.png
     
     # Couleur de la fenêtre splash (recommandé pour Android 12+)
     color_dark: "#003d25"  # Variante sombre
-    image_dark: assets/splash/logo.png  # Image pour mode sombre (optionnel)
-    branding_dark: assets/splash/branding.png  # Branding mode sombre
+    image_dark: assets/splash/new-icon.png  # Image pour mode sombre (optionnel)
+    branding_dark: assets/splash/new-branding.png  # Branding mode sombre
     
     # Désactive l'icône par défaut Android 12
     icon_background_color: "#005b37"

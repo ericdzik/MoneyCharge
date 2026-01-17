@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/status_badge.dart';
 
 class RentalHistoryScreen extends StatefulWidget {

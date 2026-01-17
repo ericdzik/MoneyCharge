@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_text_styles.dart';
-import '../models/merchant_auth_model.dart';
+import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 
 class MerchantHeaderWidget extends StatelessWidget {
   final MerchantAuthModel merchant;

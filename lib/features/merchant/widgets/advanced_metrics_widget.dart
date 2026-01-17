@@ -208,7 +208,7 @@ class AdvancedMetricsWidget extends StatelessWidget {
     
     for (final transaction in transactions) {
       if (transaction.status == TransactionStatus.completed) {
-        final service = transaction.serviceName ?? 'Autre';
+        final service = transaction.serviceName;
         stats[service] = (stats[service] ?? 0) + 1;
       }
     }

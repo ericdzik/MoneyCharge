@@ -6,13 +6,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/widgets/custom_button.dart';
-import 'package:locacharge/core/widgets/custom_text_field.dart';
 import 'package:locacharge/features/merchant/widgets/opening_hours_selector.dart';
-import 'package:locacharge/providers/auth_provider.dart';
+import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
 class MerchantRegisterScreen extends StatefulWidget {
   const MerchantRegisterScreen({super.key});
@@ -695,7 +690,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                       activeColor: AppColors.secondary,
                       controlAffinity: ListTileControlAffinity.leading,
                     );
-                  }).toList(),
+                  }),
                   CheckboxListTile(
                     title: const Text(
                       'Autre',

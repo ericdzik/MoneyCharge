@@ -3,20 +3,16 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/utils/render_helper.dart';
 import 'package:locacharge/features/user/widgets/map_widget.dart';
 import 'package:locacharge/features/user/widgets/search_bar_widget.dart';
 import 'package:locacharge/features/user/widgets/filter_widget.dart';
 import 'package:locacharge/features/user/widgets/merchant_details_card.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
-import 'package:locacharge/providers/auth_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/location_provider.dart';
 
 import 'package:locacharge/services/location_service.dart';
-import 'package:locacharge/core/common.dart';
 
 class MerchantCardScreen extends StatefulWidget {
   const MerchantCardScreen({super.key});
