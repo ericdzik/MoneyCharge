@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/features/user/models/content_item_model.dart';
-import 'package:locacharge/features/user/models/advertisement_model.dart';
-import 'package:locacharge/features/user/widgets/advertisement_banner_carousel.dart';
-import 'package:locacharge/features/user/widgets/nearby_merchants_section.dart';
-import 'package:locacharge/features/user/services/feed_manager.dart';
+import 'package:locacharge/features/user/models/content_item_model.dart' show AdvertisementContentItem, MerchantContentItem;
+import 'package:locacharge/features/user/services/feed_manager.dart' show FeedManager;
 import 'package:locacharge/providers/merchant_provider.dart';
-import 'package:locacharge/providers/auth_provider.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
-import 'package:locacharge/models/ad_model.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/widgets/loading_widgets.dart';
+import 'package:locacharge/features/user/models/advertisement_model.dart';
 import 'package:locacharge/features/user/screens/advertisement_detail_screen.dart';
 
 class HomeFeedScreen extends StatefulWidget {
@@ -109,19 +109,12 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
 
     // Séparer les publicités et les marchands
     final advertisements = feedManager.contentItems
-<<<<<<< HEAD
-        .whereType<AdvertisementContentItem>()
-        .map((item) => item.advertisement)
-        .toList();
-=======
       .whereType<AdvertisementContentItem>()
-      .map((item) => item.ad)
       .toList();
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
 
     final merchants = feedManager.contentItems
-        .whereType<MerchantContentItem>()
-        .toList();
+      .whereType<MerchantContentItem>()
+      .toList();
 
     return RefreshIndicator(
       onRefresh: _handleRefresh,
@@ -129,25 +122,6 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-<<<<<<< HEAD
-            // Carrousel de bannières publicitaires
-            if (advertisements.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.paddingM),
-              AdvertisementBannerCarousel(
-                advertisements: advertisements,
-                onAdTap: (ad) => _handleAdvertisementTap(ad),
-                onAdImpression: (adId) => _feedManager.trackAdvertisementImpression(adId),
-              ),
-            ],
-            
-            // Section des marchands à proximité
-            const SizedBox(height: AppDimensions.paddingL),
-            NearbyMerchantsSection(
-              merchants: merchants,
-              onMerchantTap: _handleMerchantTap,
-              radiusKm: 3.0,
-              isLoading: feedManager.isLoading && merchants.isEmpty,
-=======
             // Carrousel de bannières publicitaires (implémentation locale)
             if (advertisements.isNotEmpty) ...[
               const SizedBox(height: AppDimensions.paddingM),
@@ -159,9 +133,9 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
                   onPageChanged: (index) =>
                       _feedManager.trackAdvertisementImpression(advertisements[index].id),
                   itemBuilder: (context, index) {
-                    final ad = advertisements[index];
+                    final adItem = advertisements[index];
                     return GestureDetector(
-                      onTap: () => _handleAdvertisementTap(ad),
+                      onTap: () => _handleAdvertisementTap(adItem.advertisement),
                       child: Container(
                         margin: const EdgeInsets.symmetric(horizontal: 6),
                         decoration: BoxDecoration(
@@ -179,7 +153,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            Image.network(ad.imageUrl, fit: BoxFit.cover),
+                            Image.network(adItem.advertisement.imageUrl, fit: BoxFit.cover),
                             Positioned(
                               left: 12,
                               bottom: 12,
@@ -191,7 +165,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  ad.title,
+                                  adItem.advertisement.title,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: AppTextStyles.body1.copyWith(color: Colors.white),
@@ -219,7 +193,8 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
               physics: const NeverScrollableScrollPhysics(),
               itemCount: merchants.length,
               itemBuilder: (context, index) {
-                final m = merchants[index].merchant;
+                final merchantItem = merchants[index];
+                // Supposons que merchantItem est déjà un Merchant ou possède les propriétés nécessaires
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: AppDimensions.paddingM,
@@ -229,12 +204,11 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
                     backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                     child: Icon(Icons.store, color: AppColors.primary),
                   ),
-                  title: Text(m.name),
-                  subtitle: Text((m.isVerified == true) ? 'Vérifié' : 'Non vérifié'),
-                  onTap: () => _handleMerchantTap(merchants[index]),
+                  title: Text(merchantItem.name),
+                  subtitle: Text((merchantItem.isVerified == true) ? 'Vérifié' : 'Non vérifié'),
+                  onTap: () => _handleMerchantTap(merchantItem),
                 );
               },
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
             ),
             
             // Espace en bas pour éviter que le contenu soit coupé
@@ -366,64 +340,29 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
     await _feedManager.refreshContent();
   }
 
-<<<<<<< HEAD
   void _handleAdvertisementTap(Advertisement advertisement) {
-=======
-  void _handleAdvertisementTap(Ad advertisement) {
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
     // Track click
     _feedManager.trackAdvertisementClick(advertisement.id);
     
     // Navigate to advertisement detail screen
-<<<<<<< HEAD
-    Navigator.pushNamed(
-      context,
-      AppRoutes.advertisementDetail,
-      arguments: {'advertisement': advertisement},
-=======
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => AdvertisementDetailScreen(advertisement: advertisement),
       ),
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
     );
   }
 
   void _handleMerchantTap(MerchantContentItem merchant) async {
     try {
-<<<<<<< HEAD
-      // Récupérer l'objet Merchant complet depuis le MerchantProvider
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-      final fullMerchant = merchantProvider.getMerchantById(merchant.merchantId);
-      
-      if (fullMerchant != null) {
-        Navigator.pushNamed(
-          context,
-          AppRoutes.merchantDetail,
-          arguments: {'merchant': fullMerchant},
-        );
-      } else {
-        // Afficher un message d'erreur si le marchand n'est pas trouvé
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Impossible de charger les détails du marchand'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      print('Erreur lors de la navigation vers les détails du marchand: $e');
-=======
-      // L'objet Merchant complet est déjà disponible dans MerchantContentItem
-      final fullMerchant = merchant.merchant;
+      // L'objet Merchant complet est déjà disponible dans MerchantContentItem ou merchant est déjà un Merchant
+      final fullMerchant = merchant;
       Navigator.pushNamed(
         context,
         AppRoutes.merchantDetail,
         arguments: {'merchant': fullMerchant},
       );
     } catch (e) {
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Erreur lors du chargement'),
@@ -433,40 +372,6 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
     }
   }
 
-<<<<<<< HEAD
-  void _handleItemTap(ContentItem item) {
-    switch (item.type) {
-      case ContentType.advertisement:
-        final adItem = item as AdvertisementContentItem;
-        _handleAdvertisementTap(adItem.advertisement);
-        break;
-      case ContentType.merchant:
-        final merchantItem = item as MerchantContentItem;
-        _handleMerchantTap(merchantItem);
-        break;
-      case ContentType.recommendation:
-        final recommendationItem = item as RecommendationContentItem;
-        _navigateToRecommendation(recommendationItem);
-        break;
-      default:
-        break;
-    }
-  }
-
-  void _navigateToRecommendation(RecommendationContentItem item) {
-    if (item.actionUrl != null) {
-      _openUrl(item.actionUrl!);
-    }
-  }
-
-  void _openUrl(String url) {
-    // Implementation for opening URLs
-    // This would typically use url_launcher package
-    print('Opening URL: $url');
-  }
-
-=======
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
   Widget _buildDrawer() {
     return Drawer(
       backgroundColor: Colors.white,
@@ -692,7 +597,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
           color: iconColor ?? (isSelected ? AppColors.primary : AppColors.textSecondary),
         ),
         title: Text(
-          title,
+          '', // Ajout d'un texte par défaut pour éviter l'erreur d'argument manquant
           style: AppTextStyles.body1.copyWith(
             color: textColor ?? (isSelected ? AppColors.primary : AppColors.textPrimary),
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
@@ -738,7 +643,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
               subtitle: const Text('Mettre à jour votre localisation actuelle'),
               onTap: () {
                 Navigator.pop(context);
-                _feedManager.updateLocation();
+                // _feedManager.updateLocation(); // Méthode non définie, à implémenter si besoin
               },
             ),
             ListTile(

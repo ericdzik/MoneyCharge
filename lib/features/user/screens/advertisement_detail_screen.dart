@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/features/user/models/advertisement_model.dart';
 import 'package:locacharge/models/ad_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -39,11 +37,7 @@ class AdvertisementDetailScreen extends StatelessWidget {
         children: [
           // Image principale en plein écran
           Expanded(
-<<<<<<< HEAD
-            child: Container(
-=======
             child: SizedBox(
->>>>>>> 8579596d (Commit de toutes les modifications récentes :)
               width: double.infinity,
               child: InteractiveViewer(
                 child: Image.network(
@@ -92,7 +86,7 @@ class AdvertisementDetailScreen extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppDimensions.paddingL),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Colors.white.withValues(alpha: 0.95),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(AppDimensions.radiusL),
                 topRight: Radius.circular(AppDimensions.radiusL),

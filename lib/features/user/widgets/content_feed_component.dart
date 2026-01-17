@@ -120,9 +120,6 @@ class _ContentFeedComponentState extends State<ContentFeedComponent> {
       case ContentType.recommendation:
         final recommendationItem = item as RecommendationContentItem;
         return _buildRecommendationItem(recommendationItem);
-
-      default:
-        return const SizedBox.shrink();
     }
   }
 
