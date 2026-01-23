@@ -22,18 +22,21 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   // État local
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _acceptTerms = false;
+
+  // Système d'étapes
+  int _currentStep = 0;
+  final PageController _pageController = PageController();
 
   // Constantes UI
   static const double _iconSize = 80.0;
   static const double _titleFontSize = 32.0;
   static const double _descriptionFontSize = 16.0;
   static const double _buttonHeight = 58.0;
-  static const double _fieldBorderRadius = 30.0;
 
   @override
   void initState() {
@@ -49,6 +52,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _pageController.dispose();
     appLogger.d('UserRegisterScreen: Dispose');
     super.dispose();
   }
@@ -63,6 +67,52 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     );
   }
 
+  /// Passe à l'étape suivante
+  void _nextStep() {
+    if (_currentStep < 2) {
+      // Validation de l'étape actuelle
+      if (_currentStep == 0) {
+        // Valider nom et email
+        final nameError = _validateName(_nameController.text);
+        final emailError = _validateEmail(_emailController.text);
+        if (nameError != null || emailError != null) {
+          setState(() {}); // Force la mise à jour pour afficher les erreurs
+          return;
+        }
+      } else if (_currentStep == 1) {
+        // Valider téléphone
+        final phoneError = _validatePhone(_phoneController.text);
+        if (phoneError != null) {
+          setState(() {});
+          return;
+        }
+      }
+
+      setState(() {
+        _currentStep++;
+      });
+      _pageController.animateToPage(
+        _currentStep,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  /// Revient à l'étape précédente
+  void _previousStep() {
+    if (_currentStep > 0) {
+      setState(() {
+        _currentStep--;
+      });
+      _pageController.animateToPage(
+        _currentStep,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -74,57 +124,43 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
         body: AuthBackgroundWidget(
           child: SafeArea(
             top: false,
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 20,
-                left: 24,
-                right: 24,
-                bottom: 24,
-              ),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
+            child: Column(
+              children: [
+                // En-tête avec indicateur d'étapes
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 20,
+                    left: 24,
+                    right: 24,
+                  ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 20),
-
-                      // En-tête
                       _buildHeader(),
-
-                      const SizedBox(height: 40),
-
-                      // Formulaire d'inscription
-                      _buildNameField(),
-                      const SizedBox(height: 20),
-
-                      _buildEmailField(),
-                      const SizedBox(height: 20),
-
-                      _buildPhoneField(),
-                      const SizedBox(height: 20),
-
-                      _buildPasswordField(),
-                      const SizedBox(height: 20),
-
-                      _buildConfirmPasswordField(),
-                      const SizedBox(height: 24),
-
-                      // Conditions d'utilisation
-                      _buildTermsCheckbox(),
-                      const SizedBox(height: 40),
-
-                      // Bouton inscription
-                      _buildRegisterButton(),
-
                       const SizedBox(height: 32),
-
-                      // Lien connexion
-                      _buildLoginLink(),
+                      _buildStepIndicator(),
                     ],
                   ),
                 ),
-              ),
+
+                // Contenu des étapes
+                Expanded(
+                  child: Form(
+                    key: _formKey,
+                    child: PageView(
+                      controller: _pageController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [_buildStep1(), _buildStep2(), _buildStep3()],
+                    ),
+                  ),
+                ),
+
+                // Boutons de navigation
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: _buildNavigationButtons(),
+                ),
+              ],
             ),
           ),
         ),
@@ -136,11 +172,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Icon(
-          Icons.person_add_rounded,
-          size: _iconSize,
-          color: AppColors.white,
-        ),
+        Icon(Icons.person_add_rounded, size: _iconSize, color: AppColors.white),
         const SizedBox(height: 24),
         Text(
           'Créer un compte',
@@ -160,6 +192,210 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
             height: 1.5,
           ),
           textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  /// Construit l'indicateur d'étapes
+  Widget _buildStepIndicator() {
+    final steps = ['Infos', 'Contact', 'Sécurité'];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Row(
+        children: List.generate(3, (index) {
+          final isActive = index == _currentStep;
+          final isCompleted = index < _currentStep;
+
+          return Expanded(
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? AppColors.yellow
+                              : isCompleted
+                              ? AppColors.success
+                              : Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: isCompleted
+                              ? const Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 20,
+                                )
+                              : Text(
+                                  '${index + 1}',
+                                  style: TextStyle(
+                                    color: isActive
+                                        ? AppColors.primary
+                                        : Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        steps[index],
+                        style: TextStyle(
+                          color: isActive
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.6),
+                          fontSize: 11,
+                          fontWeight: isActive
+                              ? FontWeight.w600
+                              : FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                if (index < 2)
+                  Expanded(
+                    child: Container(
+                      height: 2,
+                      margin: const EdgeInsets.only(bottom: 30),
+                      color: isCompleted
+                          ? AppColors.success
+                          : Colors.white.withValues(alpha: 0.2),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  /// Étape 1 : Informations personnelles
+  Widget _buildStep1() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Étape 1/3 : Informations personnelles',
+            style: AppTextStyles.body1.copyWith(
+              color: AppColors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _buildNameField(),
+          const SizedBox(height: 20),
+
+          _buildEmailField(),
+        ],
+      ),
+    );
+  }
+
+  /// Étape 2 : Contact
+  Widget _buildStep2() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Étape 2/3 : Contact',
+            style: AppTextStyles.body1.copyWith(
+              color: AppColors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _buildPhoneField(),
+        ],
+      ),
+    );
+  }
+
+  /// Étape 3 : Sécurité
+  Widget _buildStep3() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Étape 3/3 : Sécurité',
+            style: AppTextStyles.body1.copyWith(
+              color: AppColors.white.withValues(alpha: 0.9),
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          _buildPasswordField(),
+          const SizedBox(height: 20),
+
+          _buildConfirmPasswordField(),
+          const SizedBox(height: 24),
+
+          _buildTermsCheckbox(),
+        ],
+      ),
+    );
+  }
+
+  /// Construit les boutons de navigation
+  Widget _buildNavigationButtons() {
+    return Row(
+      children: [
+        // Bouton Précédent
+        if (_currentStep > 0)
+          Expanded(
+            child: _AnimatedButton(
+              onPressed: _previousStep,
+              isLoading: false,
+              text: 'Précédent',
+              width: null,
+              height: _buttonHeight,
+              backgroundColor: AppColors.white.withValues(alpha: 0.2),
+            ),
+          ),
+
+        if (_currentStep > 0) const SizedBox(width: 12),
+
+        // Bouton Suivant / S'inscrire
+        Expanded(
+          flex: _currentStep == 0 ? 1 : 1,
+          child: Consumer<AuthProvider>(
+            builder: (context, authProvider, child) {
+              return _AnimatedButton(
+                onPressed: _currentStep < 2
+                    ? _nextStep
+                    : (!_acceptTerms || authProvider.isLoading)
+                    ? null
+                    : _handleRegister,
+                isLoading: _currentStep == 2 && authProvider.isLoading,
+                text: _currentStep < 2 ? 'Suivant' : 'Créer mon compte',
+                width: null,
+                height: _buttonHeight,
+                backgroundColor: AppColors.yellow,
+              );
+            },
+          ),
         ),
       ],
     );
@@ -283,51 +519,6 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     );
   }
 
-  /// Construit le bouton d'inscription
-  Widget _buildRegisterButton() {
-    return Consumer<AuthProvider>(
-      builder: (context, authProvider, child) {
-        return Center(
-          child: _AnimatedButton(
-            onPressed: (!_acceptTerms || authProvider.isLoading)
-                ? null
-                : _handleRegister,
-            isLoading: authProvider.isLoading,
-            text: 'Créer mon compte',
-            width: double.infinity,
-            height: _buttonHeight,
-            backgroundColor: AppColors.yellow,
-          ),
-        );
-      },
-    );
-  }
-
-  /// Construit le lien de connexion
-  Widget _buildLoginLink() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Text(
-          'Déjà un compte ? ',
-          style: AppTextStyles.body2.copyWith(
-            color: AppColors.white.withValues(alpha: 0.9),
-          ),
-        ),
-        GestureDetector(
-          onTap: _navigateToLogin,
-          child: Text(
-            'Se connecter',
-            style: AppTextStyles.body2.copyWith(
-              color: AppColors.yellow,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   /// Valide le nom
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -344,8 +535,9 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     if (value == null || value.trim().isEmpty) {
       return 'Veuillez saisir votre email';
     }
-    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-        .hasMatch(value.trim())) {
+    if (!RegExp(
+      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+    ).hasMatch(value.trim())) {
       return 'Email invalide';
     }
     return null;
@@ -411,7 +603,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      appLogger.e('UserRegisterScreen: Erreur lors de l\'inscription', error: e);
+      appLogger.e(
+        'UserRegisterScreen: Erreur lors de l\'inscription',
+        error: e,
+      );
       SnackBarHelper.showError(
         context,
         authProvider.error ?? 'Erreur lors de l\'inscription',
@@ -419,13 +614,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     }
   }
 
-  /// Navigue vers l'écran de connexion
-  void _navigateToLogin() {
-    appLogger.d('UserRegisterScreen: Navigation vers login');
-    Navigator.pushReplacementNamed(context, AppRoutes.login);
-  }
-
-  /// Champ de texte personnalisé élégant avec effet glassmorphism
+  /// Champ de texte personnalisé élégant avec effet glassmorphism et focus
   Widget _buildCustomTextField({
     required TextEditingController controller,
     required String label,
@@ -454,68 +643,24 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
 
         // Champ de texte avec gestion d'erreur externe
         FormField<String>(
-          validator: validator != null ? (_) => validator(controller.text) : null,
+          validator: validator != null
+              ? (_) => validator(controller.text)
+              : null,
           builder: (formFieldState) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(_fieldBorderRadius),
-                    border: Border.all(
-                      color: formFieldState.hasError
-                          ? AppColors.primary.withValues(alpha: 0.6)
-                          : AppColors.white.withValues(alpha: 0.25),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(_fieldBorderRadius),
-                    child: TextField(
-                      controller: controller,
-                      keyboardType: keyboardType,
-                      obscureText: obscureText,
-                      style: AppTextStyles.body1.copyWith(
-                        color: AppColors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      decoration: InputDecoration(
-                        filled: false,
-                        hintText: hint,
-                        hintStyle: AppTextStyles.body2.copyWith(
-                          color: AppColors.white.withValues(alpha: 0.4),
-                          fontSize: 16,
-                        ),
-                        prefixIcon: Icon(
-                          icon,
-                          color: AppColors.white.withValues(alpha: 0.7),
-                          size: 22,
-                        ),
-                        suffixIcon: suffixIcon,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        errorBorder: InputBorder.none,
-                        focusedErrorBorder: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        formFieldState.didChange(value);
-                      },
-                    ),
-                  ),
+                _FocusableTextField(
+                  controller: controller,
+                  keyboardType: keyboardType,
+                  obscureText: obscureText,
+                  hint: hint,
+                  icon: icon,
+                  suffixIcon: suffixIcon,
+                  hasError: formFieldState.hasError,
+                  onChanged: (value) {
+                    formFieldState.didChange(value);
+                  },
                 ),
 
                 // Message d'erreur affiché en dehors
@@ -537,6 +682,120 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
           },
         ),
       ],
+    );
+  }
+}
+
+/// TextField avec effet de focus sur la bordure
+class _FocusableTextField extends StatefulWidget {
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final String hint;
+  final IconData icon;
+  final Widget? suffixIcon;
+  final bool hasError;
+  final Function(String) onChanged;
+
+  const _FocusableTextField({
+    required this.controller,
+    required this.keyboardType,
+    required this.obscureText,
+    required this.hint,
+    required this.icon,
+    required this.suffixIcon,
+    required this.hasError,
+    required this.onChanged,
+  });
+
+  @override
+  State<_FocusableTextField> createState() => _FocusableTextFieldState();
+}
+
+class _FocusableTextFieldState extends State<_FocusableTextField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: widget.hasError
+              ? AppColors.error.withValues(alpha: 0.8)
+              : _isFocused
+              ? AppColors.yellow.withValues(alpha: 0.8)
+              : AppColors.white.withValues(alpha: 0.25),
+          width: _isFocused ? 2.0 : 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: TextField(
+          controller: widget.controller,
+          focusNode: _focusNode,
+          keyboardType: widget.keyboardType,
+          obscureText: widget.obscureText,
+          style: AppTextStyles.body1.copyWith(
+            color: AppColors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: AppColors.white,
+          decoration: InputDecoration(
+            filled: false,
+            hintText: widget.hint,
+            hintStyle: AppTextStyles.body2.copyWith(
+              color: AppColors.white.withValues(alpha: 0.4),
+              fontSize: 16,
+            ),
+            prefixIcon: Icon(
+              widget.icon,
+              color: _isFocused
+                  ? AppColors.white
+                  : AppColors.white.withValues(alpha: 0.7),
+              size: 22,
+            ),
+            suffixIcon: widget.suffixIcon,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            errorBorder: InputBorder.none,
+            focusedErrorBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 18,
+            ),
+          ),
+          onChanged: widget.onChanged,
+        ),
+      ),
     );
   }
 }
@@ -618,8 +877,9 @@ class _AnimatedButtonState extends State<_AnimatedButton>
               gradient: LinearGradient(
                 colors: [
                   widget.backgroundColor ?? AppColors.white,
-                  (widget.backgroundColor ?? AppColors.white)
-                      .withValues(alpha: 0.95),
+                  (widget.backgroundColor ?? AppColors.white).withValues(
+                    alpha: 0.95,
+                  ),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -627,8 +887,9 @@ class _AnimatedButtonState extends State<_AnimatedButton>
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: (widget.backgroundColor ?? AppColors.white)
-                      .withValues(alpha: 0.3),
+                  color: (widget.backgroundColor ?? AppColors.white).withValues(
+                    alpha: 0.3,
+                  ),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),

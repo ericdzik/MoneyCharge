@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/unified_sliver_app_bar.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/user/screens/cgu_screen.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
@@ -17,18 +17,10 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   final ScrollController _scrollController = ScrollController();
-  double _headerOpacity = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_handleScroll);
-  }
-
-  void _handleScroll() {
-    setState(() {
-      _headerOpacity = (_scrollController.offset / 120).clamp(0.0, 1.0);
-    });
   }
 
   @override
@@ -42,6 +34,17 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Scaffold(
       drawer: const CustomDrawer(),
       backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: 'Profil',
+        showLogo: false,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: const [Icon(Icons.person, color: Colors.white)],
+      ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
           final user = authProvider.appUserProfile;
@@ -63,37 +66,61 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             );
           }
 
-          return CustomScrollView(
+          return ListView(
             controller: _scrollController,
-            slivers: [
-              UnifiedSliverAppBar(
-                opacity: _headerOpacity,
-                title: 'Mon profil',
-                subtitle: user.email,
-                icon: Icons.person_rounded,
-              ),
-              SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    const SizedBox(height: AppDimensions.paddingL),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.paddingM,
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.paddingL),
-                    _ActionsSection(),
-                    const SizedBox(height: AppDimensions.paddingXL),
-                  ],
-                ),
-              ),
-            ],
+            children: [_buildProfileContent()],
           );
         },
       ),
     );
   }
 
+  Widget _buildProfileContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Example profile header
+        Padding(
+          padding: const EdgeInsets.all(AppDimensions.paddingL),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 36,
+                backgroundColor: AppColors.primary,
+                child: const Icon(Icons.person, size: 48, color: Colors.white),
+              ),
+              const SizedBox(width: AppDimensions.paddingL),
+              Expanded(
+                child: Consumer<AuthProvider>(
+                  builder: (context, authProvider, child) {
+                    final user = authProvider.appUserProfile;
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user?.name ?? 'Utilisateur',
+                          style: AppTextStyles.h2,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          user?.email ?? '',
+                          style: AppTextStyles.body2.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppDimensions.paddingL),
+        _ActionsSection(),
+      ],
+    );
+  }
 }
 
 // ============================================================================
@@ -118,9 +145,7 @@ class _ActionsSection extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const CguScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const CguScreen()),
               );
             },
           ),
@@ -190,10 +215,7 @@ class _ActionCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-              ),
+              Icon(Icons.chevron_right_rounded, color: AppColors.textSecondary),
             ],
           ),
         ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
-import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
 
 class CustomDrawer extends StatelessWidget {
@@ -223,32 +222,6 @@ class CustomDrawer extends StatelessWidget {
                         ),
 
                         const Divider(color: Colors.white30, thickness: 1),
-
-                        // Dark mode toggle
-                        Consumer<ThemeProvider>(
-                          builder: (context, themeProvider, _) {
-                            final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-                            return SwitchListTile(
-                              value: isDarkMode,
-                              onChanged: (value) {
-                                themeProvider.toggleTheme();
-                              },
-                              title: Text(
-                                'Mode sombre',
-                                style: AppTextStyles.body1.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              secondary: Icon(
-                                isDarkMode
-                                    ? Icons.dark_mode
-                                    : Icons.light_mode,
-                                color: Colors.white,
-                              ),
-                              activeColor: AppColors.secondary,
-                            );
-                          },
-                        ),
                       ],
                     ),
                   ),

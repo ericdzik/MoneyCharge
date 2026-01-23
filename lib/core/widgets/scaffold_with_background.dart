@@ -3,8 +3,8 @@ import 'package:locacharge/core/widgets/background_image_widget.dart';
 
 /// Configuration pour personnaliser l'apparence du fond dans ScaffoldWithBackground
 class BackgroundConfig {
-  /// Chemin de l'image de fond (défaut: image par défaut)
-  final String imagePath;
+  /// Chemin de l'image de fond (optionnel, null = pas d'image)
+  final String? imagePath;
 
   /// Couleur de l'overlay (défaut: transparent)
   final Color? overlayColor;
@@ -22,7 +22,7 @@ class BackgroundConfig {
   final BoxFit imageFit;
 
   const BackgroundConfig({
-    this.imagePath = kDefaultBackgroundImage,
+    this.imagePath,
     this.overlayColor,
     this.overlayOpacity = 0.0,
     this.applyGreenOverlay = false,
@@ -31,10 +31,7 @@ class BackgroundConfig {
   });
 
   /// Configuration avec overlay sombre (effet darkened)
-  factory BackgroundConfig.darkened({
-    String imagePath = kDefaultBackgroundImage,
-    double opacity = 0.3,
-  }) {
+  factory BackgroundConfig.darkened({String? imagePath, double opacity = 0.3}) {
     return BackgroundConfig(
       imagePath: imagePath,
       overlayColor: Colors.black,
@@ -44,9 +41,7 @@ class BackgroundConfig {
   }
 
   /// Configuration avec overlay vert du projet
-  factory BackgroundConfig.withGreenOverlay({
-    String imagePath = kDefaultBackgroundImage,
-  }) {
+  factory BackgroundConfig.withGreenOverlay({String? imagePath}) {
     return BackgroundConfig(
       imagePath: imagePath,
       applyGreenOverlay: true,
@@ -56,10 +51,7 @@ class BackgroundConfig {
 
   /// Configuration sans fond (transparent)
   factory BackgroundConfig.none() {
-    return const BackgroundConfig(
-      imagePath: '',
-      enableCache: false,
-    );
+    return const BackgroundConfig(imagePath: null, enableCache: false);
   }
 
   /// Copier avec modifications
@@ -150,7 +142,7 @@ class ScaffoldWithBackground extends StatelessWidget {
     this.floatingActionButton,
     this.backgroundColor,
     this.resizeToAvoidBottomInset = true,
-  }) : backgroundConfig = const BackgroundConfig(imagePath: '');
+  }) : backgroundConfig = const BackgroundConfig(imagePath: null);
 
   /// Version avec overlay sombre (populaire pour les écrans clairs)
   ScaffoldWithBackground.darkened({
@@ -176,8 +168,9 @@ class ScaffoldWithBackground extends StatelessWidget {
       resizeToAvoidBottomInset: resizeToAvoidBottomInset,
       body: Stack(
         children: [
-          // Fond (uniquement si imagePath n'est pas vide)
-          if (backgroundConfig.imagePath.isNotEmpty)
+          // Fond (uniquement si imagePath est spécifié)
+          if (backgroundConfig.imagePath != null &&
+              backgroundConfig.imagePath!.isNotEmpty)
             Positioned.fill(
               child: BackgroundImage(
                 imagePath: backgroundConfig.imagePath,

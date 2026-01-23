@@ -1,4 +1,3 @@
-
 import 'package:geolocator/geolocator.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/models/ad_model.dart';
@@ -6,51 +5,13 @@ import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/services/location_service.dart';
 import 'package:flutter/foundation.dart';
-
-/// Types de contenu pour le fil
-enum ContentItemType { advertisement, merchant, recommendation }
-
-abstract class ContentItem {
-  final String id;
-  final DateTime timestamp;
-  ContentItem(this.id, this.timestamp);
-  ContentItemType get type;
-}
-
-class AdvertisementContentItem extends ContentItem {
-  final Ad ad;
-  AdvertisementContentItem({required String id, required this.ad, required DateTime timestamp})
-      : super(id, timestamp);
-  @override
-  ContentItemType get type => ContentItemType.advertisement;
-}
-
-class MerchantContentItem extends ContentItem {
-  final Merchant merchant;
-  MerchantContentItem({required String id, required this.merchant, required DateTime timestamp})
-      : super(id, timestamp);
-  @override
-  ContentItemType get type => ContentItemType.merchant;
-}
-
-class RecommendationContentItem extends ContentItem {
-  final String title;
-  final String description;
-  final String imageUrl;
-  final String actionUrl;
-  final Map<String, String> metadata;
-  RecommendationContentItem({
-    required String id,
-    required this.title,
-    required this.description,
-    required this.imageUrl,
-    required this.actionUrl,
-    required this.metadata,
-    required DateTime timestamp,
-  }) : super(id, timestamp);
-  @override
-  ContentItemType get type => ContentItemType.recommendation;
-}
+import 'package:locacharge/features/user/models/content_item_model.dart'
+    show
+        ContentItem,
+        MerchantContentItem,
+        AdvertisementContentItem,
+        RecommendationContentItem;
+import 'package:locacharge/features/user/models/advertisement_model.dart';
 
 class FeedManager extends ChangeNotifier {
   final LocationService _locationService = LocationService();
@@ -73,7 +34,33 @@ class FeedManager extends ChangeNotifier {
 
   /// Initialiser le FeedManager avec le MerchantProvider
   void initialize(MerchantProvider merchantProvider) {
+    if (_merchantProvider != null) {
+      _merchantProvider!.removeListener(_onMerchantProviderChange);
+    }
     _merchantProvider = merchantProvider;
+    _merchantProvider!.addListener(_onMerchantProviderChange);
+  }
+
+  @override
+  void dispose() {
+    _merchantProvider?.removeListener(_onMerchantProviderChange);
+    super.dispose();
+  }
+
+  void _onMerchantProviderChange() {
+    // Si le chargement initial a échoué à récupérer des marchands (race condition)
+    // et que le provider en a maintenant, on recharge.
+    if (!_isLoading && _merchantProvider != null) {
+      final hasDisplayedMerchants = _contentItems.any(
+        (item) => item is MerchantContentItem,
+      );
+      if (!hasDisplayedMerchants && _merchantProvider!.merchants.isNotEmpty) {
+        // On ne recharge que si on est sur la première page pour éviter de perturber la pagination
+        if (_currentPage == 0) {
+          loadInitialContent();
+        }
+      }
+    }
   }
 
   /// Charger le contenu initial du fil
@@ -117,7 +104,9 @@ class FeedManager extends ChangeNotifier {
         _hasMoreContent = false;
       }
     } catch (e) {
-      _setError('Erreur lors du chargement de contenu supplémentaire: ${e.toString()}');
+      _setError(
+        'Erreur lors du chargement de contenu supplémentaire: ${e.toString()}',
+      );
     } finally {
       _setLoading(false);
     }
@@ -132,6 +121,7 @@ class FeedManager extends ChangeNotifier {
   void trackAdvertisementClick(String advertisementId) {
     print('Advertisement clicked: $advertisementId');
   }
+
   void trackAdvertisementImpression(String advertisementId) {
     print('Advertisement impression: $advertisementId');
   }
@@ -146,9 +136,13 @@ class FeedManager extends ChangeNotifier {
     final recommendations = await _loadRecommendations(offset, _pageSize ~/ 5);
 
     if (page == 0) {
-      pageContent.addAll(_createStructuredFirstPage(advertisements, merchants, recommendations));
+      pageContent.addAll(
+        _createStructuredFirstPage(advertisements, merchants, recommendations),
+      );
     } else {
-      pageContent.addAll(_createMixedContent(advertisements, merchants, recommendations));
+      pageContent.addAll(
+        _createMixedContent(advertisements, merchants, recommendations),
+      );
     }
     return pageContent;
   }
@@ -166,7 +160,10 @@ class FeedManager extends ChangeNotifier {
   }
 
   /// Charger des marchands proches (rayon 3 km)
-  Future<List<MerchantContentItem>> _loadNearbyMerchants(int offset, int limit) async {
+  Future<List<MerchantContentItem>> _loadNearbyMerchants(
+    int offset,
+    int limit,
+  ) async {
     try {
       final merchants = _merchantProvider?.merchants ?? [];
       List<Merchant> filtered = merchants;
@@ -181,11 +178,22 @@ class FeedManager extends ChangeNotifier {
           return distMeters <= 3000; // 3 km
         }).toList();
       }
-      final items = filtered.map((m) => MerchantContentItem(
-        id: 'merchant_${m.id}',
-        merchant: m,
-        timestamp: DateTime.now(),
-      )).toList();
+      final items = filtered
+          .map(
+            (m) => MerchantContentItem.fromMerchant(
+              merchantId: m.id,
+              name: m.name,
+              services: m.services,
+              rating: m.averageRating,
+              distanceKm: m.distance,
+              imageUrl: (m.imageUrls != null && m.imageUrls!.isNotEmpty)
+                  ? m.imageUrls!.first
+                  : null,
+              address: m.address,
+              isVerified: m.isVerified ?? false,
+            ),
+          )
+          .toList();
       return items.skip(offset).take(limit).toList();
     } catch (_) {
       return [];
@@ -193,7 +201,10 @@ class FeedManager extends ChangeNotifier {
   }
 
   /// Charger des recommandations (mock pour l’instant)
-  Future<List<RecommendationContentItem>> _loadRecommendations(int offset, int limit) async {
+  Future<List<RecommendationContentItem>> _loadRecommendations(
+    int offset,
+    int limit,
+  ) async {
     try {
       final mock = _createMockRecommendations();
       return mock.skip(offset).take(limit).toList();
@@ -211,11 +222,27 @@ class FeedManager extends ChangeNotifier {
     final List<ContentItem> content = [];
 
     if (advertisements.isNotEmpty) {
-      content.add(AdvertisementContentItem(
-        id: 'banner_${advertisements.first.id}',
-        ad: advertisements.first,
-        timestamp: DateTime.now(),
-      ));
+      content.add(
+        AdvertisementContentItem(
+          id: 'banner_${advertisements.first.id}',
+          advertisement: Advertisement(
+            id: advertisements.first.id,
+            title: advertisements.first.title,
+            description: advertisements.first.description,
+            imageUrl: advertisements.first.imageUrl,
+            merchantId: '',
+            targetLocation: null,
+            targetRadiusKm: null,
+            type: AdvertisementType.banner,
+            createdAt: advertisements.first.createdAt.toDate(),
+            expiresAt: null,
+            isActive: true,
+            targetingCriteria: const {},
+            callToAction: null,
+          ),
+          timestamp: DateTime.now(),
+        ),
+      );
     }
 
     if (merchants.isNotEmpty) {
@@ -224,11 +251,27 @@ class FeedManager extends ChangeNotifier {
 
     if (advertisements.length > 1) {
       for (int i = 1; i < advertisements.length; i++) {
-        content.add(AdvertisementContentItem(
-          id: 'sponsored_${advertisements[i].id}',
-          ad: advertisements[i],
-          timestamp: DateTime.now(),
-        ));
+        content.add(
+          AdvertisementContentItem(
+            id: 'sponsored_${advertisements[i].id}',
+            advertisement: Advertisement(
+              id: advertisements[i].id,
+              title: advertisements[i].title,
+              description: advertisements[i].description,
+              imageUrl: advertisements[i].imageUrl,
+              merchantId: '',
+              targetLocation: null,
+              targetRadiusKm: null,
+              type: AdvertisementType.banner,
+              createdAt: advertisements[i].createdAt.toDate(),
+              expiresAt: null,
+              isActive: true,
+              targetingCriteria: const {},
+              callToAction: null,
+            ),
+            timestamp: DateTime.now(),
+          ),
+        );
       }
     }
 
@@ -245,11 +288,29 @@ class FeedManager extends ChangeNotifier {
     final List<ContentItem> content = [];
     final List<ContentItem> allContent = [];
 
-    allContent.addAll(advertisements.map((ad) => AdvertisementContentItem(
-      id: 'ad_${ad.id}',
-      ad: ad,
-      timestamp: DateTime.now(),
-    )));
+    allContent.addAll(
+      advertisements.map(
+        (ad) => AdvertisementContentItem(
+          id: 'ad_${ad.id}',
+          advertisement: Advertisement(
+            id: ad.id,
+            title: ad.title,
+            description: ad.description,
+            imageUrl: ad.imageUrl,
+            merchantId: '',
+            targetLocation: null,
+            targetRadiusKm: null,
+            type: AdvertisementType.banner,
+            createdAt: ad.createdAt.toDate(),
+            expiresAt: null,
+            isActive: true,
+            targetingCriteria: const {},
+            callToAction: null,
+          ),
+          timestamp: DateTime.now(),
+        ),
+      ),
+    );
     allContent.addAll(merchants);
     allContent.addAll(recommendations);
 
@@ -257,11 +318,28 @@ class FeedManager extends ChangeNotifier {
     for (int i = 0; i < allContent.length; i++) {
       content.add(allContent[i]);
       if ((i + 1) % 3 == 0 && adIndex < advertisements.length) {
-        content.add(AdvertisementContentItem(
-          id: 'mixed_ad_${advertisements[adIndex].id}',
-          ad: advertisements[adIndex],
-          timestamp: DateTime.now(),
-        ));
+        final ad = advertisements[adIndex];
+        content.add(
+          AdvertisementContentItem(
+            id: 'mixed_ad_${ad.id}',
+            advertisement: Advertisement(
+              id: ad.id,
+              title: ad.title,
+              description: ad.description,
+              imageUrl: ad.imageUrl,
+              merchantId: '',
+              targetLocation: null,
+              targetRadiusKm: null,
+              type: AdvertisementType.banner,
+              createdAt: ad.createdAt.toDate(),
+              expiresAt: null,
+              isActive: true,
+              targetingCriteria: const {},
+              callToAction: null,
+            ),
+            timestamp: DateTime.now(),
+          ),
+        );
         adIndex++;
       }
     }
@@ -282,7 +360,8 @@ class FeedManager extends ChangeNotifier {
   Future<void> _updateCurrentLocation() async {
     try {
       final permissionStatus = await _locationService.requestPermission();
-      if (permissionStatus == LocationPermission.always || permissionStatus == LocationPermission.whileInUse) {
+      if (permissionStatus == LocationPermission.always ||
+          permissionStatus == LocationPermission.whileInUse) {
         _currentLocation = await _locationService.getCurrentPosition();
       } else {
         _currentLocation = null;
@@ -298,7 +377,8 @@ class FeedManager extends ChangeNotifier {
       RecommendationContentItem(
         id: 'rec_1',
         title: 'Conseils d\'entretien automobile',
-        description: 'Découvrez nos conseils pour maintenir votre véhicule en parfait état',
+        description:
+            'Découvrez nos conseils pour maintenir votre véhicule en parfait état',
         imageUrl: 'https://example.com/car-maintenance.jpg',
         actionUrl: 'https://example.com/car-tips',
         metadata: {'category': 'automotive', 'priority': 'high'},
@@ -307,7 +387,8 @@ class FeedManager extends ChangeNotifier {
       RecommendationContentItem(
         id: 'rec_2',
         title: 'Économisez sur vos factures d\'électricité',
-        description: 'Astuces et conseils pour réduire votre consommation énergétique',
+        description:
+            'Astuces et conseils pour réduire votre consommation énergétique',
         imageUrl: 'https://example.com/energy-saving.jpg',
         actionUrl: 'https://example.com/energy-tips',
         metadata: {'category': 'energy', 'priority': 'medium'},

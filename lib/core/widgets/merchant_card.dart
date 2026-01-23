@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart'; // Ajout de Provider
+import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_dimensions.dart';
 import '../constants/app_text_styles.dart';
 import 'status_badge.dart';
-import 'custom_button.dart';
 import '../../features/user/models/merchant_model.dart';
-import '../../providers/favorite_merchant_provider.dart'; // Ajout du FavoriteMerchantProvider
+import '../../providers/favorite_merchant_provider.dart';
 import '../../providers/location_provider.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,141 +27,247 @@ class MerchantCard extends StatelessWidget {
     final statusType = _getMerchantStatusType(merchant.status);
     final favoriteProvider = Provider.of<FavoriteMerchantProvider>(context);
     final isFavorite = favoriteProvider.isFavorite(merchant.id);
-
     final locationProvider = Provider.of<LocationProvider>(context);
+
+    // Calcul de la distance
     final double distanceMeters = Geolocator.distanceBetween(
       locationProvider.effectiveLatitude,
       locationProvider.effectiveLongitude,
       merchant.latitude,
       merchant.longitude,
     );
-    // double distanceKm = distanceMeters / 1000; // Non utilisé dans ce design
-    // Distance disponible si besoin: `${distanceKm.toStringAsFixed(1)} km` ou `${distanceMeters.round()} m`
-    final String walkingTimeText =
-        locationProvider.calculateWalkingTime(distanceMeters);
+    final double distanceKm = distanceMeters / 1000;
 
     return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimensions.paddingM,
-        vertical: AppDimensions.paddingS,
+        vertical:
+            6, // Marges verticales réduites pour un effet liste plus compact
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 22,
-            offset: const Offset(0, 12),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.paddingM),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: AppColors.primary.withOpacity(0.1),
-                    ),
-                    child: Icon(
-                      Icons.store_rounded,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.paddingM),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          merchant.name,
-                          style: AppTextStyles.h3.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: AppDimensions.paddingXS),
-                        Row(
-                          children: [
-                            StatusBadge(status: _computeStatus(statusType, merchant)),
-                            const SizedBox(width: AppDimensions.paddingS),
-                            _Pill(
-                              icon: Icons.access_time,
-                              label: merchant.isOpen ? 'Ouvert' : 'Ferme',
-                              color: merchant.isOpen
-                                  ? AppColors.success.withOpacity(0.12)
-                                  : AppColors.textSecondary.withOpacity(0.12),
-                              textColor:
-                                  merchant.isOpen ? AppColors.success : AppColors.textSecondary,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 1. Grande Image (90x90)
+                Hero(
+                  tag: 'merchant_list_img_${merchant.id}',
+                  child: _buildMerchantImage(),
+                ),
+                const SizedBox(width: 12),
+
+                // 2. Colonne d'informations
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header: Nom + Favori
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  merchant.name,
+                                  style: AppTextStyles.h3.copyWith(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    height: 1.2,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                if (merchant.isVerified == true) ...[
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        Icons.verified,
+                                        size: 14,
+                                        color: AppColors.primary,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        "Vérifié",
+                                        style: AppTextStyles.caption.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
-                        ),
-                      ],
-                    ),
+                          ),
+                          _FavoriteButton(
+                            isFavorite: isFavorite,
+                            onToggle: () {
+                              if (isFavorite) {
+                                favoriteProvider.removeFavorite(merchant.id);
+                              } else {
+                                favoriteProvider.addFavorite(merchant.id);
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Statuts (Chips)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          // Badge de stock/dispo
+                          Transform.scale(
+                            scale: 0.9,
+                            alignment: Alignment.centerLeft,
+                            child: StatusBadge(
+                              status: _computeStatus(statusType, merchant),
+                            ),
+                          ),
+                          // Badge Ouvert/Fermé
+                          _CompactStatusPill(isOpen: merchant.isOpen),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Footer: Distance + Action
+                      Row(
+                        children: [
+                          // Distance Pill
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.location_on,
+                                  size: 12,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${distanceKm.toStringAsFixed(1)} km',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          const Spacer(),
+
+                          // Petit bouton itinéraire
+                          InkWell(
+                            onTap: () async {
+                              if (onDirectionsPressed != null) {
+                                onDirectionsPressed!();
+                              } else {
+                                await _launchExternalDirections(
+                                  context,
+                                  merchant.latitude,
+                                  merchant.longitude,
+                                );
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: AppColors.gray100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.directions,
+                                size: 20,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppDimensions.paddingS),
-                  _FavoriteButton(
-                    isFavorite: isFavorite,
-                    onToggle: () {
-                      if (isFavorite) {
-                        favoriteProvider.removeFavorite(merchant.id);
-                      } else {
-                        favoriteProvider.addFavorite(merchant.id);
-                      }
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.paddingM),
-              _InfoLine(
-                icon: Icons.place_rounded,
-                text: merchant.address,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(height: AppDimensions.paddingM),
-              Wrap(
-                spacing: AppDimensions.paddingS,
-                runSpacing: AppDimensions.paddingS,
-                children: [
-                  _Pill(
-                    icon: Icons.directions_walk_rounded,
-                    label: walkingTimeText,
-                    color: AppColors.primary.withOpacity(0.08),
-                    textColor: AppColors.primary,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.paddingM),
-              CustomButton(
-                text: 'Itineraire',
-                type: ButtonType.primary,
-                onPressed: () async {
-                  if (onDirectionsPressed != null) {
-                    onDirectionsPressed!();
-                  } else {
-                    await _launchExternalDirections(
-                      context,
-                      merchant.latitude,
-                      merchant.longitude,
-                    );
-                  }
-                },
-                icon: const Icon(Icons.directions_rounded, size: 18),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMerchantImage() {
+    return Container(
+      width: 90,
+      height: 90,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: AppColors.gray200,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: (merchant.imageUrls != null && merchant.imageUrls!.isNotEmpty)
+            ? Image.network(
+                merchant.imageUrls!.first,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return _buildDefaultImage();
+                },
+              )
+            : _buildDefaultImage(),
+      ),
+    );
+  }
+
+  Widget _buildDefaultImage() {
+    return Container(
+      color: AppColors.primary.withValues(alpha: 0.05),
+      child: Center(
+        child: Icon(
+          Icons.store_rounded,
+          color: AppColors.primary.withValues(alpha: 0.5),
+          size: 32,
         ),
       ),
     );
@@ -179,87 +284,42 @@ class MerchantCard extends StatelessWidget {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Impossible d'ouvrir l'itineraire."),
+        const SnackBar(
+          content: Text("Impossible d'ouvrir l'itineraire."),
           behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
-
 }
 
-class _InfoLine extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color color;
+class _CompactStatusPill extends StatelessWidget {
+  final bool isOpen;
 
-  const _InfoLine({
-    required this.icon,
-    required this.text,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppDimensions.paddingXS),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: AppDimensions.paddingS),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTextStyles.body2,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 2,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Pill extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final Color textColor;
-
-  const _Pill({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.textColor,
-  });
+  const _CompactStatusPill({required this.isOpen});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingM,
-        vertical: AppDimensions.paddingS,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        color: isOpen
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.textSecondary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isOpen
+              ? AppColors.success.withValues(alpha: 0.2)
+              : AppColors.textSecondary.withValues(alpha: 0.2),
+        ),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: textColor),
-          const SizedBox(width: AppDimensions.paddingXS),
-          Text(
-            label,
-            style: AppTextStyles.caption.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+      child: Text(
+        isOpen ? 'Ouvert' : 'Fermé',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: isOpen ? AppColors.success : AppColors.textSecondary,
+        ),
       ),
     );
   }
@@ -269,28 +329,25 @@ class _FavoriteButton extends StatelessWidget {
   final bool isFavorite;
   final VoidCallback onToggle;
 
-  const _FavoriteButton({
-    required this.isFavorite,
-    required this.onToggle,
-  });
+  const _FavoriteButton({required this.isFavorite, required this.onToggle});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onToggle,
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: isFavorite
-              ? AppColors.error.withOpacity(0.12)
-              : AppColors.textSecondary.withOpacity(0.08),
-          shape: BoxShape.circle,
-        ),
+        padding: const EdgeInsets.all(8),
+        // decoration: BoxDecoration(
+        //   color: isFavorite
+        //       ? AppColors.error.withValues(alpha: 0.1)
+        //       : Colors.transparent,
+        //   shape: BoxShape.circle,
+        // ),
         child: Icon(
-          isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: isFavorite ? AppColors.error : AppColors.textSecondary,
-          size: 20,
+          isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
+          color: isFavorite ? AppColors.error : AppColors.gray400,
+          size: 22,
         ),
       ),
     );
@@ -301,10 +358,14 @@ StatusType _computeStatus(StatusType baseStatus, Merchant merchant) {
   final stock = merchant.serviceStockStatus;
   if (stock != null && stock.isNotEmpty) {
     final hasOut = stock.values.any(
-      (v) => v.toLowerCase().contains('rupture') || v.toLowerCase().contains('epuise'),
+      (v) =>
+          v.toLowerCase().contains('rupture') ||
+          v.toLowerCase().contains('epuise'),
     );
     final hasLow = stock.values.any(
-      (v) => v.toLowerCase().contains('faible') || v.toLowerCase().contains('bientot'),
+      (v) =>
+          v.toLowerCase().contains('faible') ||
+          v.toLowerCase().contains('bientot'),
     );
     if (hasOut && !hasLow) return StatusType.outOfStock;
     if (hasLow) return StatusType.lowStock;
@@ -312,8 +373,6 @@ StatusType _computeStatus(StatusType baseStatus, Merchant merchant) {
   }
   return baseStatus;
 }
-
-// Fonctions helper pour mapper MerchantStatus à des types pour ce widget.
 
 StatusType _getMerchantStatusType(MerchantStatus status) {
   switch (status) {

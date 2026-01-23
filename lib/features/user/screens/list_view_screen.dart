@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/unified_sliver_app_bar.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/merchant_card.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
@@ -20,20 +20,12 @@ class ListViewScreen extends StatefulWidget {
 class _ListViewScreenState extends State<ListViewScreen> {
   String _sortOption = 'distance';
   final ScrollController _scrollController = ScrollController();
-  double _appBarOpacity = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_handleScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<MerchantProvider>(context, listen: false).listenToMerchants();
-    });
-  }
-
-  void _handleScroll() {
-    setState(() {
-      _appBarOpacity = (_scrollController.offset / 120).clamp(0.0, 1.0);
     });
   }
 
@@ -78,86 +70,66 @@ class _ListViewScreenState extends State<ListViewScreen> {
     return Scaffold(
       drawer: const CustomDrawer(),
       backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: "Points de service",
+        showLogo: false,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+      ),
       body: Consumer<MerchantProvider>(
         builder: (context, merchantProvider, child) {
-          return CustomScrollView(
+          final merchants = _sortMerchants(merchantProvider.merchants);
+          return ListView(
             controller: _scrollController,
-            slivers: [
-                UnifiedSliverAppBar(
-                  opacity: _appBarOpacity,
-                  title: 'Points de service',
-                  subtitle: '${merchantProvider.merchants.length} marchand${merchantProvider.merchants.length > 1 ? 's' : ''} disponible${merchantProvider.merchants.length > 1 ? 's' : ''}',
-                  icon: Icons.store_rounded,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: AppDimensions.paddingM,
+                  bottom: AppDimensions.paddingM,
                 ),
-              if (merchantProvider.merchants.isEmpty &&
-                  !merchantProvider.isLoading)
-                SliverFillRemaining(
+                child: _FilterChips(
+                  selectedSort: _sortOption,
+                  onSortChanged: (value) {
+                    setState(() => _sortOption = value);
+                  },
+                ),
+              ),
+              if (merchants.isEmpty)
+                SizedBox(
+                  height: MediaQuery.of(context).size.height - 300,
                   child: _EmptyState(),
                 )
-              else if (merchantProvider.isLoading)
-                const SliverFillRemaining(
-                  child: Center(child: LoadingIndicator()),
-                )
               else
-                SliverPadding(
-                  padding: const EdgeInsets.all(AppDimensions.paddingM),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: AppDimensions.paddingM,
-                            ),
-                            child: _FilterChips(
-                              selectedSort: _sortOption,
-                              onSortChanged: (value) {
-                                setState(() => _sortOption = value);
-                              },
+                ...merchants.map((merchant) {
+                  return Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppDimensions.paddingM,
+                    ),
+                    child: MerchantCard(
+                      merchant: merchant,
+                      onTap: () {
+                        if (widget.mapController != null) {
+                          widget.mapController!.animateCamera(
+                            CameraUpdate.newLatLngZoom(
+                              LatLng(merchant.latitude, merchant.longitude),
+                              16.0,
                             ),
                           );
                         }
-
-                        final merchantIndex = index - 1;
-                        final merchants =
-                            _sortMerchants(merchantProvider.merchants);
-
-                        if (merchantIndex >= merchants.length) {
-                          return null;
-                        }
-
-                        final merchant = merchants[merchantIndex];
-                        return Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: AppDimensions.paddingM,
-                          ),
-                          child: MerchantCard(
-                            merchant: merchant,
-                            onTap: () {
-                              if (widget.mapController != null) {
-                                widget.mapController!.animateCamera(
-                                  CameraUpdate.newLatLngZoom(
-                                    LatLng(
-                                        merchant.latitude, merchant.longitude),
-                                    16.0,
-                                  ),
-                                );
-                              }
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.merchantDetail,
-                                arguments: {'merchant': merchant},
-                              );
-                            },
-                            onDirectionsPressed: () => _openDirections(merchant),
-                          ),
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.merchantDetail,
+                          arguments: {'merchant': merchant},
                         );
                       },
-                      childCount:
-                          _sortMerchants(merchantProvider.merchants).length + 1,
+                      onDirectionsPressed: () => _openDirections(merchant),
                     ),
-                  ),
-                ),
+                  );
+                }).toList(),
             ],
           );
         },
@@ -174,10 +146,7 @@ class _FilterChips extends StatelessWidget {
   final String selectedSort;
   final ValueChanged<String> onSortChanged;
 
-  const _FilterChips({
-    required this.selectedSort,
-    required this.onSortChanged,
-  });
+  const _FilterChips({required this.selectedSort, required this.onSortChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -193,8 +162,11 @@ class _FilterChips extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.filter_list_rounded,
-                  size: 20, color: AppColors.textSecondary),
+              Icon(
+                Icons.filter_list_rounded,
+                size: 20,
+                color: AppColors.textSecondary,
+              ),
               const SizedBox(width: AppDimensions.paddingS),
               Text(
                 'Trier par',
@@ -305,21 +277,18 @@ class _EmptyState extends StatelessWidget {
           const SizedBox(height: AppDimensions.paddingXL),
           Text(
             'Aucun point de service',
-            style: AppTextStyles.h2.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: AppDimensions.paddingM),
           Text(
             'Deplacer la carte ou rafraichir pour voir les points disponibles.',
             textAlign: TextAlign.center,
-            style: AppTextStyles.body2.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.body2.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.paddingL),
           ElevatedButton.icon(
-            onPressed: () => context.read<MerchantProvider>().listenToMerchants(),
+            onPressed: () =>
+                context.read<MerchantProvider>().listenToMerchants(),
             icon: const Icon(Icons.refresh_rounded),
             label: const Text('Actualiser'),
             style: ElevatedButton.styleFrom(

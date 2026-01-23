@@ -6,7 +6,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/background_image_widget.dart';
 import 'package:locacharge/core/widgets/profile_avatar.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 
@@ -75,10 +74,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      SnackBarHelper.showError(
-        context,
-        "Erreur lors du recadrage : $e",
-      );
+      SnackBarHelper.showError(context, "Erreur lors du recadrage : $e");
     }
   }
 
@@ -96,10 +92,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
         if (!mounted) return;
 
         if (success) {
-          SnackBarHelper.showSuccess(
-            context,
-            'Profil mis à jour !',
-          );
+          SnackBarHelper.showSuccess(context, 'Profil mis à jour !');
           Navigator.of(context).pop();
         } else {
           SnackBarHelper.showError(
@@ -109,10 +102,7 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
         }
       } catch (e) {
         if (!mounted) return;
-        SnackBarHelper.showError(
-          context,
-          "Erreur: $e",
-        );
+        SnackBarHelper.showError(context, "Erreur: $e");
       }
     }
   }
@@ -135,60 +125,60 @@ class _EditUserProfileScreenState extends State<EditUserProfileScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(kDefaultBackgroundImage),
-            fit: BoxFit.cover,
-          ),
-        ),
+        color: AppColors.background,
         child: user == null
             ? const Center(child: Text('Utilisateur non trouvé.'))
             : SingleChildScrollView(
-          padding: EdgeInsets.only(
-            top: MediaQuery.of(context).padding.top + kToolbarHeight + AppDimensions.paddingL,
-            left: AppDimensions.paddingL,
-            right: AppDimensions.paddingL,
-            bottom: AppDimensions.paddingL,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ProfileAvatar(
-                  imageUrl: user.profileImageUrl,
-                  imageFile: _imageFile,
-                  onPick: (File rawFile) async {
-                    await _cropImage(rawFile);
-                  },
+                padding: EdgeInsets.only(
+                  top:
+                      MediaQuery.of(context).padding.top +
+                      kToolbarHeight +
+                      AppDimensions.paddingL,
+                  left: AppDimensions.paddingL,
+                  right: AppDimensions.paddingL,
+                  bottom: AppDimensions.paddingL,
                 ),
-                const SizedBox(height: AppDimensions.paddingXL),
-                CustomTextField(
-                  controller: _nameController,
-                  labelText: 'Nom complet',
-                  validator: FormValidators.required('Entrez votre nom'),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ProfileAvatar(
+                        imageUrl: user.profileImageUrl,
+                        imageFile: _imageFile,
+                        onPick: (File rawFile) async {
+                          await _cropImage(rawFile);
+                        },
+                      ),
+                      const SizedBox(height: AppDimensions.paddingXL),
+                      CustomTextField(
+                        controller: _nameController,
+                        labelText: 'Nom complet',
+                        validator: FormValidators.required('Entrez votre nom'),
+                      ),
+                      const SizedBox(height: AppDimensions.paddingM),
+                      CustomTextField(
+                        controller: _phoneController,
+                        labelText: 'Numéro de téléphone',
+                        keyboardType: TextInputType.phone,
+                      ),
+                      const SizedBox(height: AppDimensions.paddingM),
+                      CustomTextField(
+                        controller: TextEditingController(text: user.email),
+                        labelText: 'Email (non modifiable)',
+                        enabled: false,
+                      ),
+                      const SizedBox(height: AppDimensions.paddingXL),
+                      CustomButton(
+                        text: authProvider.isLoading
+                            ? 'Sauvegarde...'
+                            : 'Sauvegarder',
+                        onPressed: authProvider.isLoading ? null : _saveProfile,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: AppDimensions.paddingM),
-                CustomTextField(
-                  controller: _phoneController,
-                  labelText: 'Numéro de téléphone',
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: AppDimensions.paddingM),
-                CustomTextField(
-                  controller: TextEditingController(text: user.email),
-                  labelText: 'Email (non modifiable)',
-                  enabled: false,
-                ),
-                const SizedBox(height: AppDimensions.paddingXL),
-                CustomButton(
-                  text: authProvider.isLoading ? 'Sauvegarde...' : 'Sauvegarder',
-                  onPressed: authProvider.isLoading ? null : _saveProfile,
-                ),
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }

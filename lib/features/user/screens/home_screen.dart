@@ -3,7 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/custom_bottom_nav_bar.dart';
+import 'package:locacharge/core/widgets/modern_floating_nav_bar.dart';
 import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/list_view_screen.dart';
@@ -48,10 +48,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       drawer: const CustomDrawer(),
-      body: _currentIndex == 1 // Map is now at index 1
+      extendBody: true, // Permet à la nav bar de flotter
+      body:
+          _currentIndex ==
+              1 // Map is now at index 1
           ? _buildMapView(screens[1])
           : SafeArea(child: screens[_currentIndex]),
-      bottomNavigationBar: CustomBottomNavBar(
+      bottomNavigationBar: ModernFloatingNavBarWithLabels(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
@@ -126,8 +129,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
-
-
       ],
     );
   }
@@ -181,7 +182,9 @@ class _MapViewContentState extends State<MapViewContent> {
                     padding: const EdgeInsets.all(AppDimensions.paddingM),
                     child: Text(
                       "Erreur: ${provider.error}",
-                      style: AppTextStyles.body1.copyWith(color: AppColors.error),
+                      style: AppTextStyles.body1.copyWith(
+                        color: AppColors.error,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   ),

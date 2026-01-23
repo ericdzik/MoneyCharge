@@ -193,7 +193,9 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Veuillez saisir votre email';
                       }
-                      if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(value.trim())) {
+                      if (!RegExp(
+                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                      ).hasMatch(value.trim())) {
                         return 'Email invalide';
                       }
                       return null;
@@ -274,7 +276,9 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                         child: Consumer<AuthProvider>(
                           builder: (context, authProvider, child) {
                             return _AnimatedButton(
-                              onPressed: authProvider.isLoading ? null : _handleLogin,
+                              onPressed: authProvider.isLoading
+                                  ? null
+                                  : _handleLogin,
                               isLoading: authProvider.isLoading,
                               text: 'Se connecter',
                               width: null,
@@ -314,7 +318,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
     );
   }
 
-  /// Champ de texte personnalisé élégant avec effet glassmorphism
+  /// Champ de texte personnalisé élégant avec effet glassmorphism et focus
   Widget _buildCustomTextField({
     required TextEditingController controller,
     required String label,
@@ -348,64 +352,17 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: formFieldState.hasError
-                          ? AppColors.primary.withValues(alpha: 0.6)
-                          : AppColors.white.withValues(alpha: 0.25),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(30),
-                    child: TextField(
-                      controller: controller,
-                      keyboardType: keyboardType,
-                      obscureText: obscureText,
-                      style: AppTextStyles.body1.copyWith(
-                        color: AppColors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      cursorColor: AppColors.white,
-                      onChanged: (_) =>
-                          formFieldState.didChange(controller.text),
-                      decoration: InputDecoration(
-                        hintText: hint,
-                        hintStyle: AppTextStyles.body2.copyWith(
-                          color: AppColors.white.withValues(alpha: 0.4),
-                          fontSize: 15,
-                        ),
-                        prefixIcon: Icon(
-                          icon,
-                          color: AppColors.white.withValues(alpha: 0.7),
-                          size: 22,
-                        ),
-                        suffixIcon: suffixIcon,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        errorBorder: InputBorder.none,
-                        focusedErrorBorder: InputBorder.none,
-                        filled: true,
-                        fillColor: Colors.transparent,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 18,
-                        ),
-                      ),
-                    ),
-                  ),
+                _FocusableTextField(
+                  controller: controller,
+                  keyboardType: keyboardType,
+                  obscureText: obscureText,
+                  hint: hint,
+                  icon: icon,
+                  suffixIcon: suffixIcon,
+                  hasError: formFieldState.hasError,
+                  onChanged: (value) {
+                    formFieldState.didChange(value);
+                  },
                 ),
                 // Message d'erreur affiché en dehors
                 if (formFieldState.hasError)
@@ -461,6 +418,121 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
             backgroundColor: AppColors.orange,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// TextField avec effet de focus sur la bordure
+class _FocusableTextField extends StatefulWidget {
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final String hint;
+  final IconData icon;
+  final Widget? suffixIcon;
+  final bool hasError;
+  final Function(String) onChanged;
+
+  const _FocusableTextField({
+    required this.controller,
+    required this.keyboardType,
+    required this.obscureText,
+    required this.hint,
+    required this.icon,
+    required this.suffixIcon,
+    required this.hasError,
+    required this.onChanged,
+  });
+
+  @override
+  State<_FocusableTextField> createState() => _FocusableTextFieldState();
+}
+
+class _FocusableTextFieldState extends State<_FocusableTextField> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: widget.hasError
+              ? AppColors.error.withValues(alpha: 0.8)
+              : _isFocused
+              ? AppColors.yellow.withValues(alpha: 0.8)
+              : AppColors.white.withValues(alpha: 0.25),
+          width: _isFocused ? 2.0 : 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: TextField(
+          controller: widget.controller,
+          focusNode: _focusNode,
+          keyboardType: widget.keyboardType,
+          obscureText: widget.obscureText,
+          style: AppTextStyles.body1.copyWith(
+            color: AppColors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+          ),
+          cursorColor: AppColors.white,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.transparent,
+            hintText: widget.hint,
+            hintStyle: AppTextStyles.body2.copyWith(
+              color: AppColors.white.withValues(alpha: 0.4),
+              fontSize: 15,
+            ),
+            prefixIcon: Icon(
+              widget.icon,
+              color: _isFocused
+                  ? AppColors.white
+                  : AppColors.white.withValues(alpha: 0.7),
+              size: 22,
+            ),
+            suffixIcon: widget.suffixIcon,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            errorBorder: InputBorder.none,
+            focusedErrorBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 18,
+            ),
+          ),
+          onChanged: widget.onChanged,
+        ),
       ),
     );
   }
@@ -545,7 +617,9 @@ class _AnimatedButtonState extends State<_AnimatedButton>
               gradient: LinearGradient(
                 colors: [
                   widget.backgroundColor ?? AppColors.white,
-                  (widget.backgroundColor ?? AppColors.white).withValues(alpha: 0.95),
+                  (widget.backgroundColor ?? AppColors.white).withValues(
+                    alpha: 0.95,
+                  ),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -553,7 +627,9 @@ class _AnimatedButtonState extends State<_AnimatedButton>
               borderRadius: BorderRadius.circular(30),
               boxShadow: [
                 BoxShadow(
-                  color: (widget.backgroundColor ?? AppColors.white).withValues(alpha: 0.3),
+                  color: (widget.backgroundColor ?? AppColors.white).withValues(
+                    alpha: 0.3,
+                  ),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),

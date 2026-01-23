@@ -19,9 +19,10 @@ class AdvertisementDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
+      appBar: CustomAppBar(
+        title: '',
         backgroundColor: Colors.transparent,
-        elevation: 0,
+        showLogo: false,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),

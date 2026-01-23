@@ -218,6 +218,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       bottomNavigationBar: _buildBottomNavBar(),
     );
   }
+  
 
   Widget _buildBottomNavBar() {
     return Container(

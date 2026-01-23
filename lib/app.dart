@@ -39,13 +39,16 @@ import 'package:locacharge/features/auth/screens/user_register_screen.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/favorite_merchant_provider.dart';
+import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
+
 import 'package:locacharge/providers/invoice_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
 import 'package:locacharge/services/notification_service.dart';
+import 'package:locacharge/features/user/services/feed_manager.dart';
 
 class LocaChargeApp extends StatefulWidget {
   const LocaChargeApp({super.key});
@@ -77,6 +80,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         ChangeNotifierProvider(create: (_) => InvoiceProvider()),
         ChangeNotifierProvider(create: (_) => FavoriteMerchantProvider()),
         ChangeNotifierProvider(create: (_) => AdProvider()),
+        ChangeNotifierProvider(create: (_) => FeedManager()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, authProvider, _) {
@@ -194,9 +198,10 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         );
       case AppRoutes.merchantDetail:
         final args = settings.arguments as Map<String, dynamic>?;
+        final merchant = args?['merchant'] as Merchant?;
         return MaterialPageRoute(
           builder: (_) => RouteGuards.requireUserType(
-            MerchantDetailScreen(merchant: args?['merchant']),
+            MerchantDetailScreen(merchant: merchant!),
             UserType.user,
           ),
         );

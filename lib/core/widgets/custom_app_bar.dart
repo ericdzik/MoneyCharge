@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_dimensions.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -24,70 +24,57 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final titleStyle = theme.appBarTheme.titleTextStyle?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ) ??
-        const TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        );
-
     final statusBarHeight = MediaQuery.of(context).padding.top;
+    final color = backgroundColor ?? AppColors.primary;
+
+    // Définir la couleur de la status bar de manière plus fiable
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: color,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+    );
 
     return Container(
-      padding: EdgeInsets.only(top: statusBarHeight),
+      // Le Container doit inclure la status bar dans sa hauteur totale
+      height: statusBarHeight + kToolbarHeight,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppColors.primary,
+        color: color,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(borderRadius),
           bottomRight: Radius.circular(borderRadius),
         ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-        child: Row(
-          children: [
-            if (leading != null) leading!,
-            Expanded(
-              child: Center(
-                child: showLogo
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          // const SimIcon(),
-                          const SizedBox(width: AppDimensions.paddingS),
-                          Flexible(
-                            child: Text(
-                              title,
-                              overflow: TextOverflow.ellipsis,
-                              style: titleStyle,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        title,
-                        overflow: TextOverflow.ellipsis,
-                        style: titleStyle,
-                      ),
+      // Le padding est appliqué APRÈS la décoration
+      padding: EdgeInsets.only(top: statusBarHeight, left: 16.0, right: 16.0),
+      child: Row(
+        children: [
+          if (leading != null) leading!,
+          Expanded(
+            child: Center(
+              child: Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            if (actions != null) 
-              Row(children: actions!.take(3).toList()),
-          ],
-        ),
+          ),
+          if (actions != null) Row(children: actions!.take(3).toList()),
+        ],
       ),
     );
   }
 
   @override
   Size get preferredSize {
-    // Hauteur totale = statusBar + toolbar + padding vertical
-    // On utilise une hauteur fixe approximative pour la statusBar (24-48px typique)
-    // Le MediaQuery sera disponible au moment du build
-    return const Size.fromHeight(kToolbarHeight + 16.0 + 30.0);
+    final statusBarHeight =
+        WidgetsBinding.instance.window.padding.top /
+        WidgetsBinding.instance.window.devicePixelRatio;
+    return Size.fromHeight(kToolbarHeight + statusBarHeight);
   }
 }

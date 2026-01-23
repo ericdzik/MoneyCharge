@@ -1,326 +1,130 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:locacharge/core/constants/app_routes.dart';
-import 'package:locacharge/features/user/models/content_item_model.dart' show AdvertisementContentItem, MerchantContentItem;
-import 'package:locacharge/features/user/services/feed_manager.dart' show FeedManager;
-import 'package:locacharge/providers/merchant_provider.dart';
-import 'package:locacharge/features/auth/providers/auth_provider.dart';
-import 'package:locacharge/core/constants/app_colors.dart';
-import 'package:locacharge/core/constants/app_text_styles.dart';
-import 'package:locacharge/core/constants/app_dimensions.dart';
-import 'package:locacharge/core/widgets/loading_widgets.dart';
-import 'package:locacharge/features/user/models/advertisement_model.dart';
-import 'package:locacharge/features/user/screens/advertisement_detail_screen.dart';
 
+import 'package:locacharge/core/constants/app_dimensions.dart';
+import 'package:locacharge/core/constants/app_routes.dart';
+import 'package:locacharge/core/constants/app_text_styles.dart';
+import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/widgets/custom_app_bar.dart';
+import 'package:locacharge/core/widgets/custom_drawer.dart';
+import 'package:locacharge/core/widgets/loading_widgets.dart';
+import 'package:locacharge/features/user/widgets/merchant_card.dart';
+
+import 'package:locacharge/features/user/models/advertisement_model.dart';
+import 'package:locacharge/features/user/models/content_item_model.dart';
+import 'package:locacharge/features/user/screens/advertisement_detail_screen.dart';
+import 'package:locacharge/features/user/services/feed_manager.dart';
+
+import 'package:locacharge/providers/merchant_provider.dart';
+
+/// Écran d'accueil avec fil d'actualités
+///
+/// Affiche :
+/// - Une bannière publicitaire en haut (carousel auto-scroll)
+/// - Une liste de marchands à proximité
 class HomeFeedScreen extends StatefulWidget {
-  const HomeFeedScreen({Key? key}) : super(key: key);
+  const HomeFeedScreen({super.key});
 
   @override
   State<HomeFeedScreen> createState() => _HomeFeedScreenState();
 }
 
-class _HomeFeedScreenState extends State<HomeFeedScreen>
-    with AutomaticKeepAliveClientMixin {
+class _HomeFeedScreenState extends State<HomeFeedScreen> {
   late FeedManager _feedManager;
-  final ScrollController _scrollController = ScrollController();
-  bool _isInitialized = false;
-  
-  @override
-  bool get wantKeepAlive => true;
+
+  // Contrôleur pour le carousel de bannières publicitaires
+  final PageController _bannerController = PageController(
+    viewportFraction: 0.9,
+  );
+  int _currentBannerIndex = 0;
+
+  // Timer pour l'auto-scroll des bannières
+  Timer? _bannerAutoScrollTimer;
+  bool _isBannerPaused = false;
+
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _feedManager = FeedManager();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    
-    // Initialiser le FeedManager avec le MerchantProvider une seule fois
-    if (!_isInitialized) {
-      _isInitialized = true;
-      final merchantProvider = Provider.of<MerchantProvider>(context, listen: false);
-      // Initialisation du FeedManager
+
+    if (_initialized) return;
+
+    _feedManager = context.read<FeedManager>();
+    final merchantProvider = context.read<MerchantProvider>();
+
+    // Initialiser et charger le contenu
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _feedManager.initialize(merchantProvider);
+      _feedManager.loadInitialContent();
+    });
 
-      // S'assurer que les marchands sont chargés
-      if (merchantProvider.merchants.isEmpty && !merchantProvider.isLoading) {
-        // print('🔄 Rechargement forcé...');
-        merchantProvider.listenToMerchants();
-      }
-
-      // Load initial content après un petit délai
-      Future.delayed(const Duration(milliseconds: 100), () {
-        _feedManager.loadInitialContent();
-      });
-    }
+    _initialized = true;
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
-    _feedManager.dispose();
+    _bannerAutoScrollTimer?.cancel();
+    _bannerController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    // Load more content when approaching the end
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      _feedManager.loadMoreContent();
-    }
+  /* -------------------------------------------------------------------------- */
+  /*                            AUTO-SCROLL BANNER                              */
+  /* -------------------------------------------------------------------------- */
+
+  void _startBannerAutoScroll(int bannerCount) {
+    if (bannerCount <= 1) return;
+
+    _bannerAutoScrollTimer?.cancel();
+    _bannerAutoScrollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted || _isBannerPaused) return;
+
+      final nextIndex = (_currentBannerIndex + 1) % bannerCount;
+      _bannerController.animateToPage(
+        nextIndex,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOut,
+      );
+    });
   }
+
+  void _pauseBannerAutoScroll() {
+    setState(() => _isBannerPaused = true);
+  }
+
+  void _resumeBannerAutoScroll() {
+    setState(() => _isBannerPaused = false);
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                   BUILD                                    */
+  /* -------------------------------------------------------------------------- */
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
-    
     return Scaffold(
-      backgroundColor: AppColors.background,
-      drawer: _buildDrawer(),
-      body: ChangeNotifierProvider.value(
-        value: _feedManager,
-        child: Consumer<FeedManager>(
-          builder: (context, feedManager, child) {
-            return NestedScrollView(
-              controller: _scrollController,
-              headerSliverBuilder: (context, innerBoxIsScrolled) {
-                return [_buildAppBar()];
-              },
-              body: _buildFeedContent(feedManager),
-            );
-          },
-        ),
-      ),
+      drawer: const CustomDrawer(),
+      appBar: _buildAppBar(),
+      body: _buildBody(),
     );
   }
 
-  Widget _buildFeedContent(FeedManager feedManager) {
-    if (feedManager.isLoading && feedManager.contentItems.isEmpty) {
-      return const Center(child: LoadingIndicator());
-    }
-
-    if (feedManager.errorMessage != null) {
-      return _buildErrorState(feedManager.errorMessage!);
-    }
-
-    // Séparer les publicités et les marchands
-    final advertisements = feedManager.contentItems
-      .whereType<AdvertisementContentItem>()
-      .toList();
-
-    final merchants = feedManager.contentItems
-      .whereType<MerchantContentItem>()
-      .toList();
-
-    return RefreshIndicator(
-      onRefresh: _handleRefresh,
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Carrousel de bannières publicitaires (implémentation locale)
-            if (advertisements.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.paddingM),
-              SizedBox(
-                height: 160,
-                child: PageView.builder(
-                  controller: PageController(viewportFraction: 0.9),
-                  itemCount: advertisements.length,
-                  onPageChanged: (index) =>
-                      _feedManager.trackAdvertisementImpression(advertisements[index].id),
-                  itemBuilder: (context, index) {
-                    final adItem = advertisements[index];
-                    return GestureDetector(
-                      onTap: () => _handleAdvertisementTap(adItem.advertisement),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                          color: Colors.white,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.05),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.network(adItem.advertisement.imageUrl, fit: BoxFit.cover),
-                            Positioned(
-                              left: 12,
-                              bottom: 12,
-                              right: 12,
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.45),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  adItem.advertisement.title,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: AppTextStyles.body1.copyWith(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-
-            // Section des marchands à proximité (implémentation locale)
-            const SizedBox(height: AppDimensions.paddingL),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.paddingM),
-              child: Text('Marchands à proximité', style: AppTextStyles.h3),
-            ),
-            const SizedBox(height: AppDimensions.paddingS),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: merchants.length,
-              itemBuilder: (context, index) {
-                final merchantItem = merchants[index];
-                // Supposons que merchantItem est déjà un Merchant ou possède les propriétés nécessaires
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.paddingM,
-                    vertical: 4,
-                  ),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                    child: Icon(Icons.store, color: AppColors.primary),
-                  ),
-                  title: Text(merchantItem.name),
-                  subtitle: Text((merchantItem.isVerified == true) ? 'Vérifié' : 'Non vérifié'),
-                  onTap: () => _handleMerchantTap(merchantItem),
-                );
-              },
-            ),
-            
-            // Espace en bas pour éviter que le contenu soit coupé
-            const SizedBox(height: AppDimensions.paddingXL),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String errorMessage) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.paddingXL),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: AppDimensions.paddingM),
-            Text(
-              'Erreur de chargement',
-              style: AppTextStyles.h3,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimensions.paddingS),
-            Text(
-              errorMessage,
-              style: AppTextStyles.body2.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimensions.paddingL),
-            ElevatedButton(
-              onPressed: _handleRefresh,
-              child: const Text('Réessayer'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
-      pinned: true,
-      backgroundColor: AppColors.primary,
-      automaticallyImplyLeading: false,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(20),
-          bottomRight: Radius.circular(20),
-        ),
-      ),
-      leading: Padding(
-        padding: const EdgeInsets.only(left: 16.0),
-        child: Row(
-          children: [
-            IconButton(
-              icon: const Icon(Icons.menu, color: Colors.white),
-              onPressed: () => Scaffold.of(context).openDrawer(),
-            ),
-            Text(
-              'Accueil',
-              style: AppTextStyles.h3.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-      leadingWidth: 150,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withValues(alpha: 0.8),
-              ],
-            ),
-            borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(20),
-              bottomRight: Radius.circular(20),
-            ),
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.paddingM),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Text(
-                    'Découvrez les offres près de chez vous',
-                    style: AppTextStyles.body2.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+  PreferredSizeWidget _buildAppBar() {
+    return CustomAppBar(
+      title: 'Accueil',
+      showLogo: false,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu, color: Colors.white),
+          onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
       actions: [
@@ -328,385 +132,484 @@ class _HomeFeedScreenState extends State<HomeFeedScreen>
           icon: const Icon(Icons.location_on, color: Colors.white),
           onPressed: _showLocationSettings,
         ),
-        IconButton(
-          icon: const Icon(Icons.tune, color: Colors.white),
-          onPressed: _showFeedSettings,
-        ),
       ],
     );
   }
 
-  Future<void> _handleRefresh() async {
-    await _feedManager.refreshContent();
-  }
+  Widget _buildBody() {
+    return ListenableBuilder(
+      listenable: _feedManager,
+      builder: (context, _) {
+        // État de chargement initial
+        if (_feedManager.isLoading && _feedManager.contentItems.isEmpty) {
+          return const Center(child: LoadingIndicator());
+        }
 
-  void _handleAdvertisementTap(Advertisement advertisement) {
-    // Track click
-    _feedManager.trackAdvertisementClick(advertisement.id);
-    
-    // Navigate to advertisement detail screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AdvertisementDetailScreen(advertisement: advertisement),
-      ),
+        // État d'erreur
+        if (_feedManager.errorMessage != null) {
+          return _buildErrorState(_feedManager.errorMessage!);
+        }
+
+        // Extraire les bannières publicitaires et les marchands
+        final banners = _feedManager.contentItems
+            .whereType<AdvertisementContentItem>()
+            .toList();
+
+        final merchants = _feedManager.contentItems
+            .whereType<MerchantContentItem>()
+            .toList();
+
+        // Démarrer l'auto-scroll si nécessaire
+        if (banners.isNotEmpty && _bannerAutoScrollTimer == null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _startBannerAutoScroll(banners.length);
+          });
+        }
+
+        return RefreshIndicator(
+          onRefresh: _feedManager.refreshContent,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // Bannière publicitaire en haut
+              if (banners.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      top: AppDimensions.paddingM,
+                      bottom: AppDimensions.paddingL,
+                    ),
+                    child: _buildBannerCarousel(banners),
+                  ),
+                ),
+
+              // Section titre "Marchands à proximité"
+              if (merchants.isNotEmpty)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.paddingM,
+                    ),
+                    child: Text(
+                      'Marchands à proximité',
+                      style: AppTextStyles.h2.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+              if (merchants.isNotEmpty)
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppDimensions.paddingM),
+                ),
+
+              // Liste des marchands
+              if (merchants.isEmpty && banners.isEmpty)
+                SliverFillRemaining(child: _buildEmptyState())
+              else if (merchants.isNotEmpty)
+                SliverPadding(
+                  padding: const EdgeInsets.only(
+                    bottom: 100,
+                  ), // Espace pour nav bar
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final merchant = merchants[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppDimensions.paddingM,
+                        ),
+                        child: MerchantCard(
+                          merchantId: merchant.merchantId,
+                          name: merchant.name,
+                          services: merchant.services,
+                          rating: merchant.rating,
+                          distanceKm: merchant.distanceKm,
+                          imageUrl: merchant.imageUrl,
+                          address: merchant.address,
+                          isVerified: merchant.isVerified,
+                          onTap: () => _onMerchantTap(merchant),
+                        ),
+                      );
+                    }, childCount: merchants.length),
+                  ),
+                )
+              else
+                const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  void _handleMerchantTap(MerchantContentItem merchant) async {
-    try {
-      // L'objet Merchant complet est déjà disponible dans MerchantContentItem ou merchant est déjà un Merchant
-      final fullMerchant = merchant;
-      Navigator.pushNamed(
-        context,
-        AppRoutes.merchantDetail,
-        arguments: {'merchant': fullMerchant},
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erreur lors du chargement'),
-          backgroundColor: Colors.red,
+  /* -------------------------------------------------------------------------- */
+  /*                            BANNER CAROUSEL                                 */
+  /* -------------------------------------------------------------------------- */
+
+  Widget _buildBannerCarousel(List<AdvertisementContentItem> banners) {
+    return Column(
+      children: [
+        // En-tête de section style "Premium"
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "#SpecialForYou",
+                style: AppTextStyles.h3.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+              Text(
+                "Tout voir",
+                style: AppTextStyles.body2.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
-      );
-    }
+
+        // Carousel avec effet "Peek" (viewportFraction)
+        SizedBox(
+          height: 190,
+          child: GestureDetector(
+            onTapDown: (_) => _pauseBannerAutoScroll(),
+            onTapUp: (_) => _resumeBannerAutoScroll(),
+            onTapCancel: () => _resumeBannerAutoScroll(),
+            child: PageView.builder(
+              controller: _bannerController,
+              itemCount: banners.length,
+              padEnds:
+                  false, // Alignement à gauche pour le premier item ? Non, centré c'est mieux avec viewportFraction
+              onPageChanged: (index) {
+                setState(() => _currentBannerIndex = index);
+                _feedManager.trackAdvertisementImpression(banners[index].id);
+              },
+              itemBuilder: (context, index) {
+                return _buildPremiumBannerCard(banners[index]);
+              },
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Indicateurs de page centrés en dessous
+        if (banners.length > 1)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              banners.length,
+              (index) =>
+                  _buildPageIndicator(isActive: index == _currentBannerIndex),
+            ),
+          ),
+      ],
+    );
   }
 
-  Widget _buildDrawer() {
-    return Drawer(
-      backgroundColor: Colors.white,
-      child: Column(
-        children: [
-          // Header du drawer
-          Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  AppColors.primary,
-                  AppColors.primary.withValues(alpha: 0.8),
+  Widget _buildPremiumBannerCard(AdvertisementContentItem item) {
+    return GestureDetector(
+      onTap: () => _onBannerTap(item.advertisement),
+      child: Container(
+        margin: const EdgeInsets.symmetric(
+          horizontal: 6,
+        ), // Espacement entre les cartes
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: AppColors.gray200, // Placeholder couleur
+          image: DecorationImage(
+            image: NetworkImage(item.advertisement.imageUrl),
+            fit: BoxFit.cover,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            // Dégradé Noir -> Transparent (Pour lisibilité texte à gauche)
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.black.withValues(alpha: 0.8),
+                    Colors.black.withValues(alpha: 0.0),
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  stops: const [0.0, 0.7],
+                ),
+              ),
+            ),
+
+            // Contenu
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Badge "Limited time" / "Sponsorisé"
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "Offre Spéciale",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  // Titre
+                  Text(
+                    item.advertisement.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      height: 1.1,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Description (ex: Up to 40%)
+                  if (item.advertisement.description.isNotEmpty)
+                    Text(
+                      item.advertisement.description,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                  const SizedBox(height: 12),
+
+                  // Bouton "Claim" / "Voir l'offre" aligné à droite
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        item.advertisement.callToAction ?? "Voir l'offre",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimensions.paddingL),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.white.withValues(alpha: 0.2),
-                      child: Icon(
-                        Icons.person,
-                        size: 35,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.paddingM),
-                    Consumer<AuthProvider>(
-                      builder: (context, authProvider, _) {
-                        String displayName = 'Utilisateur';
-                        String email = '';
-                        
-                        // Récupérer le nom selon le type d'utilisateur
-                        switch (authProvider.userType) {
-                          case UserType.user:
-                            displayName = authProvider.appUserProfile?.name ?? 'Utilisateur';
-                            email = authProvider.appUserProfile?.email ?? '';
-                            break;
-                          case UserType.merchant:
-                            displayName = authProvider.merchantProfile?.businessName ?? 'Marchand';
-                            email = authProvider.merchantProfile?.email ?? '';
-                            break;
-                          case UserType.admin:
-                            displayName = authProvider.adminProfile?.name ?? 'Admin';
-                            email = authProvider.adminProfile?.email ?? '';
-                            break;
-                          default:
-                            displayName = 'Utilisateur';
-                            email = '';
-                        }
-                        
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              displayName,
-                              style: AppTextStyles.h3.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              email,
-                              style: AppTextStyles.body2.copyWith(
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          
-          // Menu items
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                _buildDrawerItem(
-                  icon: Icons.home,
-                  title: 'Accueil',
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  isSelected: true,
-                ),
-                _buildDrawerItem(
-                  icon: Icons.list,
-                  title: 'Liste des marchands',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.listView);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.map,
-                  title: 'Carte',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.mapView);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.favorite,
-                  title: 'Favoris',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.favorites);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.local_offer,
-                  title: 'Promotions',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.promotions);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.notifications,
-                  title: 'Notifications',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.notifications);
-                  },
-                ),
-                const Divider(height: 1),
-                _buildDrawerItem(
-                  icon: Icons.person,
-                  title: 'Mon profil',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.userProfile);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.help,
-                  title: 'Aide et support',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.help);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.privacy_tip,
-                  title: 'Confidentialité',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.privacy);
-                  },
-                ),
-                _buildDrawerItem(
-                  icon: Icons.info,
-                  title: 'À propos',
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, AppRoutes.about);
-                  },
-                ),
-              ],
-            ),
-          ),
-          
-          // Footer avec déconnexion
-          Container(
-            padding: const EdgeInsets.all(AppDimensions.paddingM),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: AppColors.border),
-              ),
-            ),
-            child: _buildDrawerItem(
-              icon: Icons.logout,
-              title: 'Déconnexion',
-              onTap: () async {
-                Navigator.pop(context);
-                final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                await authProvider.logout();
-              },
-              textColor: AppColors.error,
-              iconColor: AppColors.error,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required IconData icon,
-    required String title,
-    required VoidCallback onTap,
-    bool isSelected = false,
-    Color? textColor,
-    Color? iconColor,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingS,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: isSelected ? AppColors.primary.withValues(alpha: 0.1) : null,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: iconColor ?? (isSelected ? AppColors.primary : AppColors.textSecondary),
-        ),
-        title: Text(
-          '', // Ajout d'un texte par défaut pour éviter l'erreur d'argument manquant
-          style: AppTextStyles.body1.copyWith(
-            color: textColor ?? (isSelected ? AppColors.primary : AppColors.textPrimary),
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-          ),
-        ),
-        onTap: onTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        ),
-      ),
-    );
-  }
-
-  void _showLocationSettings() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Paramètres de localisation',
-              style: AppTextStyles.h3.copyWith(fontSize: 18),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.my_location),
-              title: const Text('Actualiser ma position'),
-              subtitle: const Text('Mettre à jour votre localisation actuelle'),
-              onTap: () {
-                Navigator.pop(context);
-                // _feedManager.updateLocation(); // Méthode non définie, à implémenter si besoin
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Paramètres de confidentialité'),
-              subtitle: const Text('Gérer vos préférences de localisation'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/privacy-settings');
-              },
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
 
-  void _showFeedSettings() {
+  Widget _buildPageIndicator({required bool isActive}) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: isActive ? 24 : 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: isActive ? AppColors.primary : AppColors.gray300,
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                EMPTY STATE                                 */
+  /* -------------------------------------------------------------------------- */
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingXL),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.store_outlined,
+                size: 60,
+                color: AppColors.primary.withValues(alpha: 0.5),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.paddingXL),
+            Text(
+              'Aucun contenu disponible',
+              style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: AppDimensions.paddingM),
+            Text(
+              'Tirez vers le bas pour actualiser',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body2.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                              ERROR STATE                                   */
+  /* -------------------------------------------------------------------------- */
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: AppColors.error),
+            const SizedBox(height: AppDimensions.paddingL),
+            Text(
+              'Erreur',
+              style: AppTextStyles.h2.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppDimensions.paddingM),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.body1,
+            ),
+            const SizedBox(height: AppDimensions.paddingL),
+            ElevatedButton.icon(
+              onPressed: () => _feedManager.refreshContent(),
+              icon: const Icon(Icons.refresh),
+              label: const Text('Réessayer'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                ACTIONS                                     */
+  /* -------------------------------------------------------------------------- */
+
+  void _onBannerTap(Advertisement ad) {
+    _feedManager.trackAdvertisementClick(ad.id);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AdvertisementDetailScreen(advertisement: ad),
+      ),
+    );
+  }
+
+  void _onMerchantTap(MerchantContentItem merchant) {
+    final provider = context.read<MerchantProvider>();
+    final model = provider.getMerchantById(merchant.merchantId);
+
+    if (model == null) {
+      _showSnackBar('Marchand introuvable');
+      return;
+    }
+
+    Navigator.pushNamed(
+      context,
+      AppRoutes.merchantDetail,
+      arguments: {'merchant': model},
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.error),
+    );
+  }
+
+  void _showLocationSettings() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(AppDimensions.paddingL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 20),
+            Text('Paramètres de localisation', style: AppTextStyles.h2),
+            const SizedBox(height: AppDimensions.paddingM),
             Text(
-              'Paramètres du fil d\'actualité',
-              style: AppTextStyles.h3.copyWith(fontSize: 18),
+              'Activez la localisation pour voir les marchands à proximité',
+              style: AppTextStyles.body1,
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.tune),
-              title: const Text('Préférences de contenu'),
-              subtitle: const Text('Personnaliser votre fil d\'actualité'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/feed-preferences');
-              },
+            const SizedBox(height: AppDimensions.paddingL),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Fermer'),
             ),
-            ListTile(
-              leading: const Icon(Icons.block),
-              title: const Text('Contenu bloqué'),
-              subtitle: const Text('Gérer les marchands et publicités bloqués'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/blocked-content');
-              },
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),

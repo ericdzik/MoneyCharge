@@ -207,14 +207,11 @@ class AuthProvider with ChangeNotifier {
     _setLoading(true);
     _error = null;
     try {
-      // Réinitialiser immédiatement l'état local avant la déconnexion Firebase
+      await _authService.logout();
       _firebaseUser = null;
       _userType = UserType.unknown;
       _clearProfiles();
-      notifyListeners(); // Notifier immédiatement
-      
-      // Puis déconnecter de Firebase
-      await _authService.logout();
+      notifyListeners();
     } catch (e) {
       _error = e.toString();
     } finally {

@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:share_plus/share_plus.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/utils/opening_hours_parser.dart';
@@ -10,7 +9,6 @@ import 'package:locacharge/core/widgets/status_badge.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/features/user/screens/add_review_screen.dart';
 import 'package:locacharge/features/user/widgets/review_list_widget.dart';
-import 'package:locacharge/providers/favorite_merchant_provider.dart';
 import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/services/location_service.dart';
 
@@ -28,7 +26,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   String _drivingTime = 'Calcul...';
   final LocationService _locationService = LocationService();
   final ScrollController _scrollController = ScrollController();
-  double _appBarOpacity = 0.0;
 
   @override
   void initState() {
@@ -43,7 +40,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
 
   void _handleScroll() {
     setState(() {
-      _appBarOpacity = (_scrollController.offset / 200).clamp(0.0, 1.0);
     });
   }
 
@@ -98,21 +94,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
     }
   }
 
-  void _shareMerchant() {
-    final merchant = widget.merchant;
-    final googleMapsUrl =
-        'https://www.google.com/maps/search/?api=1&query=${merchant.latitude},${merchant.longitude}';
-
-    final services = merchant.services.join('\n- ');
-    final servicesText =
-        services.isNotEmpty ? 'Services proposés :\n- $services\n\n' : '';
-
-    final shareMessage = 'Découvrez ce marchand sur Géo : ${merchant.name}\n\n'
-        '$servicesText'
-        '📍 Emplacement sur Google Maps :\n$googleMapsUrl';
-
-    Share.share(shareMessage);
-  }
 
   Future<void> _handleNavigation() async {
     final success = await _locationService.openNavigation(
@@ -132,36 +113,49 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          _SliverAppBar(
-            merchant: widget.merchant,
-            onShare: _shareMerchant,
-            opacity: _appBarOpacity,
+      drawer: const CustomDrawer(),
+      backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: widget.merchant.name,
+        showLogo: false,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
           ),
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                _ImageHero(merchant: widget.merchant),
-                _MerchantHeader(merchant: widget.merchant),
-                _TransitTimesSection(
-                  walkingTime: _walkingTime,
-                  drivingTime: _drivingTime,
-                ),
-                _InfoSection(merchant: widget.merchant),
-                _ServicesSection(services: widget.merchant.services),
-                _RatingSection(merchant: widget.merchant),
-                _ReviewSection(merchantId: widget.merchant.id),
-                const SizedBox(height: AppDimensions.paddingXL),
-              ],
-            ),
-          ),
+        ),
+        actions: const [
+          Icon(Icons.store, color: Colors.white),
         ],
       ),
+      body: _buildMerchantDetail(),
       bottomNavigationBar: _BottomActions(
         phone: widget.merchant.phone,
         onNavigate: _handleNavigation,
+      ),
+    );
+  }
+
+  Widget _buildMerchantDetail() {
+    return SingleChildScrollView(
+      controller: _scrollController,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ImageHero(merchant: widget.merchant),
+          _MerchantHeader(merchant: widget.merchant),
+          const SizedBox(height: AppDimensions.paddingM),
+          _TransitTimesSection(
+            walkingTime: _walkingTime,
+            drivingTime: _drivingTime,
+          ),
+          const SizedBox(height: AppDimensions.paddingM),
+          _InfoSection(merchant: widget.merchant),
+          _ServicesSection(services: widget.merchant.services),
+          _RatingSection(merchant: widget.merchant),
+          _ReviewSection(merchantId: widget.merchant.id),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }
@@ -171,51 +165,6 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
 // MODERN UI WIDGETS - SENIOR LEVEL DESIGN
 // ============================================================================
 
-class _SliverAppBar extends StatelessWidget {
-  final Merchant merchant;
-  final VoidCallback onShare;
-  final double opacity;
-
-  const _SliverAppBar({
-    required this.merchant,
-    required this.onShare,
-    required this.opacity,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 0,
-      pinned: true,
-      backgroundColor: Colors.white.withValues(alpha: opacity),
-      elevation: opacity > 0.5 ? 4 : 0,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(16),
-          bottomRight: Radius.circular(16),
-        ),
-      ),
-      leading: Container(
-        margin: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.3 * (1 - opacity)),
-          shape: BoxShape.circle,
-        ),
-        child: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      actions: [
-        _FavoriteButton(merchantId: merchant.id),
-        IconButton(
-          icon: Icon(Icons.share, color: Colors.black.withValues(alpha: 0.5 + opacity * 0.5)),
-          onPressed: onShare,
-        ),
-      ],
-    );
-  }
-}
 
 class _ImageHero extends StatelessWidget {
   final Merchant merchant;
@@ -559,42 +508,6 @@ class _TransitCard extends StatelessWidget {
   }
 }
 
-class _FavoriteButton extends StatelessWidget {
-  final String merchantId;
-
-  const _FavoriteButton({required this.merchantId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<FavoriteMerchantProvider>(
-      builder: (context, provider, _) {
-        final isFavorite = provider.isFavorite(merchantId);
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          decoration: BoxDecoration(
-            color: isFavorite
-                ? AppColors.error.withValues(alpha: 0.15)
-                : Colors.black.withValues(alpha: 0.05),
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: Icon(
-              isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-              color: isFavorite ? AppColors.error : Colors.black.withValues(alpha: 0.6),
-            ),
-            onPressed: () {
-              if (isFavorite) {
-                provider.removeFavorite(merchantId);
-              } else {
-                provider.addFavorite(merchantId);
-              }
-            },
-          ),
-        );
-      },
-    );
-  }
-}
 
 class _InfoSection extends StatelessWidget {
   final Merchant merchant;
