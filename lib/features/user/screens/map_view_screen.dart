@@ -3,7 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/custom_bottom_nav_bar.dart';
+import 'package:locacharge/core/widgets/adaptive_navigation.dart';
 import 'package:locacharge/core/utils/opening_hours_parser.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
@@ -839,7 +839,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
       body: _currentIndex == 0 
           ? _buildMapContent()
           : SafeArea(child: screens[_currentIndex]),
-      bottomNavigationBar: CustomBottomNavBar(
+      bottomNavigationBar: AdaptiveBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),

@@ -3,7 +3,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
-import 'package:locacharge/core/widgets/modern_floating_nav_bar.dart';
+import 'package:locacharge/core/widgets/adaptive_navigation.dart';
 // merchant profile replaced by unified profile screen
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/list_view_screen.dart';
@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
               1 // Map is now at index 1
           ? _buildMapView(screens[1])
           : SafeArea(child: screens[_currentIndex]),
-      bottomNavigationBar: ModernFloatingNavBarWithLabels(
+      bottomNavigationBar: AdaptiveBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),

@@ -19,7 +19,7 @@ import 'package:locacharge/features/user/screens/home_screen.dart'
     show MapViewContent;
 import 'package:locacharge/core/security/access_control_widget.dart';
 import 'package:locacharge/core/security/rbac_constants.dart';
-import 'package:locacharge/core/widgets/modern_floating_nav_bar.dart';
+import 'package:locacharge/core/widgets/adaptive_navigation.dart';
 import 'package:locacharge/features/profile/unified_profile_screen.dart';
 
 class MerchantDashboardScreen extends StatefulWidget {
@@ -80,7 +80,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(child: screens[_currentIndex]),
-      bottomNavigationBar: ModernFloatingNavBarWithLabels(
+      bottomNavigationBar: AdaptiveBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
