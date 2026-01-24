@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/core/theme/app_theme.dart';
-import 'package:locacharge/core/utils/route_guards.dart';
+
+import 'package:locacharge/core/security/permission_provider.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/features/admin/screens/ad_screen.dart';
 import 'package:locacharge/features/admin/screens/admin_dashboard_screen.dart';
@@ -13,8 +14,9 @@ import 'package:locacharge/features/admin/screens/pending_verifications_screen.d
 import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/screens/edit_merchant_profile_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_dashboard_screen.dart';
+import 'package:locacharge/core/security/permission_guard.dart';
+import 'package:locacharge/core/security/rbac_constants.dart';
 import 'package:locacharge/features/merchant/screens/merchant_card_screen.dart';
-import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
 import 'package:locacharge/features/auth/screens/merchant_register_screen.dart';
 import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
 import 'package:locacharge/features/merchant/screens/stock_management_screen.dart';
@@ -34,7 +36,7 @@ import 'package:locacharge/features/user/screens/notifications_screen.dart';
 import 'package:locacharge/features/user/screens/privacy_screen.dart';
 import 'package:locacharge/features/user/screens/promotions_screen.dart';
 import 'package:locacharge/features/auth/screens/user_login_screen.dart';
-import 'package:locacharge/features/user/screens/user_profile_screen.dart';
+// user profile screen imported by specific screens where needed
 import 'package:locacharge/features/auth/screens/user_register_screen.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
@@ -44,6 +46,8 @@ import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
+
+import 'package:locacharge/features/profile/unified_profile_screen.dart';
 
 import 'package:locacharge/providers/invoice_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
@@ -70,6 +74,13 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProxyProvider<AuthProvider, PermissionProvider>(
+          create: (context) => PermissionProvider(
+            Provider.of<AuthProvider>(context, listen: false),
+          ),
+          update: (context, authProvider, permissionProvider) =>
+              permissionProvider!..update(authProvider),
+        ),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProxyProvider<LocationProvider, MerchantProvider>(
           create: (context) => MerchantProvider(null),
@@ -185,24 +196,29 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
       // Routes utilisateur
       case AppRoutes.home:
         return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const HomeScreen(), UserType.user),
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewHome,
+            child: const HomeScreen(),
+          ),
         );
 
       case AppRoutes.listView:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const ListViewScreen(),
-            UserType.user,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewMarketplace,
+            child: const ListViewScreen(),
           ),
         );
       case AppRoutes.merchantDetail:
         final args = settings.arguments as Map<String, dynamic>?;
         final merchant = args?['merchant'] as Merchant?;
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            MerchantDetailScreen(merchant: merchant!),
-            UserType.user,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewMarketplace,
+            child: MerchantDetailScreen(merchant: merchant!),
           ),
         );
 
@@ -210,50 +226,56 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         final args = settings.arguments as Map<String, dynamic>?;
         final advertisement = args?['advertisement'];
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            AdvertisementDetailScreen(advertisement: advertisement),
-            UserType.user,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewMarketplace,
+            child: AdvertisementDetailScreen(advertisement: advertisement),
           ),
         );
 
       case AppRoutes.userProfile:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const UserProfileScreen(),
-            UserType.user,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewUserProfile,
+            child: const UnifiedProfileScreen(),
           ),
         );
 
       case AppRoutes.favorites:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const FavoritesScreen(),
-            UserType.user,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewFavorites,
+            child: const FavoritesScreen(),
           ),
         );
 
       case AppRoutes.editProfile:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const EditUserProfileScreen(),
-            UserType.user,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.editUserProfile,
+            child: const EditUserProfileScreen(),
           ),
         );
 
       // Routes marchand
       case AppRoutes.merchantDashboard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const MerchantDashboardScreen(),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.accessMerchantDashboard,
+            child: const MerchantDashboardScreen(),
           ),
         );
 
       case AppRoutes.merchantCard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const MerchantCardScreen(),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.manageBusinessProfile,
+            child: const MerchantCardScreen(),
           ),
         );
 
@@ -261,51 +283,57 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         final args = settings.arguments as Map<String, dynamic>?;
         final merchantId = args?['merchantId'] as String;
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            MerchantReviewsScreen(merchantId: merchantId),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.respondToReviews,
+            child: MerchantReviewsScreen(merchantId: merchantId),
           ),
         );
 
       case AppRoutes.editMerchantProfile:
         final merchant = settings.arguments as MerchantAuthModel;
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            EditMerchantProfileScreen(merchant: merchant),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.manageBusinessProfile,
+            child: EditMerchantProfileScreen(merchant: merchant),
           ),
         );
 
       case AppRoutes.merchantProfile:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const MerchantProfileScreen(),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.manageBusinessProfile,
+            child: const UnifiedProfileScreen(),
           ),
         );
 
       case AppRoutes.stockManagement:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const StockManagementScreen(),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.manageStock,
+            child: const StockManagementScreen(),
           ),
         );
 
       case AppRoutes.salesScreen:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const SalesScreen(),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewSalesByType,
+            child: const SalesScreen(),
           ),
         );
 
       case AppRoutes.createInvoice:
         final invoice = settings.arguments as InvoiceModel?;
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            CreateInvoiceScreen(invoice: invoice),
-            UserType.merchant,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.createInvoice,
+            child: CreateInvoiceScreen(invoice: invoice),
           ),
         );
 
@@ -328,9 +356,10 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
       // Routes admin
       case AppRoutes.adminDashboard:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const AdminDashboardScreen(),
-            UserType.admin,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.accessAdminDashboard,
+            child: const AdminDashboardScreen(),
           ),
         );
 
@@ -339,24 +368,31 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         final pendingMerchants =
             args?['merchants'] as List<MerchantAuthModel>? ?? [];
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            PendingVerificationsScreen(pendingMerchants: pendingMerchants),
-            UserType.admin,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.approveMerchants,
+            child: PendingVerificationsScreen(
+              pendingMerchants: pendingMerchants,
+            ),
           ),
         );
 
       case AppRoutes.adminAds:
         return MaterialPageRoute(
-          builder: (_) => RouteGuards.requireUserType(
-            const ManageAdsScreen(),
-            UserType.admin,
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.manageSystemAds,
+            child: const ManageAdsScreen(),
           ),
         );
 
       case AppRoutes.adminAddAd:
         return MaterialPageRoute(
-          builder: (_) =>
-              RouteGuards.requireUserType(const AdScreen(), UserType.admin),
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.manageSystemAds,
+            child: const AdScreen(),
+          ),
         );
 
       default:
@@ -372,10 +408,7 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'Page non trouvée',
-        showLogo: false,
-      ),
+      appBar: const CustomAppBar(title: 'Page non trouvée', showLogo: false),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

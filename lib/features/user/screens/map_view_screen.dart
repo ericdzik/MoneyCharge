@@ -8,8 +8,8 @@ import 'package:locacharge/core/utils/opening_hours_parser.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/list_view_screen.dart';
-import 'package:locacharge/features/user/screens/user_profile_screen.dart';
-import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+import 'package:locacharge/features/profile/unified_profile_screen.dart';
+// merchant profile replaced by unified profile screen
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/location_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
@@ -87,9 +87,7 @@ class _MapViewScreenState extends State<MapViewScreen> {
       _buildMapContent(), // Contenu de la carte
       ListViewScreen(mapController: _mapController),
       const FavoritesScreen(),
-      isMerchant
-          ? const MerchantProfileScreen()
-          : const UserProfileScreen(showBackground: true),
+        const UnifiedProfileScreen(),
     ];
   }
 

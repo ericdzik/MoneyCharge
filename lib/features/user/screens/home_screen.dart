@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/widgets/modern_floating_nav_bar.dart';
-import 'package:locacharge/features/merchant/screens/merchant_profile_screen.dart';
+// merchant profile replaced by unified profile screen
 import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/user/screens/list_view_screen.dart';
-import 'package:locacharge/features/user/screens/user_profile_screen.dart';
+import 'package:locacharge/features/profile/unified_profile_screen.dart';
 import 'package:locacharge/features/user/screens/home_feed_screen.dart';
 import 'package:locacharge/features/user/widgets/filter_widget.dart';
 import 'package:locacharge/features/user/widgets/map_widget.dart';
@@ -34,9 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       MapViewContent(onMapCreated: (controller) => _mapController = controller),
       ListViewScreen(mapController: _mapController),
       const FavoritesScreen(),
-      isMerchant
-          ? const MerchantProfileScreen()
-          : const UserProfileScreen(showBackground: true),
+        const UnifiedProfileScreen(),
     ];
   }
 

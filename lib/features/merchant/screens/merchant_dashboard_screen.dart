@@ -9,13 +9,18 @@ import 'package:locacharge/core/common.dart';
 import 'package:locacharge/features/admin/screens/notification_screen.dart';
 import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/merchant/screens/merchant_reviews_screen.dart';
-import 'package:locacharge/features/merchant/widgets/dashboard_stats_widget.dart';
-import 'package:locacharge/features/merchant/widgets/merchant_header_widget.dart';
-import 'package:locacharge/features/merchant/widgets/stock_alerts_widget.dart';
-import 'package:locacharge/features/merchant/widgets/advanced_metrics_widget.dart';
 import 'package:locacharge/models/transaction_model.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
+import 'package:locacharge/features/user/screens/home_feed_screen.dart';
+import 'package:locacharge/features/user/screens/list_view_screen.dart';
+import 'package:locacharge/features/user/screens/favorites_screen.dart';
+import 'package:locacharge/features/user/screens/home_screen.dart'
+    show MapViewContent;
+import 'package:locacharge/core/security/access_control_widget.dart';
+import 'package:locacharge/core/security/rbac_constants.dart';
+import 'package:locacharge/core/widgets/modern_floating_nav_bar.dart';
+import 'package:locacharge/features/profile/unified_profile_screen.dart';
 
 class MerchantDashboardScreen extends StatefulWidget {
   const MerchantDashboardScreen({super.key});
@@ -27,198 +32,60 @@ class MerchantDashboardScreen extends StatefulWidget {
 
 class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   bool _isTrackingPosition = false;
+  int _currentIndex = 0;
   Timer? _positionUpdateTimer;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        _initializeData();
-      }
-    });
-  }
-
-  Future<void> _initializeData() async {
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.merchantProfile != null && mounted) {
-        await Provider.of<TransactionProvider>(
-          context,
-          listen: false,
-        ).fetchMerchantTransactions(authProvider);
-      } else {
-        print(
-          "[MerchantDashboardScreen] initState: merchantProfile est null, impossible de fetch les transactions.",
-        );
-      }
-    } catch (e) {
-      print("[MerchantDashboardScreen] Erreur lors de l'initialisation: $e");
-    }
+    // nothing UI-related here; keep init lightweight
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final transactionProvider = Provider.of<TransactionProvider>(context);
-    final MerchantAuthModel? currentMerchant = authProvider.merchantProfile;
-
-    if ((authProvider.isLoading || transactionProvider.isLoadingTransactions) &&
-        currentMerchant == null) {
-      return const Scaffold(body: LoadingIndicator());
-    }
-
-    if (currentMerchant == null) {
-      return Scaffold(
-        appBar: CustomAppBar(
-          title: 'Erreur Profil Marchand',
-          showLogo: false,
-        ),
-        body: const Center(
-          child: Padding(
-            padding: EdgeInsets.all(AppDimensions.paddingL),
-            child: Text(
-              "Profil marchand non disponible. Veuillez vous reconnecter ou contacter le support.",
-              textAlign: TextAlign.center,
-            ),
-          ),
-        ),
-      );
-    }
+    // Les écrans accessibles aux marchands (incluant les écrans User grâce à l'héritage)
+    final screens = [
+      // Écran 0: Home Feed (hérité de User)
+      AccessControl(
+        permission: AppPermission.viewHome,
+        child: const HomeFeedScreen(),
+        fallback: const Center(child: Text('Accès refusé')),
+      ),
+      // Écran 1: Map View (hérité de User)
+      AccessControl(
+        permission: AppPermission.viewMarketplace,
+        child: const MapViewContent(onMapCreated: null),
+        fallback: const Center(child: Text('Accès refusé')),
+      ),
+      // Écran 2: List View (hérité de User)
+      AccessControl(
+        permission: AppPermission.viewMarketplace,
+        child: const ListViewScreen(mapController: null),
+        fallback: const Center(child: Text('Accès refusé')),
+      ),
+      // Écran 3: Favorites (hérité de User)
+      AccessControl(
+        permission: AppPermission.viewFavorites,
+        child: const FavoritesScreen(),
+        fallback: const Center(child: Text('Accès refusé')),
+      ),
+      // Écran 4: Merchant Profile (unifié)
+      AccessControl(
+        permission: AppPermission.manageBusinessProfile,
+        child: const UnifiedProfileScreen(),
+        fallback: const Center(child: Text('Accès refusé')),
+      ),
+    ];
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          // Header sans SafeArea supplémentaire
-          MerchantHeaderWidget(
-            merchant: currentMerchant,
-            onLogout: () => _handleLogout(context),
-            onNotificationsTapped: _showNotifications,
-          ),
-
-          // Contenu scrollable
-          Expanded(
-            child: Container(
-              color: Colors.grey.shade50,
-              child: RefreshIndicator(
-                onRefresh: () async {
-                  if (!mounted) return;
-                  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                  if (authProvider.merchantProfile != null && mounted) {
-                    await Provider.of<TransactionProvider>(
-                      context,
-                      listen: false,
-                    ).fetchMerchantTransactions(authProvider);
-                  }
-                },
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(AppDimensions.paddingL),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Alertes de stock
-                      StockAlertsWidget(
-                        merchant: currentMerchant,
-                        onManageStock: () {
-                          Navigator.pushNamed(context, AppRoutes.stockManagement);
-                        },
-                      ),
-                      
-                      Text(
-                        'Aperçu',
-                        style: AppTextStyles.h2
-                            .copyWith(fontSize: 20, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 16),
-                      Builder(
-                        builder: (context) {
-                          final int totalServicesCount =
-                              currentMerchant.services?.length ?? 0;
-                          final int activeServicesCount =
-                              currentMerchant.serviceStockStatus?.entries
-                                  .where(
-                                    (entry) =>
-                                entry.value.toLowerCase() ==
-                                    'disponible'
-                              )
-                                  .length ??
-                                  0;
-
-                          return DashboardStatsWidget(
-                            totalServices: totalServicesCount,
-                            activeServices: activeServicesCount,
-                            totalRevenue: transactionProvider.totalRevenue,
-                            previousRevenue: transactionProvider.previousRevenue,
-                            totalTransactions: transactionProvider
-                                .totalSalesTransactionsCount,
-                            previousTransactions: transactionProvider.previousTransactionsCount,
-                            averageRating: currentMerchant.averageRating,
-                            reviewCount: currentMerchant.reviewCount,
-                            revenueChart: transactionProvider.last7DaysRevenue,
-                            chartLabels: transactionProvider.last7DaysLabels,
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 32),
-                      
-                      // Métriques avancées
-                      if (transactionProvider.merchantTransactions.isNotEmpty) ...[
-                        Text(
-                          'Analyses détaillées',
-                          style: AppTextStyles.h2
-                              .copyWith(fontSize: 20, color: Colors.black87),
-                        ),
-                        const SizedBox(height: 16),
-                        AdvancedMetricsWidget(
-                          transactions: transactionProvider.merchantTransactions,
-                          services: currentMerchant.services ?? [],
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                      
-                      if (transactionProvider.transactionsError != null)
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            bottom: AppDimensions.paddingM,
-                          ),
-                          child: Text(
-                            "Erreur de chargement des transactions: ${transactionProvider.transactionsError}",
-                            style: AppTextStyles.body2
-                                .copyWith(color: Colors.redAccent),
-                          ),
-                        ),
-                      Text(
-                        'Actions rapides',
-                        style: AppTextStyles.h2
-                            .copyWith(fontSize: 20, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildQuickActions(currentMerchant),
-                      const SizedBox(height: 32),
-                      if (currentMerchant.profileType == 'mobile')
-                        _buildLiveLocationCard(),
-                      Text(
-                        'Activité récente',
-                        style: AppTextStyles.h2
-                            .copyWith(fontSize: 20, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 16),
-                      _buildRecentActivity(),
-                      // Ajouter un padding en bas pour éviter que le contenu soit masqué par la nav bar
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
+      body: SafeArea(child: screens[_currentIndex]),
+      bottomNavigationBar: ModernFloatingNavBarWithLabels(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
     );
   }
-  
 
   Widget _buildBottomNavBar() {
     return Container(
@@ -254,7 +121,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 label: 'Carte',
                 isActive: false,
                 onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.merchantCard);
+                  Navigator.pushNamed(context, AppRoutes.home);
                 },
               ),
               _buildNavBarItem(
@@ -336,7 +203,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
   void _showMoreOptions() {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentMerchant = authProvider.merchantProfile;
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
@@ -372,9 +239,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => MerchantReviewsScreen(
-                        merchantId: currentMerchant.id,
-                      ),
+                      builder: (_) =>
+                          MerchantReviewsScreen(merchantId: currentMerchant.id),
                     ),
                   );
                 }
@@ -422,11 +288,7 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
           color: AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: AppColors.primary,
-          size: 24,
-        ),
+        child: Icon(icon, color: AppColors.primary, size: 24),
       ),
       title: Text(
         title,
@@ -527,9 +389,8 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => MerchantReviewsScreen(
-                      merchantId: merchant.id,
-                    ),
+                    builder: (_) =>
+                        MerchantReviewsScreen(merchantId: merchant.id),
                   ),
                 );
               },
@@ -663,8 +524,10 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
     }
 
     return Column(
-      children: transactionProvider.recentTransactions.map<Widget>((transaction) {
-        String description = 
+      children: transactionProvider.recentTransactions.map<Widget>((
+        transaction,
+      ) {
+        String description =
             '${transaction.typeDisplay}: ${transaction.serviceName} - ${transaction.amount.toStringAsFixed(0)} FCFA';
         if (transaction.userId != null && transaction.userId!.isNotEmpty) {
           description += ' (Client: ${transaction.userId!.substring(0, 5)}...)';
@@ -798,7 +661,10 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
                 children: [
                   Text('Suivi de la Position', style: AppTextStyles.h3),
                   SizedBox(height: 4),
-                  Text('Activez pour être visible par les clients.', style: AppTextStyles.body2),
+                  Text(
+                    'Activez pour être visible par les clients.',
+                    style: AppTextStyles.body2,
+                  ),
                 ],
               ),
             ),
@@ -817,13 +683,14 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
 
   void _togglePositionTracking(bool value) async {
     if (!mounted) return;
-    
+
     if (value) {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
-      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
         if (mounted) {
           SnackBarHelper.showWarning(
             context,
@@ -837,7 +704,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
         setState(() {
           _isTrackingPosition = true;
         });
-        _positionUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+        _positionUpdateTimer = Timer.periodic(const Duration(seconds: 30), (
+          timer,
+        ) {
           if (mounted) {
             _updatePositionInFirestore();
           } else {
@@ -857,17 +726,22 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
 
   Future<void> _updatePositionInFirestore() async {
     if (!mounted) return;
-    
+
     try {
-      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
       if (!mounted) return;
-      
+
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       if (authProvider.userId != null && mounted) {
-        await FirebaseFirestore.instance.collection('users').doc(authProvider.userId).update({
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-        });
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(authProvider.userId)
+            .update({
+              'latitude': position.latitude,
+              'longitude': position.longitude,
+            });
       }
     } catch (e) {
       print("Erreur lors de la mise à jour de la position: $e");
@@ -890,9 +764,9 @@ class _MerchantDashboardScreenState extends State<MerchantDashboardScreen> {
       dialogContext,
       listen: false,
     );
-    
+
     final confirmed = await DialogHelper.showLogoutConfirmation(dialogContext);
-    
+
     if (confirmed == true && mounted) {
       await authProvider.logout();
       if (mounted) {
