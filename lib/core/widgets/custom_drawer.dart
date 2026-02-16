@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -41,18 +42,31 @@ class CustomDrawer extends StatelessWidget {
                             GestureDetector(
                               onTap: () {
                                 Navigator.pop(context);
-                                Navigator.pushNamed(context, AppRoutes.userProfile);
+                                Navigator.pushNamed(
+                                  context,
+                                  AppRoutes.userProfile,
+                                );
                               },
                               child: CircleAvatar(
                                 radius: 40.0,
-                                backgroundImage: (isMerchant
-                                        ? merchant?.profileImageUrl
-                                        : user?.profileImageUrl) != null
-                                    ? NetworkImage(isMerchant
-                                        ? merchant!.profileImageUrl!
-                                        : user!.profileImageUrl!)
+                                backgroundImage:
+                                    (isMerchant
+                                        ? (merchant?.profileImageUrl != null &&
+                                              merchant!
+                                                  .profileImageUrl!
+                                                  .isNotEmpty)
+                                        : (user?.profileImageUrl != null &&
+                                              user!
+                                                  .profileImageUrl!
+                                                  .isNotEmpty))
+                                    ? CachedNetworkImageProvider(
+                                        isMerchant
+                                            ? merchant!.profileImageUrl!
+                                            : user!.profileImageUrl!,
+                                      )
                                     : null,
-                                child: (isMerchant
+                                child:
+                                    (isMerchant
                                             ? merchant?.profileImageUrl
                                             : user?.profileImageUrl) ==
                                         null
@@ -71,7 +85,10 @@ class CustomDrawer extends StatelessWidget {
                               child: GestureDetector(
                                 onTap: () {
                                   Navigator.pop(context);
-                                  Navigator.pushNamed(context, AppRoutes.editProfile);
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.editProfile,
+                                  );
                                 },
                                 child: Container(
                                   padding: const EdgeInsets.all(6),
@@ -120,7 +137,8 @@ class CustomDrawer extends StatelessWidget {
                         ),
 
                         // Téléphone
-                        if ((isMerchant ? merchant?.phone : user?.phone) != null)
+                        if ((isMerchant ? merchant?.phone : user?.phone) !=
+                            null)
                           Padding(
                             padding: const EdgeInsets.only(
                               top: AppDimensions.paddingXS,
@@ -190,7 +208,10 @@ class CustomDrawer extends StatelessWidget {
                           title: 'Notifications',
                           onTap: () {
                             Navigator.pop(context);
-                            Navigator.pushNamed(context, AppRoutes.notifications);
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.notifications,
+                            );
                           },
                         ),
                         _buildDrawerItem(
@@ -232,10 +253,12 @@ class CustomDrawer extends StatelessWidget {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         Navigator.pop(context);
-                        final confirmed = await DialogHelper.showLogoutConfirmation(context);
+                        final confirmed =
+                            await DialogHelper.showLogoutConfirmation(context);
                         if (confirmed == true) {
                           await authProvider.logout();
-                          final navigator = NavigationService.navigatorKey.currentState;
+                          final navigator =
+                              NavigationService.navigatorKey.currentState;
                           navigator?.pushNamedAndRemoveUntil(
                             AppRoutes.login,
                             (route) => false,
@@ -245,22 +268,30 @@ class CustomDrawer extends StatelessWidget {
                       icon: const Icon(Icons.logout),
                       label: Text(
                         'Déconnexion',
-                        style: AppTextStyles.button.copyWith(color: Colors.white),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Colors.white, width: 1.2),
-                        shape: const StadiumBorder(),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppDimensions.paddingM,
-                          horizontal: AppDimensions.paddingL,
-                        ),
-                        backgroundColor: Colors.white10,
-                      ).merge(
-                        ButtonStyle(
-                          overlayColor: WidgetStateProperty.all(Colors.white24),
+                        style: AppTextStyles.button.copyWith(
+                          color: Colors.white,
                         ),
                       ),
+                      style:
+                          OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 1.2,
+                            ),
+                            shape: const StadiumBorder(),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppDimensions.paddingM,
+                              horizontal: AppDimensions.paddingL,
+                            ),
+                            backgroundColor: Colors.white10,
+                          ).merge(
+                            ButtonStyle(
+                              overlayColor: WidgetStateProperty.all(
+                                Colors.white24,
+                              ),
+                            ),
+                          ),
                     ),
                   ),
                 ],
@@ -282,9 +313,7 @@ class CustomDrawer extends StatelessWidget {
       leading: Icon(icon, color: Colors.white),
       title: Text(
         title,
-        style: AppTextStyles.body1.copyWith(
-          color: Colors.white,
-        ),
+        style: AppTextStyles.body1.copyWith(color: Colors.white),
       ),
       onTap: onTap,
       hoverColor: Colors.white12,

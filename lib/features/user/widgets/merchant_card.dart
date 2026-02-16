@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/widgets/cached_image.dart';
 
 class MerchantCard extends StatelessWidget {
   final String merchantId;
@@ -252,25 +253,7 @@ class MerchantCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: imageUrl != null
-            ? Image.network(
-                imageUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildDefaultImage();
-                },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(
-                    child: CircularProgressIndicator(
-                      value: loadingProgress.expectedTotalBytes != null
-                          ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
-                          : null,
-                      strokeWidth: 2,
-                    ),
-                  );
-                },
-              )
+            ? CachedImage(imageUrl: imageUrl!, fit: BoxFit.cover)
             : _buildDefaultImage(),
       ),
     );

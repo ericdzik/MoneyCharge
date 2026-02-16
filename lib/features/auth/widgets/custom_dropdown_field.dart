@@ -55,12 +55,19 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
       children: [
         // Label
         Padding(
-          padding: const EdgeInsets.only(left: 16, bottom: 8),
+          padding: EdgeInsets.only(
+            left: ResponsiveHelper.getPadding(
+              context,
+              extraSmall: 12,
+              medium: 16,
+            ),
+            bottom: 8,
+          ),
           child: Text(
             widget.label,
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 16,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -77,7 +84,9 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                   duration: const Duration(milliseconds: 200),
                   decoration: BoxDecoration(
                     color: AppColors.white.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(50),
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveHelper.getBorderRadius(context, baseRadius: 50),
+                    ),
                     border: Border.all(
                       color: formFieldState.hasError
                           ? AppColors.error.withValues(alpha: 0.8)
@@ -95,7 +104,9 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(50),
+                    borderRadius: BorderRadius.circular(
+                      ResponsiveHelper.getBorderRadius(context, baseRadius: 50),
+                    ),
                     child: DropdownButtonFormField<T>(
                       value: widget.value,
                       focusNode: _focusNode,
@@ -103,12 +114,20 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                         hintText: widget.hint,
                         hintStyle: TextStyle(
                           color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: ResponsiveHelper.getFontSize(
+                            context,
+                            baseSize: 16,
+                          ),
                         ),
                         prefixIcon: Icon(
                           widget.icon,
                           color: _isFocused
                               ? Colors.white
                               : Colors.white.withValues(alpha: 0.5),
+                          size: ResponsiveHelper.getIconSize(
+                            context,
+                            baseSize: 24,
+                          ),
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
@@ -116,27 +135,48 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                         errorBorder: InputBorder.none,
                         focusedErrorBorder: InputBorder.none,
                         filled: false,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: ResponsiveHelper.getPadding(
+                            context,
+                            extraSmall: 16,
+                            medium: 20,
+                          ),
+                          vertical: ResponsiveHelper.getPadding(
+                            context,
+                            extraSmall: 14,
+                            medium: 16,
+                          ),
                         ),
                       ),
                       dropdownColor: AppColors.primary.withValues(alpha: 0.95),
-                      style: const TextStyle(color: Colors.white, fontSize: 16),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: ResponsiveHelper.getFontSize(
+                          context,
+                          baseSize: 16,
+                        ),
+                      ),
                       icon: Icon(
                         Icons.keyboard_arrow_down_rounded,
                         color: _isFocused
                             ? Colors.white
                             : Colors.white.withValues(alpha: 0.7),
+                        size: ResponsiveHelper.getIconSize(
+                          context,
+                          baseSize: 24,
+                        ),
                       ),
                       items: widget.items.map((T item) {
                         return DropdownMenuItem<T>(
                           value: item,
                           child: Text(
                             widget.itemLabel(item),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 16,
+                              fontSize: ResponsiveHelper.getFontSize(
+                                context,
+                                baseSize: 16,
+                              ),
                             ),
                           ),
                         );
@@ -153,10 +193,23 @@ class _CustomDropdownFieldState<T> extends State<CustomDropdownField<T>> {
                 // Message d'erreur
                 if (formFieldState.hasError)
                   Padding(
-                    padding: const EdgeInsets.only(left: 16, top: 8),
+                    padding: EdgeInsets.only(
+                      left: ResponsiveHelper.getPadding(
+                        context,
+                        extraSmall: 12,
+                        medium: 16,
+                      ),
+                      top: 8,
+                    ),
                     child: Text(
                       formFieldState.errorText!,
-                      style: TextStyle(color: AppColors.error, fontSize: 12),
+                      style: TextStyle(
+                        color: AppColors.error,
+                        fontSize: ResponsiveHelper.getFontSize(
+                          context,
+                          baseSize: 12,
+                        ),
+                      ),
                     ),
                   ),
               ],

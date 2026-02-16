@@ -1,6 +1,6 @@
 // ==================== BARREL FILE ====================
 // Exports centralisés des helpers et widgets communs
-// 
+//
 // Usage simplifié:
 // import 'package:locacharge/core/common.dart';
 // Au lieu de multiples imports
@@ -10,6 +10,7 @@ export 'utils/image_picker_helper.dart';
 export 'utils/snackbar_helper.dart';
 export 'utils/dialog_helper.dart';
 export 'utils/form_validators.dart';
+export 'utils/responsive_helper.dart';
 export 'config/env_config.dart';
 
 // ==================== WIDGETS ====================

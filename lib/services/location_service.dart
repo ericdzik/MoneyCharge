@@ -98,8 +98,12 @@ String calculateDrivingTime(double distanceInMeters) {
 
 
   Map<String, String> calculateTravelTime(double distanceInMeters) {
-    const walkingSpeed = 1.39;
-    const drivingSpeed = 5.56;
+    // Use realistic urban average speeds (km/h) then convert to m/s.
+    const walkingSpeedKmh = 4.8;
+    const drivingSpeedKmh = 35.0;
+    const walkingSpeed = walkingSpeedKmh / 3.6;
+    const drivingSpeed = drivingSpeedKmh / 3.6;
+
     final walkingTimeSeconds = distanceInMeters / walkingSpeed;
     final drivingTimeSeconds = distanceInMeters / drivingSpeed;
     return {

@@ -36,7 +36,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   static const double _iconSize = 80.0;
   static const double _titleFontSize = 32.0;
   static const double _descriptionFontSize = 16.0;
-  static const double _buttonHeight = 58.0;
+  // _buttonHeight remplacé par ResponsiveHelper.getButtonHeight(context)
 
   @override
   void initState() {
@@ -129,15 +129,41 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                 // En-tête avec indicateur d'étapes
                 Padding(
                   padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 20,
-                    left: 24,
-                    right: 24,
+                    top:
+                        MediaQuery.of(context).padding.top +
+                        ResponsiveHelper.getPadding(
+                          context,
+                          extraSmall: 10,
+                          medium: 20,
+                        ),
+                    left: ResponsiveHelper.getPadding(
+                      context,
+                      extraSmall: 16,
+                      medium: 24,
+                    ),
+                    right: ResponsiveHelper.getPadding(
+                      context,
+                      extraSmall: 16,
+                      medium: 24,
+                    ),
                   ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: ResponsiveHelper.getPadding(
+                          context,
+                          extraSmall: 10,
+                          medium: 20,
+                        ),
+                      ),
                       _buildHeader(),
-                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: ResponsiveHelper.getPadding(
+                          context,
+                          extraSmall: 20,
+                          medium: 32,
+                        ),
+                      ),
                       _buildStepIndicator(),
                     ],
                   ),
@@ -157,7 +183,13 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
 
                 // Boutons de navigation
                 Padding(
-                  padding: const EdgeInsets.all(24),
+                  padding: EdgeInsets.all(
+                    ResponsiveHelper.getPadding(
+                      context,
+                      extraSmall: 16,
+                      medium: 24,
+                    ),
+                  ),
                   child: _buildNavigationButtons(),
                 ),
               ],
@@ -172,12 +204,23 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        Icon(Icons.person_add_rounded, size: _iconSize, color: AppColors.white),
+        Icon(
+          Icons.person_add_rounded,
+          size: ResponsiveHelper.getResponsiveValue(
+            context,
+            extraSmall: 60,
+            medium: _iconSize,
+          ),
+          color: AppColors.white,
+        ),
         const SizedBox(height: 24),
         Text(
           'Créer un compte',
           style: AppTextStyles.h1.copyWith(
-            fontSize: _titleFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _titleFontSize,
+            ),
             fontWeight: FontWeight.bold,
             color: AppColors.white,
           ),
@@ -188,7 +231,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
           'Rejoignez GEO et accédez à tous nos services',
           style: AppTextStyles.body2.copyWith(
             color: AppColors.white.withValues(alpha: 0.9),
-            fontSize: _descriptionFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _descriptionFontSize,
+            ),
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -202,7 +248,14 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
     final steps = ['Infos', 'Contact', 'Sécurité'];
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getPadding(
+          context,
+          extraSmall: 16,
+          medium: 24,
+        ),
+        vertical: 20,
+      ),
       child: Row(
         children: List.generate(3, (index) {
           final isActive = index == _currentStep;
@@ -215,8 +268,16 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                   child: Column(
                     children: [
                       Container(
-                        width: 40,
-                        height: 40,
+                        width: ResponsiveHelper.getResponsiveValue(
+                          context,
+                          extraSmall: 32,
+                          medium: 40,
+                        ),
+                        height: ResponsiveHelper.getResponsiveValue(
+                          context,
+                          extraSmall: 32,
+                          medium: 40,
+                        ),
                         decoration: BoxDecoration(
                           color: isActive
                               ? AppColors.yellow
@@ -227,10 +288,13 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                         ),
                         child: Center(
                           child: isCompleted
-                              ? const Icon(
+                              ? Icon(
                                   Icons.check,
                                   color: Colors.white,
-                                  size: 20,
+                                  size: ResponsiveHelper.getIconSize(
+                                    context,
+                                    baseSize: 20,
+                                  ),
                                 )
                               : Text(
                                   '${index + 1}',
@@ -239,7 +303,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                                         ? AppColors.primary
                                         : Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: ResponsiveHelper.getFontSize(
+                                      context,
+                                      baseSize: 16,
+                                    ),
                                   ),
                                 ),
                         ),
@@ -251,7 +318,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                           color: isActive
                               ? Colors.white
                               : Colors.white.withValues(alpha: 0.6),
-                          fontSize: 11,
+                          fontSize: ResponsiveHelper.getFontSize(
+                            context,
+                            baseSize: 11,
+                          ),
                           fontWeight: isActive
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -283,7 +353,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   /// Étape 1 : Informations personnelles
   Widget _buildStep1() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getHorizontalMargin(context),
+        vertical: 20,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -292,7 +365,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
             style: AppTextStyles.body1.copyWith(
               color: AppColors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
             ),
           ),
           const SizedBox(height: 24),
@@ -309,7 +382,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   /// Étape 2 : Contact
   Widget _buildStep2() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getHorizontalMargin(context),
+        vertical: 20,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -318,7 +394,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
             style: AppTextStyles.body1.copyWith(
               color: AppColors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
             ),
           ),
           const SizedBox(height: 24),
@@ -332,7 +408,10 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
   /// Étape 3 : Sécurité
   Widget _buildStep3() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getHorizontalMargin(context),
+        vertical: 20,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -341,7 +420,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
             style: AppTextStyles.body1.copyWith(
               color: AppColors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
             ),
           ),
           const SizedBox(height: 24),
@@ -370,7 +449,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
               isLoading: false,
               text: 'Précédent',
               width: null,
-              height: _buttonHeight,
+              height: ResponsiveHelper.getButtonHeight(context),
               backgroundColor: AppColors.white.withValues(alpha: 0.2),
             ),
           ),
@@ -391,7 +470,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
                 isLoading: _currentStep == 2 && authProvider.isLoading,
                 text: _currentStep < 2 ? 'Suivant' : 'Créer mon compte',
                 width: null,
-                height: _buttonHeight,
+                height: ResponsiveHelper.getButtonHeight(context),
                 backgroundColor: AppColors.yellow,
               );
             },
@@ -636,7 +715,7 @@ class _UserRegisterScreenState extends State<UserRegisterScreen> {
             style: AppTextStyles.body2.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,
-              fontSize: 15,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 15),
             ),
           ),
         ),

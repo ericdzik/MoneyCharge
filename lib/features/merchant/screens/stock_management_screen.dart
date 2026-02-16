@@ -419,23 +419,36 @@ class _StockManagementScreenState extends State<StockManagementScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Services personnalisés',
-                    style: AppTextStyles.h2.copyWith(fontSize: 18),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: _showAddServiceDialog,
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Ajouter'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                    ),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  return Wrap(
+                    alignment: WrapAlignment.spaceBetween,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    runSpacing: 8,
+                    spacing: 12,
+                    children: [
+                      ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: constraints.maxWidth - 120,
+                        ),
+                        child: Text(
+                          'Services personnalis?s',
+                          style: AppTextStyles.h2.copyWith(fontSize: 18),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: _showAddServiceDialog,
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Ajouter'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
               if (invoiceProvider.customServices.isEmpty)

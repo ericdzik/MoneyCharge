@@ -124,9 +124,10 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
           top: false,
           child: SingleChildScrollView(
             padding: EdgeInsets.fromLTRB(
-              AppDimensions.paddingL,
-              MediaQuery.of(context).padding.top + AppDimensions.paddingXL,
-              AppDimensions.paddingL,
+              context.isExtraSmall ? 16 : AppDimensions.paddingL,
+              MediaQuery.of(context).padding.top +
+                  (context.isSmall ? 16 : AppDimensions.paddingXL),
+              context.isExtraSmall ? 16 : AppDimensions.paddingL,
               AppDimensions.paddingXL,
             ),
             child: Form(
@@ -137,19 +138,32 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
 
                   // Logo icône élégant
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: ResponsiveHelper.getResponsiveValue(
+                      context,
+                      extraSmall: 70,
+                      medium: 90,
+                    ),
+                    height: ResponsiveHelper.getResponsiveValue(
+                      context,
+                      extraSmall: 70,
+                      medium: 90,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(
+                        ResponsiveHelper.getBorderRadius(
+                          context,
+                          baseRadius: 28,
+                        ),
+                      ),
                       border: Border.all(
                         color: AppColors.white.withValues(alpha: 0.3),
                         width: 2,
                       ),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.lock_outline_rounded,
-                      size: 48,
+                      size: ResponsiveHelper.getIconSize(context, baseSize: 48),
                       color: AppColors.white,
                     ),
                   ),
@@ -160,7 +174,10 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                   Text(
                     'Bienvenue',
                     style: AppTextStyles.h1.copyWith(
-                      fontSize: 36,
+                      fontSize: ResponsiveHelper.getFontSize(
+                        context,
+                        baseSize: 36,
+                      ),
                       fontWeight: FontWeight.bold,
                       color: AppColors.white,
                       letterSpacing: 0.5,
@@ -174,7 +191,10 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                     'Connectez-vous à votre compte',
                     style: AppTextStyles.body1.copyWith(
                       color: AppColors.white.withValues(alpha: 0.85),
-                      fontSize: 16,
+                      fontSize: ResponsiveHelper.getFontSize(
+                        context,
+                        baseSize: 16,
+                      ),
                       fontWeight: FontWeight.w400,
                     ),
                     textAlign: TextAlign.center,
@@ -261,6 +281,10 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                           decorationColor: AppColors.white.withValues(
                             alpha: 0.5,
                           ),
+                          fontSize: ResponsiveHelper.getFontSize(
+                            context,
+                            baseSize: 14,
+                          ),
                         ),
                       ),
                     ),
@@ -282,7 +306,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                               isLoading: authProvider.isLoading,
                               text: 'Se connecter',
                               width: null,
-                              height: 58,
+                              height: ResponsiveHelper.getButtonHeight(context),
                             );
                           },
                         ),
@@ -298,7 +322,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
                           isLoading: false,
                           text: 'S\'inscrire',
                           width: null,
-                          height: 58,
+                          height: ResponsiveHelper.getButtonHeight(context),
                           backgroundColor: AppColors.yellow,
                         ),
                       ),
@@ -340,7 +364,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
             style: AppTextStyles.body2.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,
-              fontSize: 15,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 15),
             ),
           ),
         ),
@@ -401,7 +425,7 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
             'Vous êtes un marchand ?',
             style: AppTextStyles.body2.copyWith(
               color: AppColors.white.withValues(alpha: 0.9),
-              fontSize: 15,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 15),
             ),
           ),
           const SizedBox(height: 16),
@@ -413,8 +437,12 @@ class _UnifiedLoginScreenState extends State<UnifiedLoginScreen> {
             isLoading: false,
             text: 'Créer un compte marchand',
             width: double.infinity,
-            height: 50,
-            fontSize: 15,
+            height: ResponsiveHelper.getResponsiveValue(
+              context,
+              extraSmall: 44,
+              medium: 50,
+            ),
+            fontSize: ResponsiveHelper.getFontSize(context, baseSize: 15),
             backgroundColor: AppColors.orange,
           ),
         ],

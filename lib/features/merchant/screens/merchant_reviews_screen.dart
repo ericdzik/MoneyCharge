@@ -22,6 +22,14 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: CustomAppBar(
+        title: 'Avis des clients',
+        showLogo: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('reviews')
@@ -35,7 +43,8 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
           if (snapshot.hasError) {
             return Center(child: Text('Erreur: ${snapshot.error}'));
           }
-          final allReviews = snapshot.data?.docs
+          final allReviews =
+              snapshot.data?.docs
                   .map((doc) => Review.fromFirestore(doc))
                   .toList() ??
               [];
@@ -44,7 +53,7 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
           final average = allReviews.isEmpty
               ? 0.0
               : allReviews.map((r) => r.rating).reduce((a, b) => a + b) /
-                  allReviews.length;
+                    allReviews.length;
           final dist = List<int>.filled(5, 0);
           for (final r in allReviews) {
             final bucket = r.rating.round().clamp(1, 5) - 1; // 0..4
@@ -68,38 +77,6 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
 
           return CustomScrollView(
             slivers: [
-              SliverAppBar(
-                pinned: true,
-                expandedHeight: 140,
-                elevation: 0,
-                backgroundColor: AppColors.primary,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  title: const Text('Avis des clients'),
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withOpacity(0.85),
-                        ],
-                      ),
-                      borderRadius: const BorderRadius.only(
-                        bottomLeft: Radius.circular(16),
-                        bottomRight: Radius.circular(16),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
               // Header résumé
               SliverToBoxAdapter(
                 child: Padding(
@@ -119,9 +96,7 @@ class _MerchantReviewsScreenState extends State<MerchantReviewsScreen> {
               if (reviews.isEmpty)
                 const SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(
-                    child: Text('Aucun avis pour le moment.'),
-                  ),
+                  child: Center(child: Text('Aucun avis pour le moment.')),
                 )
               else
                 SliverList(
@@ -165,7 +140,9 @@ class _ReviewsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxCount = (distribution.isEmpty) ? 0 : distribution.reduce((a, b) => a > b ? a : b);
+    final maxCount = (distribution.isEmpty)
+        ? 0
+        : distribution.reduce((a, b) => a > b ? a : b);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -195,18 +172,36 @@ class _ReviewsHeader extends StatelessWidget {
                     children: [
                       Text(
                         average.toStringAsFixed(1),
-                        style: AppTextStyles.h1.copyWith(fontWeight: FontWeight.w800),
+                        style: AppTextStyles.h1.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(width: 6),
                       _Stars(rating: average, size: 18),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text('$total avis', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+                  Text(
+                    '$total avis',
+                    style: AppTextStyles.caption.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
-              const Spacer(),
-              // Tri
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'Trier par :',
+                style: AppTextStyles.caption.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
               _ChoiceChip(
                 label: 'Récents',
                 selected: sort == 'recent',
@@ -271,7 +266,10 @@ class _DistributionBar extends StatelessWidget {
     final double ratio = max == 0 ? 0 : count / max;
     return Row(
       children: [
-        Text('$stars★', style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          '$stars★',
+          style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600),
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: ClipRRect(
@@ -285,7 +283,10 @@ class _DistributionBar extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text('$count', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+        Text(
+          '$count',
+          style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+        ),
       ],
     );
   }
@@ -310,13 +311,21 @@ class _ChoiceChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : AppColors.primary.withOpacity(0.08),
+          color: selected
+              ? AppColors.primary
+              : AppColors.primary.withOpacity(0.08),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: selected ? AppColors.primary : AppColors.primary.withOpacity(0.3)),
+          border: Border.all(
+            color: selected
+                ? AppColors.primary
+                : AppColors.primary.withOpacity(0.3),
+          ),
         ),
         child: Text(
           label,
-          style: AppTextStyles.body2.copyWith(color: selected ? Colors.white : AppColors.primary),
+          style: AppTextStyles.body2.copyWith(
+            color: selected ? Colors.white : AppColors.primary,
+          ),
         ),
       ),
     );
@@ -340,7 +349,7 @@ class _ReviewCard extends StatelessWidget {
             color: Colors.black.withOpacity(0.03),
             blurRadius: 16,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
       ),
       padding: const EdgeInsets.all(AppDimensions.paddingM),
@@ -370,7 +379,9 @@ class _ReviewCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             review.userName,
-                            style: AppTextStyles.body1.copyWith(fontWeight: FontWeight.w700),
+                            style: AppTextStyles.body1.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -381,7 +392,9 @@ class _ReviewCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       DateFormat('dd MMM yyyy, HH:mm').format(review.createdAt),
-                      style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary),
+                      style: AppTextStyles.caption.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -390,10 +403,7 @@ class _ReviewCard extends StatelessWidget {
           ),
           if (review.comment != null && review.comment!.isNotEmpty) ...[
             const SizedBox(height: AppDimensions.paddingM),
-            Text(
-              review.comment!,
-              style: AppTextStyles.body2,
-            ),
+            Text(review.comment!, style: AppTextStyles.body2),
           ],
         ],
       ),
@@ -414,9 +424,13 @@ class _Stars extends StatelessWidget {
       if (rating >= i) {
         stars.add(Icon(Icons.star_rounded, color: Colors.amber, size: size));
       } else if (rating >= i - 0.5) {
-        stars.add(Icon(Icons.star_half_rounded, color: Colors.amber, size: size));
+        stars.add(
+          Icon(Icons.star_half_rounded, color: Colors.amber, size: size),
+        );
       } else {
-        stars.add(Icon(Icons.star_border_rounded, color: Colors.amber, size: size));
+        stars.add(
+          Icon(Icons.star_border_rounded, color: Colors.amber, size: size),
+        );
       }
     }
     return Row(children: stars);

@@ -221,7 +221,7 @@ class _MapWidgetState extends State<MapWidget> {
         ),
 
         // Légende flottante
-        const _MapLegend(),
+        // const _MapLegend(),
       ],
     );
   }

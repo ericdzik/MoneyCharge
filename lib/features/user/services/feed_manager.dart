@@ -4,7 +4,9 @@ import 'package:locacharge/models/ad_model.dart';
 import 'package:locacharge/providers/ad_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/services/location_service.dart';
+import 'package:locacharge/services/distance_matrix_service.dart';
 import 'package:flutter/foundation.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:locacharge/features/user/models/content_item_model.dart'
     show
         ContentItem,
@@ -15,6 +17,8 @@ import 'package:locacharge/features/user/models/advertisement_model.dart';
 
 class FeedManager extends ChangeNotifier {
   final LocationService _locationService = LocationService();
+  final DistanceMatrixService _distanceMatrixService =
+      DistanceMatrixService();
   MerchantProvider? _merchantProvider;
   final AdProvider _adProvider = AdProvider();
 
@@ -167,17 +171,66 @@ class FeedManager extends ChangeNotifier {
     try {
       final merchants = _merchantProvider?.merchants ?? [];
       List<Merchant> filtered = merchants;
+      final Map<String, double?> distanceById = {};
+
       if (_currentLocation != null) {
+        final location = _currentLocation!;
+
+        // Pre-filter to reduce API load using straight-line distance
         filtered = merchants.where((m) {
+          final hasValidCoords = !(m.latitude == 0.0 && m.longitude == 0.0);
+          if (!hasValidCoords) {
+            distanceById[m.id] = null;
+            return true;
+          }
           final distMeters = _locationService.calculateDistance(
-            _currentLocation!.latitude,
-            _currentLocation!.longitude,
+            location.latitude,
+            location.longitude,
             m.latitude,
             m.longitude,
           );
-          return distMeters <= 3000; // 3 km
+          return distMeters <= 5000; // prefilter within 5 km
         }).toList();
+
+        if (filtered.isEmpty) {
+          filtered = merchants;
+        }
+
+        // Real road distances with Distance Matrix (chunked)
+        final origin = LatLng(location.latitude, location.longitude);
+        final List<Merchant> withCoords = filtered
+            .where((m) => !(m.latitude == 0.0 && m.longitude == 0.0))
+            .toList();
+
+        const int chunkSize = 25;
+        for (int i = 0; i < withCoords.length; i += chunkSize) {
+          final chunk = withCoords.skip(i).take(chunkSize).toList();
+          final destinations = chunk
+              .map((m) => LatLng(m.latitude, m.longitude))
+              .toList();
+          final distances = await _distanceMatrixService.getDrivingDistances(
+            origin: origin,
+            destinations: destinations,
+          );
+          for (int j = 0; j < chunk.length; j++) {
+            final meters = j < distances.length ? distances[j] : null;
+            distanceById[chunk[j].id] =
+                meters != null ? (meters / 1000) : null;
+          }
+        }
+
+        // Apply the actual distance filter (3 km) when available
+        filtered = filtered.where((m) {
+          final distKm = distanceById[m.id];
+          if (distKm == null) return true;
+          return distKm <= 3.0;
+        }).toList();
+
+        if (filtered.isEmpty) {
+          filtered = merchants;
+        }
       }
+
       final items = filtered
           .map(
             (m) => MerchantContentItem.fromMerchant(
@@ -185,7 +238,7 @@ class FeedManager extends ChangeNotifier {
               name: m.name,
               services: m.services,
               rating: m.averageRating,
-              distanceKm: m.distance,
+              distanceKm: distanceById[m.id],
               imageUrl: (m.imageUrls != null && m.imageUrls!.isNotEmpty)
                   ? m.imageUrls!.first
                   : null,

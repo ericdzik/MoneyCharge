@@ -1,4 +1,7 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
@@ -18,10 +21,13 @@ class UnifiedProfileScreen extends StatefulWidget {
 
 class _UnifiedProfileScreenState extends State<UnifiedProfileScreen> {
   final ScrollController _scrollController = ScrollController();
+  bool _isTrackingPosition = false;
+  Timer? _positionUpdateTimer;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _positionUpdateTimer?.cancel();
     super.dispose();
   }
 
@@ -64,7 +70,6 @@ class _UnifiedProfileScreenState extends State<UnifiedProfileScreen> {
             );
           }
 
-          // Render appropriate content
           return ListView(
             controller: _scrollController,
             padding: const EdgeInsets.all(AppDimensions.paddingL),
@@ -99,7 +104,12 @@ class _UnifiedProfileScreenState extends State<UnifiedProfileScreen> {
                   children: [
                     Text(user.name ?? 'Utilisateur', style: AppTextStyles.h2),
                     const SizedBox(height: 4),
-                    Text(user.email ?? '', style: AppTextStyles.body2.copyWith(color: AppColors.textSecondary)),
+                    Text(
+                      user.email ?? '',
+                      style: AppTextStyles.body2.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -155,6 +165,8 @@ class _UnifiedProfileScreenState extends State<UnifiedProfileScreen> {
             ],
           ),
         ),
+        const SizedBox(height: AppDimensions.paddingL),
+        _buildLiveLocationCard(),
         const SizedBox(height: AppDimensions.paddingXL),
         _buildSection(title: 'Informations du Commerce', children: [
           _buildInfoTile(icon: Icons.store, title: 'Nom du commerce', value: merchant.businessName),
@@ -205,7 +217,132 @@ class _UnifiedProfileScreenState extends State<UnifiedProfileScreen> {
   }
 
   Widget _buildInfoTile({required IconData icon, required String title, required String value}) {
-    return ListTile(leading: Icon(icon, color: AppColors.primary), title: Text(title, style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600)), subtitle: Text(value, style: AppTextStyles.body1));
+    return ListTile(
+      leading: Icon(icon, color: AppColors.primary),
+      title: Text(title, style: AppTextStyles.body2.copyWith(fontWeight: FontWeight.w600)),
+      subtitle: Text(value, style: AppTextStyles.body1),
+    );
+  }
+
+  Widget _buildLiveLocationCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: _isTrackingPosition
+                    ? AppColors.success.withOpacity(0.1)
+                    : Colors.grey.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.location_on,
+                color: _isTrackingPosition ? AppColors.success : Colors.grey,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Suivi de la Position', style: AppTextStyles.h3),
+                  const SizedBox(height: 4),
+                  Text(
+                    _isTrackingPosition
+                        ? 'Activé - Visible par les clients'
+                        : 'Désactivé - Invisible',
+                    style: AppTextStyles.body2.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: _isTrackingPosition,
+              onChanged: _togglePositionTracking,
+              activeColor: AppColors.success,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _togglePositionTracking(bool value) async {
+    if (!mounted) return;
+
+    if (value) {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          SnackBarHelper.showWarning(
+            context,
+            'La permission de localisation est requise pour activer le suivi.',
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          _isTrackingPosition = true;
+        });
+        _positionUpdateTimer = Timer.periodic(const Duration(seconds: 30), (
+          timer,
+        ) {
+          if (mounted) {
+            _updatePositionInFirestore();
+          } else {
+            timer.cancel();
+          }
+        });
+        _updatePositionInFirestore();
+      }
+    } else {
+      if (mounted) {
+        setState(() {
+          _isTrackingPosition = false;
+        });
+      }
+      _positionUpdateTimer?.cancel();
+    }
+  }
+
+  Future<void> _updatePositionInFirestore() async {
+    if (!mounted) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      if (!mounted) return;
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      if (authProvider.userId != null && mounted) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(authProvider.userId)
+            .update({
+              'latitude': position.latitude,
+              'longitude': position.longitude,
+            });
+      }
+    } catch (e) {
+      debugPrint("Erreur lors de la mise à jour de la position: $e");
+    }
   }
 
   void _showLogoutDialog(BuildContext context) async {

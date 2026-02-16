@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:locacharge/core/common.dart';
+import 'package:locacharge/core/utils/responsive_helper.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/merchant_card.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
@@ -164,7 +165,7 @@ class _FilterChips extends StatelessWidget {
             children: [
               Icon(
                 Icons.filter_list_rounded,
-                size: 20,
+                size: ResponsiveHelper.getIconSize(context, baseSize: 20),
                 color: AppColors.textSecondary,
               ),
               const SizedBox(width: AppDimensions.paddingS),
@@ -172,6 +173,7 @@ class _FilterChips extends StatelessWidget {
                 'Trier par',
                 style: AppTextStyles.body2.copyWith(
                   fontWeight: FontWeight.w600,
+                  fontSize: ResponsiveHelper.getFontSize(context, baseSize: 14),
                 ),
               ),
             ],
@@ -246,6 +248,7 @@ class _SortChip extends StatelessWidget {
           style: AppTextStyles.body2.copyWith(
             color: selected ? Colors.white : AppColors.primary,
             fontWeight: FontWeight.w600,
+            fontSize: ResponsiveHelper.getFontSize(context, baseSize: 14),
           ),
         ),
       ),
@@ -270,14 +273,17 @@ class _EmptyState extends StatelessWidget {
             ),
             child: Icon(
               Icons.store_outlined,
-              size: 60,
+              size: ResponsiveHelper.getIconSize(context, baseSize: 60),
               color: AppColors.primary.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: AppDimensions.paddingXL),
           Text(
             'Aucun point de service',
-            style: AppTextStyles.h2.copyWith(fontWeight: FontWeight.w700),
+            style: AppTextStyles.h2.copyWith(
+              fontWeight: FontWeight.w700,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 20),
+            ),
           ),
           const SizedBox(height: AppDimensions.paddingM),
           Text(

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/logging.dart';
+import 'package:locacharge/core/utils/responsive_helper.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/features/auth/widgets/auth_background_widget.dart';
 
@@ -26,8 +27,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   static const double _iconSize = 80.0;
   static const double _titleFontSize = 32.0;
   static const double _descriptionFontSize = 16.0;
-  static const double _buttonWidth = 250.0;
-  static const double _buttonHeight = 58.0;
+  static const double _buttonWidth = 250.0; // Utilisé comme fallback
+  // _buttonHeight remplacé par ResponsiveHelper.getButtonHeight(context)
 
   @override
   void initState() {
@@ -66,10 +67,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             top: false,
             child: Padding(
               padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 20,
-                left: 24,
-                right: 24,
-                bottom: 24,
+                top:
+                    MediaQuery.of(context).padding.top +
+                    ResponsiveHelper.getPadding(
+                      context,
+                      extraSmall: 10,
+                      medium: 20,
+                    ),
+                left: ResponsiveHelper.getHorizontalMargin(context),
+                right: ResponsiveHelper.getHorizontalMargin(context),
+                bottom: ResponsiveHelper.getPadding(
+                  context,
+                  extraSmall: 16,
+                  medium: 24,
+                ),
               ),
               child: SingleChildScrollView(
                 child: Form(
@@ -111,14 +122,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       children: [
         Icon(
           _isEmailSent ? Icons.email_rounded : Icons.lock_reset_rounded,
-          size: _iconSize,
+          size: ResponsiveHelper.getResponsiveValue(
+            context,
+            extraSmall: 60,
+            medium: _iconSize,
+          ),
           color: AppColors.white,
         ),
         const SizedBox(height: 24),
         Text(
           _isEmailSent ? 'Email envoyé !' : 'Mot de passe oublié ?',
           style: AppTextStyles.h1.copyWith(
-            fontSize: _titleFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _titleFontSize,
+            ),
             fontWeight: FontWeight.bold,
             color: AppColors.white,
           ),
@@ -131,7 +149,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               : 'Entrez votre adresse email pour recevoir un lien de réinitialisation.',
           style: AppTextStyles.body2.copyWith(
             color: AppColors.white.withValues(alpha: 0.9),
-            fontSize: _descriptionFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _descriptionFontSize,
+            ),
             height: 1.5,
           ),
           textAlign: TextAlign.center,
@@ -174,8 +195,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             onPressed: authProvider.isLoading ? null : _handleResetPassword,
             isLoading: authProvider.isLoading,
             text: 'Envoyer le lien',
-            width: _buttonWidth,
-            height: _buttonHeight,
+            width: ResponsiveHelper.getResponsiveValue(
+              context,
+              extraSmall: 220,
+              medium: _buttonWidth,
+            ),
+            height: ResponsiveHelper.getButtonHeight(context),
           ),
         );
       },
@@ -189,8 +214,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         onPressed: _navigateToLogin,
         isLoading: false,
         text: 'Retour à la connexion',
-        width: _buttonWidth,
-        height: _buttonHeight,
+        width: ResponsiveHelper.getResponsiveValue(
+          context,
+          extraSmall: 220,
+          medium: _buttonWidth,
+        ),
+        height: ResponsiveHelper.getButtonHeight(context),
       ),
     );
   }
@@ -277,7 +306,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             style: AppTextStyles.body2.copyWith(
               color: AppColors.white,
               fontWeight: FontWeight.w600,
-              fontSize: 15,
+              fontSize: ResponsiveHelper.getFontSize(context, baseSize: 15),
             ),
           ),
         ),
@@ -377,7 +406,9 @@ class _FocusableTextFieldState extends State<_FocusableTextField> {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         color: AppColors.white.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(
+          ResponsiveHelper.getBorderRadius(context, baseRadius: 30),
+        ),
         border: Border.all(
           color: widget.hasError
               ? AppColors.error.withValues(alpha: 0.8)
@@ -395,7 +426,9 @@ class _FocusableTextFieldState extends State<_FocusableTextField> {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(
+          ResponsiveHelper.getBorderRadius(context, baseRadius: 30),
+        ),
         child: TextField(
           controller: widget.controller,
           focusNode: _focusNode,
@@ -545,7 +578,10 @@ class _AnimatedButtonState extends State<_AnimatedButton>
                       style: AppTextStyles.button.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
-                        fontSize: 17,
+                        fontSize: ResponsiveHelper.getFontSize(
+                          context,
+                          baseSize: 17,
+                        ),
                         letterSpacing: 0.5,
                       ),
                     ),

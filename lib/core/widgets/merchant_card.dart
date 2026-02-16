@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../constants/app_colors.dart';
-import '../constants/app_dimensions.dart';
 import '../constants/app_text_styles.dart';
+import '../utils/responsive_helper.dart';
 import 'status_badge.dart';
 import '../../features/user/models/merchant_model.dart';
 import '../../providers/favorite_merchant_provider.dart';
@@ -38,15 +38,21 @@ class MerchantCard extends StatelessWidget {
     );
     final double distanceKm = distanceMeters / 1000;
 
+    final horizontalMargin = ResponsiveHelper.getHorizontalMargin(context);
+    final borderRadius = ResponsiveHelper.getBorderRadius(
+      context,
+      baseRadius: 16,
+    );
+    final verticalMargin = context.isExtraSmall ? 4.0 : 6.0;
+
     return Container(
-      margin: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.paddingM,
-        vertical:
-            6, // Marges verticales réduites pour un effet liste plus compact
+      margin: EdgeInsets.symmetric(
+        horizontal: horizontalMargin,
+        vertical: verticalMargin,
       ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
@@ -59,9 +65,11 @@ class MerchantCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(borderRadius),
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: EdgeInsets.all(
+              ResponsiveHelper.getPadding(context, extraSmall: 10, medium: 12),
+            ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -88,7 +96,10 @@ class MerchantCard extends StatelessWidget {
                                 Text(
                                   merchant.name,
                                   style: AppTextStyles.h3.copyWith(
-                                    fontSize: 16,
+                                    fontSize: ResponsiveHelper.getFontSize(
+                                      context,
+                                      baseSize: 16,
+                                    ),
                                     fontWeight: FontWeight.bold,
                                     height: 1.2,
                                   ),
@@ -101,7 +112,10 @@ class MerchantCard extends StatelessWidget {
                                     children: [
                                       Icon(
                                         Icons.verified,
-                                        size: 14,
+                                        size: ResponsiveHelper.getIconSize(
+                                          context,
+                                          baseSize: 14,
+                                        ),
                                         color: AppColors.primary,
                                       ),
                                       const SizedBox(width: 4),
@@ -110,7 +124,11 @@ class MerchantCard extends StatelessWidget {
                                         style: AppTextStyles.caption.copyWith(
                                           color: AppColors.primary,
                                           fontWeight: FontWeight.w500,
-                                          fontSize: 11,
+                                          fontSize:
+                                              ResponsiveHelper.getFontSize(
+                                                context,
+                                                baseSize: 11,
+                                              ),
                                         ),
                                       ),
                                     ],
@@ -172,14 +190,20 @@ class MerchantCard extends StatelessWidget {
                               children: [
                                 Icon(
                                   Icons.location_on,
-                                  size: 12,
+                                  size: ResponsiveHelper.getIconSize(
+                                    context,
+                                    baseSize: 12,
+                                  ),
                                   color: AppColors.primary,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
                                   '${distanceKm.toStringAsFixed(1)} km',
                                   style: TextStyle(
-                                    fontSize: 11,
+                                    fontSize: ResponsiveHelper.getFontSize(
+                                      context,
+                                      baseSize: 11,
+                                    ),
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.primary,
                                   ),
@@ -212,7 +236,10 @@ class MerchantCard extends StatelessWidget {
                               ),
                               child: Icon(
                                 Icons.directions,
-                                size: 20,
+                                size: ResponsiveHelper.getIconSize(
+                                  context,
+                                  baseSize: 20,
+                                ),
                                 color: AppColors.primary,
                               ),
                             ),
@@ -231,43 +258,61 @@ class MerchantCard extends StatelessWidget {
   }
 
   Widget _buildMerchantImage() {
-    return Container(
-      width: 90,
-      height: 90,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: AppColors.gray200,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return Builder(
+      builder: (context) {
+        final imageSize = ResponsiveHelper.getResponsiveValue(
+          context,
+          extraSmall: 75.0,
+          small: 80.0,
+          medium: 90.0,
+          large: 95.0,
+          tablet: 100.0,
+        );
+        final borderRadius = ResponsiveHelper.getBorderRadius(
+          context,
+          baseRadius: 12,
+        );
+
+        return Container(
+          width: imageSize,
+          height: imageSize,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            color: AppColors.gray200,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: (merchant.imageUrls != null && merchant.imageUrls!.isNotEmpty)
-            ? Image.network(
-                merchant.imageUrls!.first,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return _buildDefaultImage();
-                },
-              )
-            : _buildDefaultImage(),
-      ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(borderRadius),
+            child:
+                (merchant.imageUrls != null && merchant.imageUrls!.isNotEmpty)
+                ? Image.network(
+                    merchant.imageUrls!.first,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return _buildDefaultImage(context);
+                    },
+                  )
+                : _buildDefaultImage(context),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildDefaultImage() {
+  Widget _buildDefaultImage(BuildContext context) {
     return Container(
       color: AppColors.primary.withValues(alpha: 0.05),
       child: Center(
         child: Icon(
           Icons.store_rounded,
           color: AppColors.primary.withValues(alpha: 0.5),
-          size: 32,
+          size: ResponsiveHelper.getIconSize(context, baseSize: 32),
         ),
       ),
     );
@@ -316,7 +361,7 @@ class _CompactStatusPill extends StatelessWidget {
       child: Text(
         isOpen ? 'Ouvert' : 'Fermé',
         style: TextStyle(
-          fontSize: 10,
+          fontSize: ResponsiveHelper.getFontSize(context, baseSize: 10),
           fontWeight: FontWeight.w600,
           color: isOpen ? AppColors.success : AppColors.textSecondary,
         ),
@@ -347,7 +392,7 @@ class _FavoriteButton extends StatelessWidget {
         child: Icon(
           isFavorite ? Icons.favorite_rounded : Icons.favorite_outline_rounded,
           color: isFavorite ? AppColors.error : AppColors.gray400,
-          size: 22,
+          size: ResponsiveHelper.getIconSize(context, baseSize: 22),
         ),
       ),
     );

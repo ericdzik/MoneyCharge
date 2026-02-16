@@ -12,8 +12,7 @@ import 'package:locacharge/features/admin/screens/admin_dashboard_screen.dart';
 import 'package:locacharge/features/admin/screens/manage_ads_screen.dart';
 import 'package:locacharge/features/admin/screens/pending_verifications_screen.dart';
 import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
-import 'package:locacharge/features/merchant/screens/edit_merchant_profile_screen.dart';
-import 'package:locacharge/features/merchant/screens/merchant_dashboard_screen.dart';
+// edit_merchant_profile_screen.dart supprimé - utiliser edit_user_profile_screen.dart unifié
 import 'package:locacharge/core/security/permission_guard.dart';
 import 'package:locacharge/core/security/rbac_constants.dart';
 import 'package:locacharge/features/merchant/screens/merchant_card_screen.dart';
@@ -26,11 +25,8 @@ import 'package:locacharge/features/merchant/models/invoice_model.dart';
 import 'package:locacharge/features/user/screens/about_screen.dart';
 import 'package:locacharge/features/user/screens/advertisement_detail_screen.dart';
 import 'package:locacharge/features/user/screens/edit_user_profile_screen.dart';
-import 'package:locacharge/features/user/screens/favorites_screen.dart';
 import 'package:locacharge/features/auth/screens/forgot_password_screen.dart';
 import 'package:locacharge/features/user/screens/help_and_support_screen.dart';
-import 'package:locacharge/features/user/screens/home_screen.dart';
-import 'package:locacharge/features/user/screens/list_view_screen.dart';
 import 'package:locacharge/features/user/screens/merchant_detail_screen.dart';
 import 'package:locacharge/features/user/screens/notifications_screen.dart';
 import 'package:locacharge/features/user/screens/privacy_screen.dart';
@@ -47,7 +43,7 @@ import 'package:locacharge/providers/merchant_provider.dart';
 import 'package:locacharge/providers/theme_provider.dart';
 import 'package:locacharge/providers/transaction_provider.dart';
 
-import 'package:locacharge/features/profile/unified_profile_screen.dart';
+import 'package:locacharge/features/shared/screens/main_screen.dart';
 
 import 'package:locacharge/providers/invoice_provider.dart';
 import 'package:locacharge/services/navigation_service.dart';
@@ -126,9 +122,11 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
     // Rediriger vers l'écran approprié selon le type d'utilisateur
     switch (authProvider.userType) {
       case UserType.user:
-        return const HomeScreen();
+        return const MainScreen(initialIndex: 0);
       case UserType.merchant:
-        return const MerchantDashboardScreen();
+        // Merchant lands on Dashboard (Index 2) by default, or Home (Index 0)?
+        // Use Index 2 (Dashboard) to preserve business flow
+        return const MainScreen(initialIndex: 2);
       case UserType.admin:
         return const AdminDashboardScreen();
       default:
@@ -199,7 +197,16 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.viewHome,
-            child: const HomeScreen(),
+            child: const MainScreen(initialIndex: 0),
+          ),
+        );
+
+      case AppRoutes.mapView:
+        return MaterialPageRoute(
+          builder: (routeContext) => PermissionGuard.check(
+            context: routeContext,
+            permission: AppPermission.viewMarketplace,
+            child: const MainScreen(initialIndex: 1),
           ),
         );
 
@@ -208,7 +215,11 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.viewMarketplace,
-            child: const ListViewScreen(),
+            // ListView is Index 2 for User.
+            // For Merchant, Index 2 is Dashboard.
+            // If Merchant accesses this route, MainScreen will show Dashboard if we pass 2.
+            // So we might need a specific check or accept that this route leads to "List View equivalent" tab.
+            child: const MainScreen(initialIndex: 2),
           ),
         );
       case AppRoutes.merchantDetail:
@@ -238,7 +249,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.viewUserProfile,
-            child: const UnifiedProfileScreen(),
+            child: const MainScreen(initialIndex: 4),
           ),
         );
 
@@ -247,7 +258,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.viewFavorites,
-            child: const FavoritesScreen(),
+            child: const MainScreen(initialIndex: 3),
           ),
         );
 
@@ -266,7 +277,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.accessMerchantDashboard,
-            child: const MerchantDashboardScreen(),
+            child: const MainScreen(initialIndex: 2),
           ),
         );
 
@@ -291,12 +302,12 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
         );
 
       case AppRoutes.editMerchantProfile:
-        final merchant = settings.arguments as MerchantAuthModel;
+        // Utilise l'écran unifié qui détecte automatiquement le type (User/Merchant)
         return MaterialPageRoute(
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.manageBusinessProfile,
-            child: EditMerchantProfileScreen(merchant: merchant),
+            child: const EditUserProfileScreen(),
           ),
         );
 
@@ -305,7 +316,7 @@ class _LocaChargeAppState extends State<LocaChargeApp> {
           builder: (routeContext) => PermissionGuard.check(
             context: routeContext,
             permission: AppPermission.manageBusinessProfile,
-            child: const UnifiedProfileScreen(),
+            child: const MainScreen(initialIndex: 4), // Profile is Index 4
           ),
         );
 

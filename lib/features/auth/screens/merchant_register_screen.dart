@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/logging.dart';
+import 'package:locacharge/core/utils/responsive_helper.dart';
 import 'package:locacharge/features/auth/widgets/auth_background_widget.dart';
 import 'package:locacharge/features/auth/widgets/custom_dropdown_field.dart';
 import 'package:locacharge/features/merchant/widgets/opening_hours_selector.dart';
@@ -23,7 +24,7 @@ class MerchantRegisterScreen extends StatefulWidget {
 class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
   // Constants
   static const double _sectionTitleFontSize = 18.0;
-  static const double _mapHeight = 250.0;
+  // La hauteur de map n'est plus statique mais calculée dans build()
 
   // Form
   final _formKey = GlobalKey<FormState>();
@@ -240,7 +241,12 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
       margin: const EdgeInsets.only(top: 8.0),
       decoration: BoxDecoration(
         color: Colors.black.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusS),
+        borderRadius: BorderRadius.circular(
+          ResponsiveHelper.getBorderRadius(
+            context,
+            baseRadius: AppDimensions.radiusS,
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +292,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
   Widget _buildStepIndicator() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: ResponsiveHelper.getHorizontalMargin(context),
+        vertical: 20,
+      ),
       child: Row(
         children: List.generate(4, (index) {
           final isActive = index == _currentStep;
@@ -311,7 +320,14 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                         ),
                         child: Center(
                           child: isCompleted
-                              ? Icon(Icons.check, color: Colors.white, size: 20)
+                              ? Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: ResponsiveHelper.getIconSize(
+                                    context,
+                                    baseSize: 20,
+                                  ),
+                                )
                               : Text(
                                   '${index + 1}',
                                   style: TextStyle(
@@ -319,7 +335,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                                         ? AppColors.primary
                                         : Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
+                                    fontSize: ResponsiveHelper.getFontSize(
+                                      context,
+                                      baseSize: 16,
+                                    ),
                                   ),
                                 ),
                         ),
@@ -377,7 +396,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
   Widget _buildCurrentStep() {
     return SizedBox(
-      height: 600, // Hauteur suffisante pour le contenu le plus long
+      height: ResponsiveHelper.heightPercent(context, 75), // Hauteur adaptative
       child: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
@@ -398,7 +417,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         Text(
           'Informations du Business',
           style: AppTextStyles.h2.copyWith(
-            fontSize: _sectionTitleFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _sectionTitleFontSize,
+            ),
             color: Colors.white,
           ),
         ),
@@ -448,7 +470,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         Text(
           'Localisation & Type',
           style: AppTextStyles.h2.copyWith(
-            fontSize: _sectionTitleFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _sectionTitleFontSize,
+            ),
             color: Colors.white,
           ),
         ),
@@ -469,7 +494,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         Text(
           'Services & Horaires',
           style: AppTextStyles.h2.copyWith(
-            fontSize: _sectionTitleFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _sectionTitleFontSize,
+            ),
             color: Colors.white,
           ),
         ),
@@ -488,7 +516,10 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
         Text(
           'Sécurité & Confirmation',
           style: AppTextStyles.h2.copyWith(
-            fontSize: _sectionTitleFontSize,
+            fontSize: ResponsiveHelper.getFontSize(
+              context,
+              baseSize: _sectionTitleFontSize,
+            ),
             color: Colors.white,
           ),
         ),
@@ -504,7 +535,11 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
 
   Widget _buildNavigationButtons() {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, right: 16, bottom: 8),
+      padding: EdgeInsets.only(
+        top: 8,
+        right: ResponsiveHelper.getHorizontalMargin(context),
+        bottom: 8,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
@@ -540,8 +575,12 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
                           ? 'Création...'
                           : 'Créer mon compte',
                       backgroundColor: AppColors.orange,
-                      height: 52,
-                      width: 180,
+                      height: ResponsiveHelper.getButtonHeight(context),
+                      width: ResponsiveHelper.getResponsiveValue(
+                        context,
+                        extraSmall: 160,
+                        medium: 180,
+                      ),
                     );
                   },
                 ),
@@ -559,14 +598,26 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
           style: AppTextStyles.body1.copyWith(
             fontWeight: FontWeight.w600,
             color: Colors.white,
+            fontSize: ResponsiveHelper.getFontSize(context, baseSize: 16),
           ),
         ),
         const SizedBox(height: 8),
         Container(
-          height: _mapHeight,
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+          height: ResponsiveHelper.getImageHeight(
+            context,
+            extraSmall: 200,
+            medium: 250,
+            tablet: 350,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(
+              ResponsiveHelper.getBorderRadius(context, baseRadius: 12),
+            ),
+          ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(
+              ResponsiveHelper.getBorderRadius(context, baseRadius: 12),
+            ),
             child: _isFetchingInitialLocation
                 ? Center(
                     child: Column(
@@ -752,7 +803,7 @@ class _MerchantRegisterScreenState extends State<MerchantRegisterScreen> {
           icon: Icons.timer_outlined,
           backgroundColor: AppColors.orange,
           width: double.infinity,
-          height: 48,
+          height: ResponsiveHelper.getButtonHeight(context),
         ),
         _buildOpeningHoursSummary(),
       ],

@@ -33,6 +33,46 @@ class TransactionProvider with ChangeNotifier {
       .where((t) => t.status == TransactionStatus.completed && t.type == TransactionType.sale)
       .length;
 
+  double get revenueToday {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day);
+    final end = start.add(const Duration(days: 1));
+    return _merchantTransactions
+        .where((t) =>
+            t.status == TransactionStatus.completed &&
+            t.type == TransactionType.sale &&
+            t.timestamp.toDate().isAfter(start) &&
+            t.timestamp.toDate().isBefore(end))
+        .fold(0.0, (sum, t) => sum + t.netAmount);
+  }
+
+  double get revenueThisWeek {
+    final now = DateTime.now();
+    final startOfWeek = DateTime(now.year, now.month, now.day)
+        .subtract(Duration(days: now.weekday - 1));
+    final endOfWeek = startOfWeek.add(const Duration(days: 7));
+    return _merchantTransactions
+        .where((t) =>
+            t.status == TransactionStatus.completed &&
+            t.type == TransactionType.sale &&
+            t.timestamp.toDate().isAfter(startOfWeek) &&
+            t.timestamp.toDate().isBefore(endOfWeek))
+        .fold(0.0, (sum, t) => sum + t.netAmount);
+  }
+
+  double get revenueThisMonth {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 1);
+    return _merchantTransactions
+        .where((t) =>
+            t.status == TransactionStatus.completed &&
+            t.type == TransactionType.sale &&
+            t.timestamp.toDate().isAfter(startOfMonth) &&
+            t.timestamp.toDate().isBefore(endOfMonth))
+        .fold(0.0, (sum, t) => sum + t.netAmount);
+  }
+
   double get previousRevenue {
     final now = DateTime.now();
     final yesterday = now.subtract(const Duration(days: 1));

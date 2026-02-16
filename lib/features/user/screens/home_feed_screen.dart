@@ -7,6 +7,7 @@ import 'package:locacharge/core/constants/app_dimensions.dart';
 import 'package:locacharge/core/constants/app_routes.dart';
 import 'package:locacharge/core/constants/app_text_styles.dart';
 import 'package:locacharge/core/constants/app_colors.dart';
+import 'package:locacharge/core/utils/responsive_helper.dart';
 import 'package:locacharge/core/widgets/custom_app_bar.dart';
 import 'package:locacharge/core/widgets/custom_drawer.dart';
 import 'package:locacharge/core/widgets/loading_widgets.dart';
@@ -209,9 +210,12 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                 SliverFillRemaining(child: _buildEmptyState())
               else if (merchants.isNotEmpty)
                 SliverPadding(
-                  padding: const EdgeInsets.only(
-                    bottom: 100,
-                  ), // Espace pour nav bar
+                  padding: const EdgeInsets.fromLTRB(
+                    AppDimensions.paddingM,
+                    0,
+                    AppDimensions.paddingM,
+                    100,
+                  ), // Espace pour nav bar + marges latérales
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final merchant = merchants[index];
@@ -250,33 +254,18 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
   Widget _buildBannerCarousel(List<AdvertisementContentItem> banners) {
     return Column(
       children: [
-        // En-tête de section style "Premium"
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "#SpecialForYou",
-                style: AppTextStyles.h3.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              Text(
-                "Tout voir",
-                style: AppTextStyles.body2.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
+        const SizedBox(height: 8),
 
         // Carousel avec effet "Peek" (viewportFraction)
         SizedBox(
-          height: 190,
+          height: ResponsiveHelper.getImageHeight(
+            context,
+            extraSmall: 160.0,
+            small: 170.0,
+            medium: 190.0,
+            large: 200.0,
+            tablet: 220.0,
+          ),
           child: GestureDetector(
             onTapDown: (_) => _pauseBannerAutoScroll(),
             onTapUp: (_) => _resumeBannerAutoScroll(),
@@ -284,8 +273,7 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
             child: PageView.builder(
               controller: _bannerController,
               itemCount: banners.length,
-              padEnds:
-                  false, // Alignement à gauche pour le premier item ? Non, centré c'est mieux avec viewportFraction
+              padEnds: true,
               onPageChanged: (index) {
                 setState(() => _currentBannerIndex = index);
                 _feedManager.trackAdvertisementImpression(banners[index].id);
@@ -317,11 +305,13 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
     return GestureDetector(
       onTap: () => _onBannerTap(item.advertisement),
       child: Container(
-        margin: const EdgeInsets.symmetric(
-          horizontal: 6,
+        margin: EdgeInsets.symmetric(
+          horizontal: context.isExtraSmall ? 4 : 6,
         ), // Espacement entre les cartes
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(
+            ResponsiveHelper.getBorderRadius(context, baseRadius: 24),
+          ),
           color: AppColors.gray200, // Placeholder couleur
           image: DecorationImage(
             image: NetworkImage(item.advertisement.imageUrl),
@@ -359,34 +349,19 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Badge "Limited time" / "Sponsorisé"
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      "Offre Spéciale",
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
+                  const SizedBox(height: 0),
 
                   const Spacer(),
 
                   // Titre
                   Text(
                     item.advertisement.title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white,
-                      fontSize: 22,
+                      fontSize: ResponsiveHelper.getFontSize(
+                        context,
+                        baseSize: 22,
+                      ),
                       fontWeight: FontWeight.bold,
                       height: 1.1,
                     ),
@@ -400,9 +375,12 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                   if (item.advertisement.description.isNotEmpty)
                     Text(
                       item.advertisement.description,
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: Colors.white,
-                        fontSize: 14,
+                        fontSize: ResponsiveHelper.getFontSize(
+                          context,
+                          baseSize: 14,
+                        ),
                         fontWeight: FontWeight.w500,
                       ),
                       maxLines: 1,
@@ -432,9 +410,12 @@ class _HomeFeedScreenState extends State<HomeFeedScreen> {
                       ),
                       child: Text(
                         item.advertisement.callToAction ?? "Voir l'offre",
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 12,
+                          fontSize: ResponsiveHelper.getFontSize(
+                            context,
+                            baseSize: 12,
+                          ),
                           fontWeight: FontWeight.bold,
                         ),
                       ),

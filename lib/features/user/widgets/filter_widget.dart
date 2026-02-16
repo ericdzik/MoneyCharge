@@ -60,18 +60,7 @@ class FilterWidget extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Tous'),
-                  selected: merchantProvider.maxDistanceInKm == null,
-                  onSelected: isLocationAvailable
-                      ? (selected) {
-                          if (selected) {
-                            merchantProvider.filterByDistance(null);
-                          }
-                        }
-                      : null,
-                ),
-                const SizedBox(width: 8),
+                // distance filter chips, 3, 5, 10 km
                 // distance filter chips, 3, 5, 10 km
                 FilterChip(
                   label: const Text('3 km'),

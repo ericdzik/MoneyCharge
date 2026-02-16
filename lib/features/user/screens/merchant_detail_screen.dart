@@ -2,10 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:card_swiper/card_swiper.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:locacharge/core/common.dart';
 import 'package:locacharge/core/utils/opening_hours_parser.dart';
 import 'package:locacharge/core/widgets/status_badge.dart';
+import 'package:locacharge/services/directions_service.dart';
 import 'package:locacharge/features/user/models/merchant_model.dart';
 import 'package:locacharge/features/user/screens/add_review_screen.dart';
 import 'package:locacharge/features/user/widgets/review_list_widget.dart';
@@ -25,6 +27,7 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   String _walkingTime = 'Calcul...';
   String _drivingTime = 'Calcul...';
   final LocationService _locationService = LocationService();
+  final DirectionsService _directionsService = DirectionsService();
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -63,18 +66,46 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
 
       final position = locationProvider.currentPosition;
       if (position != null) {
-        final distance = _locationService.calculateDistance(
-          position.latitude,
-          position.longitude,
+        final origin = LatLng(position.latitude, position.longitude);
+        final destination = LatLng(
           widget.merchant.latitude,
           widget.merchant.longitude,
         );
 
+        final results = await Future.wait([
+          _directionsService.getDirections(
+            origin,
+            destination,
+            travelMode: 'walking',
+          ),
+          _directionsService.getDirections(
+            origin,
+            destination,
+            travelMode: 'driving',
+          ),
+        ]);
+
+        final walking = results[0];
+        final driving = results[1];
+
         if (mounted) {
-          setState(() {
-            _walkingTime = _locationService.calculateWalkingTime(distance);
-            _drivingTime = _locationService.calculateDrivingTime(distance);
-          });
+          if (walking != null && driving != null) {
+            setState(() {
+              _walkingTime = walking['duration_text'] as String? ?? 'N/A';
+              _drivingTime = driving['duration_text'] as String? ?? 'N/A';
+            });
+          } else {
+            final distance = _locationService.calculateDistance(
+              position.latitude,
+              position.longitude,
+              widget.merchant.latitude,
+              widget.merchant.longitude,
+            );
+            setState(() {
+              _walkingTime = _locationService.calculateWalkingTime(distance);
+              _drivingTime = _locationService.calculateDrivingTime(distance);
+            });
+          }
         }
       } else {
         if (mounted) {
@@ -113,20 +144,18 @@ class _MerchantDetailScreenState extends State<MerchantDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const CustomDrawer(),
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
         title: widget.merchant.name,
         showLogo: false,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).maybePop(),
         ),
         actions: const [
           Icon(Icons.store, color: Colors.white),
         ],
+        borderRadius: 0,
       ),
       body: _buildMerchantDetail(),
       bottomNavigationBar: _BottomActions(

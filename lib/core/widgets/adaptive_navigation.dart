@@ -40,7 +40,7 @@ class AdaptiveNavigationConfig {
       icon: Icons.map_outlined,
       activeIcon: Icons.map,
       label: 'Carte',
-      route: AppRoutes.home, // Map view is in home screen
+      route: AppRoutes.mapView,
       requiredPermission: AppPermission.viewMarketplace,
       index: 1,
     ),
@@ -178,24 +178,77 @@ class AdaptiveBottomNavBar extends StatelessWidget {
   final Function(int) onTap;
   final List<NavItem>? customItems;
 
+  final bool floating;
+  final bool showLabels;
+
   const AdaptiveBottomNavBar({
     Key? key,
     required this.currentIndex,
     required this.onTap,
     this.customItems,
+    this.floating = true,
+    this.showLabels = true,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final items =
-        customItems ?? AdaptiveNavigationConfig.getMainNavItems(context);
+    final items = customItems ?? AdaptiveNavigationConfig.getMainNavItems(context);
 
+    if (floating) {
+      return Container(
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+        decoration: BoxDecoration(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(25),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(25),
+          child: BottomNavigationBar(
+            currentIndex: currentIndex,
+            onTap: onTap,
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            selectedItemColor: Colors.white,
+            unselectedItemColor: Colors.white.withValues(alpha: 0.6),
+            selectedFontSize: 11,
+            unselectedFontSize: 10,
+            showSelectedLabels: showLabels,
+            showUnselectedLabels: showLabels,
+            items: items.map((item) {
+              final isActive = items.indexOf(item) == currentIndex;
+              return BottomNavigationBarItem(
+                icon: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isActive ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(item.icon, size: isActive ? 26 : 24),
+                ),
+                label: item.label,
+              );
+            }).toList(),
+          ),
+        ),
+      );
+    }
+
+    // Non-floating (classic) layout
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -3),
           ),
