@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -11,6 +12,7 @@ import 'package:locacharge/features/auth/services/auth_service.dart';
 import 'dart:convert';
 import 'navigation_service.dart';
 import '../core/constants/app_routes.dart';
+import '../core/utils/logger.dart';
 
 /// Service de notifications pour l'application
 class NotificationService {
@@ -61,7 +63,7 @@ class NotificationService {
 
       _isInitialized = true;
     } catch (e) {
-      print('Notification initialization error: $e');
+      AppLogger.error('Notification initialization error', e);
     }
   }
 
@@ -84,11 +86,11 @@ class NotificationService {
 
       // Gérer les notifications lorsque l'application est au premier plan
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        print('Got a message whilst in the foreground!');
-        print('Message data: ${message.data}');
+        AppLogger.debug('Got a message whilst in the foreground!');
+        AppLogger.debug('Message data: ${message.data}');
 
         if (message.notification != null) {
-          print('Message also contained a notification: ${message.notification}');
+          AppLogger.debug('Message also contained a notification: ${message.notification}');
           showNotification(
             id: message.hashCode,
             title: message.notification!.title ?? 'Notification',
@@ -100,11 +102,11 @@ class NotificationService {
 
       // Gérer le clic sur la notification lorsque l'application est ouverte depuis l'arrière-plan
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        print('A new onMessageOpenedApp event was published!');
+        AppLogger.debug('A new onMessageOpenedApp event was published!');
         _handleNotificationPayload(message.data);
       });
     } else {
-      print('User declined or has not accepted permission for FCM');
+      AppLogger.debug('User declined or has not accepted permission for FCM');
     }
   }
 
@@ -112,11 +114,11 @@ class NotificationService {
   static Future<void> _requestPermissions() async {
     try {
       final status = await Permission.notification.request();
-      if (status.isDenied) {
-        print('Notification permission denied');
+      if (status.isDenied && kDebugMode) {
+        AppLogger.debug('Notification permission denied');
       }
     } catch (e) {
-      print('Permission request error: $e');
+      AppLogger.error('Permission request error', e);
     }
   }
 
@@ -129,7 +131,7 @@ class NotificationService {
         final decodedPayload = json.decode(payload) as Map<String, dynamic>;
         _handleNotificationPayload(decodedPayload);
       } catch (e) {
-        print('Error decoding notification payload: $e');
+        AppLogger.error('Error decoding notification payload', e);
       }
     }
   }
@@ -165,7 +167,7 @@ class NotificationService {
         break;
       default:
         // Optional: navigate to a default screen if payload is unknown
-        print('Unknown notification screen: $screen');
+        AppLogger.debug('Unknown notification screen: $screen');
         break;
     }
   }
@@ -222,7 +224,7 @@ class NotificationService {
       );
       await _saveNotification(notification);
     } catch (e) {
-      print('Show notification error: $e');
+      AppLogger.error('Show notification error', e);
     }
   }
 
@@ -343,7 +345,7 @@ class NotificationService {
         payload: payload,
       );
     } catch (e) {
-      print('Schedule notification error: $e');
+      AppLogger.error('Schedule notification error', e);
     }
   }
 

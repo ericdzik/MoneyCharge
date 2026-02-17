@@ -202,134 +202,189 @@ class _ImageHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        // Main Image with Swiper
-        Container(
-          height: 300,
-          width: double.infinity,
-          color: AppColors.surface,
-          child: merchant.imageUrls != null && merchant.imageUrls!.isNotEmpty
+    return SizedBox(
+      height: 300,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          // Main Image with Swiper
+          merchant.imageUrls != null && merchant.imageUrls!.isNotEmpty
               ? Swiper(
                   itemBuilder: (context, index) {
-                    return CachedNetworkImage(
-                      imageUrl: merchant.imageUrls![index],
-                      fit: BoxFit.cover,
-                      placeholder: (context, url) =>
-                          const LoadingIndicator.small(),
-                      errorWidget: (context, url, error) => const Center(
-                        child: Icon(Icons.error_outline, size: 40),
-                      ),
+                    return Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        CachedNetworkImage(
+                          imageUrl: merchant.imageUrls![index],
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              const LoadingIndicator.small(),
+                          errorWidget: (context, url, error) => const Center(
+                            child: Icon(Icons.error_outline, size: 40),
+                          ),
+                        ),
+                        // Gradient Overlay sur chaque image
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.2),
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.4),
+                              ],
+                              stops: const [0.0, 0.5, 1.0],
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                   itemCount: merchant.imageUrls!.length,
-                  pagination: const SwiperPagination(
-                    builder: DotSwiperPaginationBuilder(
-                      color: Colors.white54,
-                      activeColor: Colors.white,
-                      size: 8,
-                      activeSize: 10,
+                  autoplay: false,
+                  loop: merchant.imageUrls!.length > 1,
+                  pagination: merchant.imageUrls!.length > 1
+                      ? const SwiperPagination(
+                          alignment: Alignment.bottomCenter,
+                          margin: EdgeInsets.only(bottom: 10),
+                          builder: DotSwiperPaginationBuilder(
+                            color: Colors.white54,
+                            activeColor: Colors.white,
+                            size: 8,
+                            activeSize: 10,
+                            space: 4,
+                          ),
+                        )
+                      : null,
+                  control: merchant.imageUrls!.length > 1
+                      ? const SwiperControl(
+                          color: Colors.white,
+                          iconPrevious: Icons.arrow_back_ios,
+                          iconNext: Icons.arrow_forward_ios,
+                          size: 20,
+                          padding: EdgeInsets.all(8),
+                        )
+                      : null,
+                )
+              : Container(
+                  color: AppColors.surface,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.store,
+                          size: 80,
+                          color: Colors.grey.withValues(alpha: 0.5),
+                        ),
+                        const SizedBox(height: AppDimensions.paddingM),
+                        Text(
+                          'Aucune image disponible',
+                          style: AppTextStyles.body2.copyWith(
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  control: const SwiperControl(
-                    color: Colors.white,
-                    iconPrevious: Icons.arrow_back_ios,
-                    iconNext: Icons.arrow_forward_ios,
-                    size: 20,
+                ),
+
+          // Image Counter - Top Left (si plusieurs images)
+          if (merchant.imageUrls != null && merchant.imageUrls!.length > 1)
+            Positioned(
+              top: AppDimensions.paddingM,
+              left: AppDimensions.paddingM,
+              child: IgnorePointer(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
                   ),
-                )
-              : Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        Icons.store,
-                        size: 80,
-                        color: Colors.grey.withValues(alpha: 0.5),
+                      const Icon(
+                        Icons.photo_library,
+                        color: Colors.white,
+                        size: 16,
                       ),
-                      const SizedBox(height: AppDimensions.paddingM),
+                      const SizedBox(width: 4),
                       Text(
-                        'Aucune image disponible',
-                        style: AppTextStyles.body2.copyWith(
-                          color: Colors.grey,
+                        '${merchant.imageUrls!.length} photos',
+                        style: AppTextStyles.caption.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-        ),
+              ),
+            ),
 
-        // Gradient Overlay
-        Positioned.fill(
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withValues(alpha: 0.2),
-                  Colors.transparent,
-                  Colors.black.withValues(alpha: 0.4),
-                ],
-                stops: const [0.0, 0.5, 1.0],
+          // Status Badge - Top Right
+          Positioned(
+            top: AppDimensions.paddingM,
+            right: AppDimensions.paddingM,
+            child: IgnorePointer(
+              child: StatusBadge(
+                status: _getStatusType(merchant.status),
               ),
             ),
           ),
-        ),
 
-        // Status Badge - Top Right
-        Positioned(
-          top: AppDimensions.paddingM,
-          right: AppDimensions.paddingM,
-          child: StatusBadge(
-            status: _getStatusType(merchant.status),
-          ),
-        ),
-
-        // Status Indicator - Bottom Left
-        Positioned(
-          bottom: AppDimensions.paddingM,
-          left: AppDimensions.paddingM,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.paddingM,
-              vertical: AppDimensions.paddingS,
-            ),
-            decoration: BoxDecoration(
-              color: merchant.isOpen ? Colors.green : Colors.grey,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+          // Status Indicator - Bottom Left
+          Positioned(
+            bottom: AppDimensions.paddingM,
+            left: AppDimensions.paddingM,
+            child: IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.paddingM,
+                  vertical: AppDimensions.paddingS,
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
+                decoration: BoxDecoration(
+                  color: merchant.isOpen ? Colors.green : Colors.grey,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  merchant.isOpen ? 'Ouvert maintenant' : 'Fermé',
-                  style: AppTextStyles.caption.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      merchant.isOpen ? 'Ouvert maintenant' : 'Fermé',
+                      style: AppTextStyles.caption.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

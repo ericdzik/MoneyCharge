@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
+import 'package:locacharge/core/utils/logger.dart';
 import 'rbac_constants.dart';
 import 'role_manager.dart';
 
@@ -39,12 +41,9 @@ class PermissionProvider with ChangeNotifier {
         _authProvider.userType,
       );
 
-      // Debug: Afficher les permissions calculées
-      debugPrint(
-        '🔐 PermissionProvider: Calculated permissions for ${_authProvider.userType}',
-      );
-      debugPrint(
-        '🔐 Permissions: ${_currentPermissions.map((p) => p.toString().split('.').last).join(', ')}',
+      // Debug: Afficher les permissions calculées (seulement en mode debug)
+      AppLogger.security(
+        'Calculated permissions for ${_authProvider.userType}: ${_currentPermissions.map((p) => p.toString().split('.').last).join(', ')}',
       );
     }
     notifyListeners();
@@ -53,15 +52,14 @@ class PermissionProvider with ChangeNotifier {
   /// The Core Check: Does the user have this specific permission?
   bool hasPermission(AppPermission permission) {
     final result = _currentPermissions.contains(permission);
+    
+    // Logs seulement en mode debug
     if (!result) {
-      debugPrint(
-        '⚠️ Permission denied: ${permission.toString().split('.').last}',
-      );
-      debugPrint('⚠️ User type: ${_authProvider.userType}');
-      debugPrint(
-        '⚠️ Available permissions: ${_currentPermissions.map((p) => p.toString().split('.').last).join(', ')}',
+      AppLogger.warning(
+        'Permission denied: ${permission.toString().split('.').last} | User type: ${_authProvider.userType} | Available: ${_currentPermissions.map((p) => p.toString().split('.').last).join(', ')}',
       );
     }
+    
     return result;
   }
 

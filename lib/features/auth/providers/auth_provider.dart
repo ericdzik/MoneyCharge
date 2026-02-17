@@ -10,11 +10,13 @@ import 'package:locacharge/features/auth/models/admin_model.dart';
 import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/auth/models/user_model.dart';
 import 'package:locacharge/features/auth/services/auth_service.dart';
+import 'package:locacharge/features/auth/services/account_deletion_service.dart';
 
 enum UserType { user, merchant, admin, unknown }
 
 class AuthProvider with ChangeNotifier {
   final AuthService _authService = AuthService();
+  final AccountDeletionService _accountDeletionService = AccountDeletionService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final fb_auth.FirebaseAuth _firebaseAuth = fb_auth.FirebaseAuth.instance;
   StreamSubscription? _authStateSubscription;
@@ -447,5 +449,45 @@ class AuthProvider with ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  /// Supprime le compte utilisateur actuel
+  Future<bool> deleteAccount() async {
+    if (_firebaseUser == null) {
+      _error = "Aucun utilisateur connecté.";
+      return false;
+    }
+
+    _setLoading(true);
+    _error = null;
+
+    try {
+      final userId = _firebaseUser!.uid;
+      final userRole = _userType == UserType.merchant
+          ? 'merchant'
+          : _userType == UserType.admin
+              ? 'admin'
+              : 'user';
+
+      // Vérifier si le compte peut être supprimé
+      await _accountDeletionService.canDeleteAccount(userId, userRole);
+
+      // Supprimer le compte
+      final success = await _accountDeletionService.deleteAccount(userId, userRole);
+
+      if (success) {
+        // Nettoyer l'état local
+        _firebaseUser = null;
+        _userType = UserType.unknown;
+        _clearProfiles();
+      }
+
+      _setLoading(false);
+      return success;
+    } catch (e) {
+      _error = e.toString();
+      _setLoading(false);
+      return false;
+    }
   }
 }

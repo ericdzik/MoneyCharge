@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/utils/logger.dart';
 
 /// Service de cache pour optimiser les performances
 class CacheService {
@@ -32,7 +33,7 @@ class CacheService {
       await prefs.setInt(timestampKey, expiryTime);
     } catch (e) {
       // En cas d'erreur, on continue sans cache
-      print('Cache error: $e');
+      AppLogger.error('Cache error', e);
     }
   }
 
@@ -67,7 +68,7 @@ class CacheService {
 
       return null;
     } catch (e) {
-      print('Cache retrieval error: $e');
+      AppLogger.error('Cache retrieval error', e);
       return null;
     }
   }
@@ -102,7 +103,7 @@ class CacheService {
       await prefs.remove(cacheKey);
       await prefs.remove(timestampKey);
     } catch (e) {
-      print('Cache removal error: $e');
+      AppLogger.error('Cache removal error', e);
     }
   }
 
@@ -118,7 +119,7 @@ class CacheService {
         }
       }
     } catch (e) {
-      print('Cache clear error: $e');
+      AppLogger.error('Cache clear error', e);
     }
   }
 

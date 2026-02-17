@@ -13,6 +13,7 @@ import 'package:locacharge/features/auth/models/merchant_auth_model.dart';
 import 'package:locacharge/features/user/widgets/review_list_widget.dart';
 import 'package:locacharge/features/auth/providers/auth_provider.dart';
 import 'package:locacharge/providers/merchant_provider.dart';
+import 'package:locacharge/core/utils/logger.dart';
 
 class AdminDashboardScreen extends StatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -116,7 +117,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
       });
     } catch (e) {
       if (!_isMounted) return;
-      print("Error loading admin data: $e");
+      AppLogger.error("Error loading admin data", e);
       setState(() {
         _dataError = "Erreur lors du chargement des données: ${e.toString()}";
         _isLoading = false;

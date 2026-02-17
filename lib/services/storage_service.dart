@@ -4,6 +4,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:path/path.dart' as p;
+import '../core/utils/logger.dart';
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -23,7 +24,7 @@ class StorageService {
       final TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
-      print("Erreur lors de l'upload de l'image: $e");
+      AppLogger.error("Erreur lors de l'upload de l'image", e);
       return null;
     }
   }
@@ -33,7 +34,7 @@ class StorageService {
       final Reference ref = _storage.refFromURL(imageUrl);
       await ref.delete();
     } catch (e) {
-      print("Erreur lors de la suppression de l'image de la publicité: $e");
+      AppLogger.error("Erreur lors de la suppression de l'image de la publicité", e);
       // Optionally, re-throw the error if the caller needs to handle it
       // throw e;
     }
@@ -54,7 +55,7 @@ class StorageService {
       final TaskSnapshot snapshot = await uploadTask;
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
-      print("Erreur lors de l'upload de l'image de la publicité: $e");
+      AppLogger.error("Erreur lors de l'upload de l'image de la publicité", e);
       return null;
     }
   }

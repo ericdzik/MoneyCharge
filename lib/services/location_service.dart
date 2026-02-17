@@ -4,6 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:locacharge/core/services/intent_service.dart';
 import 'package:locacharge/core/config/phone_config.dart';
+import 'package:locacharge/core/utils/logger.dart';
 
 class LocationService {
   Future<LocationPermission> checkPermission() async {
@@ -132,75 +133,75 @@ String calculateDrivingTime(double distanceInMeters) {
       // For web, always use the Google Maps web URL to open in a new tab.
       // Using 'dir/' API to try and get directions directly.
       uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving');
-      print('[LocationService] Web platform detected. Attempting to launch URI: ${uri.toString()}');
+      AppLogger.debug('[LocationService] Web platform detected. Attempting to launch URI: ${uri.toString()}');
       try {
         if (await canLaunchUrl(uri)) {
-          print('[LocationService] Can launch web URI. Attempting launch...');
+          AppLogger.debug('[LocationService] Can launch web URI. Attempting launch...');
           // For web, platformDefault is often better to open in a new tab.
           bool success = await launchUrl(uri, mode: LaunchMode.platformDefault);
-          print('[LocationService] Launch success for web URI: $success');
+          AppLogger.debug('[LocationService] Launch success for web URI: $success');
           return success;
         } else {
-          print('[LocationService] Cannot launch web URI: ${uri.toString()}');
+          AppLogger.debug('[LocationService] Cannot launch web URI: ${uri.toString()}');
           // Try a simpler search query as a further web fallback
           Uri webSearchUri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
-          print('[LocationService] Trying simpler web search fallback: ${webSearchUri.toString()}');
+          AppLogger.debug('[LocationService] Trying simpler web search fallback: ${webSearchUri.toString()}');
           if (await canLaunchUrl(webSearchUri)){
-            print('[LocationService] Can launch simpler web search. Attempting launch...');
+            AppLogger.debug('[LocationService] Can launch simpler web search. Attempting launch...');
             bool success = await launchUrl(webSearchUri, mode: LaunchMode.platformDefault);
-            print('[LocationService] Launch success for simpler web search: $success');
+            AppLogger.debug('[LocationService] Launch success for simpler web search: $success');
             return success;
           }
-          print('[LocationService] Cannot launch simpler web search URI: ${webSearchUri.toString()}');
+          AppLogger.debug('[LocationService] Cannot launch simpler web search URI: ${webSearchUri.toString()}');
           return false;
         }
       } catch (e) {
-        print('[LocationService] Erreur lors de l\'ouverture de la navigation web: $e');
+        AppLogger.error('[LocationService] Erreur lors de l\'ouverture de la navigation web', e);
         return false;
       }
     } else if (Platform.isIOS) {
       uri = Uri.parse('https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=d');
-      print('[LocationService] iOS platform detected. Attempting to launch Apple Maps URI: ${uri.toString()}');
+      AppLogger.debug('[LocationService] iOS platform detected. Attempting to launch Apple Maps URI: ${uri.toString()}');
     } else { // Android and other non-web native platforms
       uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=driving');
-      print('[LocationService] Android/Other native platform detected. Attempting to launch Google Maps Dir URI: ${uri.toString()}');
+      AppLogger.debug('[LocationService] Android/Other native platform detected. Attempting to launch Google Maps Dir URI: ${uri.toString()}');
     }
 
     // Native platforms attempt sequence
     try {
       if (await canLaunchUrl(uri)) {
-        print('[LocationService] Can launch native URI ${uri.toString()}. Attempting launch...');
+        AppLogger.debug('[LocationService] Can launch native URI ${uri.toString()}. Attempting launch...');
         bool success = await launchUrl(uri, mode: LaunchMode.externalApplication);
-        print('[LocationService] Launch success for native URI ${uri.toString()}: $success');
+        AppLogger.debug('[LocationService] Launch success for native URI ${uri.toString()}: $success');
         return success;
       } else {
-        print('[LocationService] Cannot launch native URI ${uri.toString()}. Trying fallbacks for native...');
+        AppLogger.debug('[LocationService] Cannot launch native URI ${uri.toString()}. Trying fallbacks for native...');
         if (Platform.isAndroid) {
           String query = Uri.encodeComponent(destinationName.isNotEmpty ? destinationName : '$latitude,$longitude');
           final geoUri = Uri.parse('geo:$latitude,$longitude?q=$query');
-          print('[LocationService] Trying Android geo intent: ${geoUri.toString()}');
+          AppLogger.debug('[LocationService] Trying Android geo intent: ${geoUri.toString()}');
           if (await canLaunchUrl(geoUri)) {
-            print('[LocationService] Can launch Android geo intent. Attempting launch...');
+            AppLogger.debug('[LocationService] Can launch Android geo intent. Attempting launch...');
             bool success = await launchUrl(geoUri, mode: LaunchMode.externalApplication);
-            print('[LocationService] Launch success for Android geo intent: $success');
+            AppLogger.debug('[LocationService] Launch success for Android geo intent: $success');
             return success;
           } else {
-            print('[LocationService] Cannot launch Android geo intent: ${geoUri.toString()}.');
+            AppLogger.debug('[LocationService] Cannot launch Android geo intent: ${geoUri.toString()}.');
           }
         }
         // Fallback for native if specific app URIs fail - try opening web version
         Uri webFallbackForNative = Uri.parse('https://www.google.com/maps/search/?api=1&query=$latitude,$longitude');
-        print('[LocationService] Trying web fallback for native: ${webFallbackForNative.toString()}');
+        AppLogger.debug('[LocationService] Trying web fallback for native: ${webFallbackForNative.toString()}');
         if(await canLaunchUrl(webFallbackForNative)){
             bool success = await launchUrl(webFallbackForNative, mode: LaunchMode.platformDefault);
-            print('[LocationService] Launch success for web fallback for native: $success');
+            AppLogger.debug('[LocationService] Launch success for web fallback for native: $success');
             return success;
         }
-        print('[LocationService] All native app launch attempts and web fallback failed for URI: ${uri.toString()}');
+        AppLogger.debug('[LocationService] All native app launch attempts and web fallback failed for URI: ${uri.toString()}');
         return false;
       }
     } catch (e) {
-      print('[LocationService] Erreur lors de l\'ouverture de la navigation native: $e');
+      AppLogger.error('[LocationService] Erreur lors de l\'ouverture de la navigation native', e);
       return false;
     }
   }
@@ -213,27 +214,27 @@ String calculateDrivingTime(double distanceInMeters) {
     Uri uri;
     if (kIsWeb) {
         uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=walking');
-        print('[LocationService] Web - Attempting walking navigation. Target URI: ${uri.toString()}');
+        AppLogger.debug('[LocationService] Web - Attempting walking navigation. Target URI: ${uri.toString()}');
     } else if (Platform.isIOS) {
         // Apple Maps walking: 'https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=w'
         uri = Uri.parse('https://maps.apple.com/?daddr=$latitude,$longitude&dirflg=w');
-        print('[LocationService] iOS - Attempting walking navigation. Target URI: ${uri.toString()}');
+        AppLogger.debug('[LocationService] iOS - Attempting walking navigation. Target URI: ${uri.toString()}');
     } else { // Android and other native
         uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude&travelmode=walking');
-        print('[LocationService] Android/Other - Attempting walking navigation. Target URI: ${uri.toString()}');
+        AppLogger.debug('[LocationService] Android/Other - Attempting walking navigation. Target URI: ${uri.toString()}');
     }
 
     try {
       if (await canLaunchUrl(uri)) {
-        print('[LocationService] Can launch walking URI. Attempting launch...');
+        AppLogger.debug('[LocationService] Can launch walking URI. Attempting launch...');
         bool success = await launchUrl(uri, mode: kIsWeb ? LaunchMode.platformDefault : LaunchMode.externalApplication);
-        print('[LocationService] Launch success for walking URI: $success');
+        AppLogger.debug('[LocationService] Launch success for walking URI: $success');
         return success;
       }
-      print('[LocationService] Could not launch walking navigation for URI: ${uri.toString()}');
+      AppLogger.debug('[LocationService] Could not launch walking navigation for URI: ${uri.toString()}');
       return false;
     } catch (e) {
-      print('[LocationService] Erreur lors de l\'ouverture de la navigation à pied: $e');
+      AppLogger.error('[LocationService] Erreur lors de l\'ouverture de la navigation à pied', e);
       return false;
     }
   }
@@ -244,15 +245,15 @@ String calculateDrivingTime(double distanceInMeters) {
       List<String> phoneVariants = PhoneConfig.getPhoneNumberVariants(phoneNumber);
       
       if (phoneVariants.isEmpty) {
-        print('[LocationService] Aucune variante de numéro valide pour: $phoneNumber');
+        AppLogger.debug('[LocationService] Aucune variante de numéro valide pour: $phoneNumber');
         return false;
       }
       
-      print('[LocationService] Tentative d\'appel avec les variantes: $phoneVariants');
+      AppLogger.debug('[LocationService] Tentative d\'appel avec les variantes: $phoneVariants');
       
       // Essayer différentes approches selon la plateforme
       if (kIsWeb) {
-        print('[LocationService] Web platform - phone calls not supported');
+        AppLogger.debug('[LocationService] Web platform - phone calls not supported');
         return false;
       }
       
@@ -267,16 +268,16 @@ String calculateDrivingTime(double distanceInMeters) {
         }
         
         if (success) {
-          print('[LocationService] Succès avec la variante: $variant');
+          AppLogger.debug('[LocationService] Succès avec la variante: $variant');
           return true;
         }
       }
       
-      print('[LocationService] Échec avec toutes les variantes pour: $phoneNumber');
+      AppLogger.debug('[LocationService] Échec avec toutes les variantes pour: $phoneNumber');
       return false;
       
     } catch (e) {
-      print('[LocationService] Erreur lors de l\'appel: $e');
+      AppLogger.error('[LocationService] Erreur lors de l\'appel', e);
       return false;
     }
   }
@@ -284,79 +285,79 @@ String calculateDrivingTime(double distanceInMeters) {
   Future<bool> _makePhoneCallAndroid(String phoneNumber, String originalNumber) async {
     // Méthode 1: Essayer le service natif Android d'abord
     try {
-      print('[LocationService] Android - Trying native intent service for: $phoneNumber');
+      AppLogger.debug('[LocationService] Android - Trying native intent service for: $phoneNumber');
       bool nativeResult = await IntentService.makePhoneCallNative(phoneNumber);
       if (nativeResult) {
-        print('[LocationService] Native intent service success');
+        AppLogger.debug('[LocationService] Native intent service success');
         return true;
       }
     } catch (e) {
-      print('[LocationService] Native intent service failed: $e');
+      AppLogger.debug('[LocationService] Native intent service failed: $e');
     }
 
     // Méthode 2: Essayer d'ouvrir le dialer natif
     try {
-      print('[LocationService] Android - Trying native dialer for: $phoneNumber');
+      AppLogger.debug('[LocationService] Android - Trying native dialer for: $phoneNumber');
       bool dialerResult = await IntentService.openDialer(phoneNumber);
       if (dialerResult) {
-        print('[LocationService] Native dialer success');
+        AppLogger.debug('[LocationService] Native dialer success');
         return true;
       }
     } catch (e) {
-      print('[LocationService] Native dialer failed: $e');
+      AppLogger.debug('[LocationService] Native dialer failed: $e');
     }
 
     // Méthode 3: Intent ACTION_CALL (nécessite permission CALL_PHONE)
     try {
       final callUri = Uri(scheme: 'tel', path: phoneNumber);
-      print('[LocationService] Android - Trying ACTION_CALL intent: ${callUri.toString()}');
+      AppLogger.debug('[LocationService] Android - Trying ACTION_CALL intent: ${callUri.toString()}');
       
       if (await canLaunchUrl(callUri)) {
         bool success = await launchUrl(callUri, mode: LaunchMode.externalApplication);
         if (success) {
-          print('[LocationService] ACTION_CALL success');
+          AppLogger.debug('[LocationService] ACTION_CALL success');
           return true;
         }
       }
     } catch (e) {
-      print('[LocationService] ACTION_CALL failed: $e');
+      AppLogger.debug('[LocationService] ACTION_CALL failed: $e');
     }
 
     // Méthode 4: Intent ACTION_DIAL (ne nécessite pas de permission)
     try {
       final dialUri = Uri.parse('tel:$phoneNumber');
-      print('[LocationService] Android - Trying ACTION_DIAL intent: ${dialUri.toString()}');
+      AppLogger.debug('[LocationService] Android - Trying ACTION_DIAL intent: ${dialUri.toString()}');
       
       if (await canLaunchUrl(dialUri)) {
         bool success = await launchUrl(dialUri, mode: LaunchMode.externalApplication);
         if (success) {
-          print('[LocationService] ACTION_DIAL success');
+          AppLogger.debug('[LocationService] ACTION_DIAL success');
           return true;
         }
       }
     } catch (e) {
-      print('[LocationService] ACTION_DIAL failed: $e');
+      AppLogger.debug('[LocationService] ACTION_DIAL failed: $e');
     }
 
-    print('[LocationService] All Android phone call methods failed for: $phoneNumber');
+    AppLogger.debug('[LocationService] All Android phone call methods failed for: $phoneNumber');
     return false;
   }
 
   Future<bool> _makePhoneCallIOS(String phoneNumber, String originalNumber) async {
     try {
       final phoneUri = Uri(scheme: 'tel', path: phoneNumber);
-      print('[LocationService] iOS - Attempting phone call: ${phoneUri.toString()}');
+      AppLogger.debug('[LocationService] iOS - Attempting phone call: ${phoneUri.toString()}');
       
       if (await canLaunchUrl(phoneUri)) {
         bool success = await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
-        print('[LocationService] iOS phone call success: $success');
+        AppLogger.debug('[LocationService] iOS phone call success: $success');
         return success;
       }
       
-      print('[LocationService] iOS - Cannot launch phone URI');
+      AppLogger.debug('[LocationService] iOS - Cannot launch phone URI');
       return false;
     } catch (e) {
-      print('[LocationService] iOS phone call error: $e');
+      AppLogger.error('[LocationService] iOS phone call error', e);
       return false;
     }
   }
@@ -366,17 +367,17 @@ String calculateDrivingTime(double distanceInMeters) {
       final smsUri = Uri(scheme: 'sms', path: phoneNumber.replaceAll(RegExp(r'\s+'), ''), queryParameters: <String, String>{
         'body': message,
       });
-      print('[LocationService] Attempting SMS. Target URI: ${smsUri.toString()}');
+      AppLogger.debug('[LocationService] Attempting SMS. Target URI: ${smsUri.toString()}');
       if (await canLaunchUrl(smsUri)) {
-         print('[LocationService] Can launch SMS URI. Attempting launch...');
+         AppLogger.debug('[LocationService] Can launch SMS URI. Attempting launch...');
         bool success = await launchUrl(smsUri);
-        print('[LocationService] Launch success for SMS URI: $success');
+        AppLogger.debug('[LocationService] Launch success for SMS URI: $success');
         return success;
       }
-      print('[LocationService] Could not launch SMS for: $phoneNumber');
+      AppLogger.debug('[LocationService] Could not launch SMS for: $phoneNumber');
       return false;
     } catch (e) {
-      print('[LocationService] Erreur lors de l\'envoi du SMS: $e');
+      AppLogger.error('[LocationService] Erreur lors de l\'envoi du SMS', e);
       return false;
     }
   }

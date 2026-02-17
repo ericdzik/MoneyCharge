@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../core/config/env_config.dart';
+import '../core/utils/logger.dart';
 
 /// Service pour gérer les directions Google Maps
 /// Utilise la clé API depuis les variables d'environnement
@@ -21,7 +22,7 @@ class DirectionsService {
       '$_baseUrl?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&mode=$travelMode&key=$apiKey',
     );
 
-    print('[DirectionsService] Requesting directions: origin=$origin, destination=$destination, mode=$travelMode');
+    AppLogger.debug('[DirectionsService] Requesting directions: origin=$origin, destination=$destination, mode=$travelMode');
 
     try {
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
@@ -46,15 +47,15 @@ class DirectionsService {
             ),
           };
         } else {
-          print('[DirectionsService] Error from API: ${data['status']} - ${data['error_message']}');
+          AppLogger.error('[DirectionsService] Error from API: ${data['status']} - ${data['error_message']}');
           return null; // ou lancer une exception spécifique
         }
       } else {
-        print('[DirectionsService] HTTP Error: ${response.statusCode} - ${response.body}');
+        AppLogger.error('[DirectionsService] HTTP Error: ${response.statusCode} - ${response.body}');
         return null; // ou lancer une exception spécifique
       }
     } catch (e) {
-      print('[DirectionsService] Exception occurred: $e');
+      AppLogger.error('[DirectionsService] Exception occurred', e);
       return null; // ou lancer une exception spécifique
     }
   }
